@@ -8,6 +8,8 @@
                  [compojure "1.5.2"]
                  [conman "0.6.3"]
                  [cprop "0.1.10"]
+                 [day8.re-frame/http-fx "0.1.2"]
+                 [day8.re-frame/async-flow-fx "0.0.6"]
                  [funcool/struct "1.0.0"]
                  [luminus-immutant "0.2.3"]
                  [luminus-migrations "0.3.0"]
@@ -23,7 +25,6 @@
                  [org.clojure/tools.logging "0.3.1"]
                  [org.postgresql/postgresql "42.0.0"]
                  [org.webjars.bower/tether "1.4.0"]
-                 [org.webjars/bootstrap "4.0.0-alpha.5"]
                  [org.webjars/font-awesome "4.7.0"]
                  [org.webjars/webjars-locator-jboss-vfs "0.1.0"]
                  [re-frame "0.9.2"]
@@ -55,6 +56,7 @@
   {:http-server-root "public"
    :nrepl-port 7002
    :css-dirs ["resources/public/css"]
+   :hawk-options {:watcher :polling}
    :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
   
 
@@ -89,7 +91,8 @@
                                  [binaryage/devtools "0.9.3"]
                                  [com.cemerick/piggieback "0.2.2-SNAPSHOT"]
                                  [doo "0.1.7"]
-                                 [figwheel-sidecar "0.5.10"]]
+                                 [figwheel-sidecar "0.5.10"]
+                                 [org.clojure/test.check "0.9.0"]]
                   :plugins      [[com.jakemccrary/lein-test-refresh "0.19.0"]
                                  [lein-doo "0.1.7"]
                                  [lein-figwheel "0.5.10"]
