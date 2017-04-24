@@ -1,0 +1,113 @@
+;; Connected to nREPL server - nrepl://localhost:7000
+;; CIDER 0.13.0snapshot (package: 20160711.31), nREPL 0.2.12
+;; Clojure 1.8.0, Java 1.8.0_111
+;;     Docs: (doc function-name)
+;;           (find-doc part-of-name)
+;;   Source: (source function-name)
+;;  Javadoc: (javadoc java-object-or-class)
+;;     Exit: <C-c C-q>
+;;  Results: Stored in vars *1, *2, *3, an exception in *e;
+;; ======================================================================
+;; If you’re new to CIDER it is highly recommended to go through its
+;; manual first. Type <M-x cider-view-manual> to view it.
+;; In case you’re seeing any warnings you should consult the manual’s
+;; "Troubleshooting" section.
+;;
+;; Here are few tips to get you started:
+;;
+;; * Press <C-h m> to see a list of the keybindings available (this
+;;   will work in every Emacs buffer)
+;; * Press <, ,> to quickly invoke some REPL command
+;; * Press <, s s> to switch between the REPL and a Clojure file
+;; * Press <M-x cider-find-var> to jump to the source of something (e.g. a var, a
+;;   Java method)
+;; * Press <, h h> to view the documentation for something (e.g.
+;;   a var, a Java method)
+;; * Enable `eldoc-mode' to display function & method signatures in the minibuffer.
+;; * Print CIDER's refcard and keep it close to your keyboard.
+;;
+;; CIDER is super customizable - try <M-x customize-group cider> to
+;; get a feel for this. If you’re thirsty for knowledge you should try
+;; <M-x cider-drink-a-sip>.
+;;
+;; If you think you’ve encountered a bug (or have some suggestions for
+;; improvements) use <M-x cider-report-bug> to report it.
+;;
+;; Above all else - don’t panic! In case of an emergency - procure
+;; some (hard) cider and enjoy it responsibly!
+;;
+;; You can remove this message with the `cider-repl-clear-help-banner' command.
+;; You can disable it from appearing on start by setting
+;; `cider-repl-display-help-banner' to nil.
+;; ======================================================================
+user> (start)
+read config from resource: "config.edn"
+read config from file: ".lein-env"
+{:started ["#'time-align.config/env" "#'time-align.handler/init-app" "#'time-align.core/http-server"]}
+user> (start-fw)
+Figwheel: Starting server at http://0.0.0.0:3449
+Figwheel: Watching build - app
+Compiling "target/cljsbuild/public/js/app.js" from ["src/cljs" "src/cljc" "env/dev/cljs"]...
+Successfully compiled "target/cljsbuild/public/js/app.js" in 8.554 seconds.
+Figwheel: Starting CSS Watcher for paths  ["resources/public/css"]
+Figwheel: Starting nREPL server on port: 7002
+nil
+user> (cljs)
+Launching ClojureScript REPL for build: app
+Figwheel Controls:
+          (stop-autobuild)                ;; stops Figwheel autobuilder
+          (start-autobuild [id ...])      ;; starts autobuilder focused on optional ids
+          (switch-to-build id ...)        ;; switches autobuilder to different build
+          (reset-autobuild)               ;; stops, cleans, and starts autobuilder
+          (reload-config)                 ;; reloads build config and resets autobuild
+          (build-once [id ...])           ;; builds source one time
+          (clean-builds [id ..])          ;; deletes compiled cljs target files
+          (print-config [id ...])         ;; prints out build configurations
+          (fig-status)                    ;; displays current state of system
+          (figwheel.client/set-autoload false)    ;; will turn autoloading off
+          (figwheel.client/set-repl-pprint false) ;; will turn pretty printing off
+  Switch REPL build focus:
+          :cljs/quit                      ;; allows you to switch REPL to another build
+    Docs: (doc function-name-here)
+    Exit: Control+C or :cljs/quit
+ Results: Stored in vars *1, *2, *3, *e holds last exception object
+Prompt will show when Figwheel connects to your application
+To quit, type: :cljs/quit
+nil
+cljs.user> (require '[cljs.spec :as s])
+nil
+cljs.user> (require '[clojure.test.check.generators :as gen])
+nil
+cljs.user> (s/def ::start int?)
+:cljs.user/start
+cljs.user> (s/def ::stop int?)
+:cljs.user/stop
+cljs.user> (s/valid? (s/keys :req [::start ::stop]) {:start 10 :stop 20})
+false
+cljs.user> (s/def task (s/keys :req [::start ::stop]))
+cljs.user/task
+cljs.user> (s/valid? ::task {:start 10 :stop 20})
+;; output cleared
+cljs.user> (s/def ::task (s/keys :req [::start ::stop]))
+:cljs.user/task
+cljs.user> (s/valid? ::task {:start 10 :stop 20})
+false
+cljs.user> (s/valid? ::task {::start 10 ::stop 20})
+true
+cljs.user> (s/def ::task (s/keys :req-un [::start ::stop]))
+:cljs.user/task
+cljs.user> (s/valid? ::task {:start 10 :stop 20})
+true
+cljs.user> (s/def ::task-valid (s/and ::task #(> (:stop %) (:start %))))
+:cljs.user/task-valid
+cljs.user> (s/valid? ::task-valid {:start 10 :stop 20})
+true
+cljs.user> s/valid? ::task-valid {:start 100 :stop 50})
+;; output cleared
+cljs.user> (s/valid? ::task-valid {:start 100 :stop 50})
+false
+cljs.user> (gen/generate (s/gen int?))
+-1
+cljs.user> (gen/generate (s/gen ::task-valid))
+{:start 314579, :stop 455000}
+cljs.user> 
