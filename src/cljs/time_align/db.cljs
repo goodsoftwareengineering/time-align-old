@@ -1,4 +1,26 @@
-(ns time-align.db)
+(ns time-align.db
+  (:require [clojure.spec :as s]
+            [clojure.test.check.generators :as gen]
+            [cljs.pprint :refer [pprint]]
+            ))
 
 (def default-db
   {:page :home})
+
+;; time is int (ms epoch) and positive
+(s/def ::moment (s/and int?
+                       #(> % 0)))
+(s/def ::start ::moment)
+(s/def ::stop ::moment)
+(s/def ::period (s/keys :req-un [::start ::stop]))
+;; periods are valid when stop happens after start and the difference between
+;; them ins't greater than 1 days worth of ms
+(s/def ::period-valid  (s/and ::period
+                              #(> (:stop %) (:start %))
+                              #(> 86400000 (- (:stop %) (:start %)))))
+(s/def ::periods (s/coll-of ::period-valid))
+(s/def ::task (s/keys :req-un [::periods]))
+
+(gen/generate (s/gen ::task))
+
+
