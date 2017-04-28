@@ -6,11 +6,12 @@
 (def default-db
   {:page :home})
 
-;; time is int (ms epoch) and positive
+(s/def ::name string?)
+(s/def ::email string?)
 (s/def ::id (s/and
              int?
              #(> % 0)))
-(s/def ::moment (s/and
+(s/def ::moment (s/and ;; time is int (ms epoch) and positive
                  int?
                  #(> % 0)))
 (s/def ::start ::moment)
@@ -32,8 +33,32 @@
 (s/def ::planned ::tasks) ;; periods not nil & in the future
 (s/def ::queue ::tasks)   ;; periods nil
 (s/def ::actual ::tasks)  ;; periods not nil & in the past
-(s/def ::day (s/keys :req-un [::planned ::queue ::actual]))
+(s/def ::user (s/keys :req-u [::name ::id ::email]))
 
-(gen/generate (s/gen ::day))
 
+;; make tasks specific for planned queue and actual
+;; validate should only be concerned with planned and actual being in the past or future
+(defn validate-planned [db]
+  (let [planned (:planned db)]
+    (= 0
+       (count (filter )))
+    )
+  )
+
+
+(s/def ::db (s/and
+             (s/keys :req-un [::user ::planned ::actual ::queue])
+             (validate-planned)))
+
+;; {
+;;  :user {:id :name :email}
+;;  :planned [{} {} {}]
+;;  :queue   [{} {} {}]
+;;  :actual  [{} {} {}]
+;;  :view {:range [{:date :filters}]
+;;         :filters []
+;;         :queue {:filters [] :ordering }}
+;;  }
+
+(gen/generate (s/gen ::db))
 
