@@ -2,40 +2,12 @@
 # To reset the sample schema, replace everything with
 # two dots ('..' - without quotes).
 
-
-logins
-----
-id pk int
-user_name varchar(255)
-hash_pass varchar(255)
-user_id FK >- users.id
-
 users
 ----
 id pk int
 name varchar(255)
-identifier varchar(255)
-
-memberships
-----
-id pk int
-user_id int FK >- users.id
-company_id int FK >- companies.id
-role_id int
 email varchar(255)
-
-companies
-----
-id pk int
-name varchar(255)
-access varchar(255)
-account int FK >- accounts.id
-
-accounts
-----
-id pk int
-name varchar(255)
-plan varchar(255)
+hash_pass varchar(255)
 
 categories
 ----
@@ -64,7 +36,6 @@ id pk int
 task_id int FK >- tasks.id
 dependency_id int FK >- tasks.id
 # check (task_id <> dependency_id)
-
 
 [settings]
 Position -12 -28
