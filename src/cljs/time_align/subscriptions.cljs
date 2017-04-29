@@ -4,9 +4,5 @@
 (reg-sub
   :page
   (fn [db _]
-    (:page db)))
+    (get-in db [:view :page])))
 
-(reg-sub
-  :docs
-  (fn [db _]
-    (:docs db)))

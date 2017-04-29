@@ -1,10 +1,6 @@
 (ns time-align.db
   (:require [clojure.spec :as s]
-            [clojure.test.check.generators :as gen]
-            ))
-
-(def default-db
-  {:page :home})
+            [clojure.test.check.generators :as gen]))
 
 (s/def ::name string?)
 (s/def ::email string?)
@@ -53,5 +49,5 @@
 ;;         :page}
 ;;  }
 
-(gen/generate (s/gen ::db))
-
+(def default-db
+  (gen/generate (s/gen ::db)))
