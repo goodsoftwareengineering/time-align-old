@@ -16,6 +16,7 @@
                  #(> % 0)))
 (s/def ::start ::moment)
 (s/def ::stop ::moment)
+(s/def ::priority int?)
 ;; periods are valid when stop happens after start and the difference between
 ;; them ins't greater than 1 days worth of ms
 (s/def ::period (s/and
@@ -28,36 +29,28 @@
                    #(> 256 (count %))))
 (s/def ::dependency ::id)
 (s/def ::dependencies (s/coll-of ::dependency))
-(s/def ::task (s/keys :req-un [::periods ::dependencies ::category]))
+(s/def ::task (s/keys :req-un [::dependencies ::category]
+                      :opt-un [::periods ::priority]))
 (s/def ::tasks (s/coll-of ::task))
-(s/def ::planned ::tasks) ;; periods not nil & in the future
-(s/def ::queue ::tasks)   ;; periods nil
-(s/def ::actual ::tasks)  ;; periods not nil & in the past
-(s/def ::user (s/keys :req-u [::name ::id ::email]))
-
-
-;; make tasks specific for planned queue and actual
-;; validate should only be concerned with planned and actual being in the past or future
-(defn validate-planned [db]
-  (let [planned (:planned db)]
-    (= 0
-       (count (filter )))
-    )
-  )
-
-
-(s/def ::db (s/and
-             (s/keys :req-un [::user ::planned ::actual ::queue])
-             (validate-planned)))
+(s/def ::user (s/keys :req-un [::name ::id ::email]))
+(s/def ::date ::moment)
+(s/def ::categories (s/coll-of ::category))
+(s/def ::filters (s/coll-of ::category))
+(s/def ::order #{:category :name :priority})
+(s/def ::ordering string?)
+(s/def ::range (s/keys :req-un [::filters ::start ::stop]))
+(s/def ::queue (s/keys :req-un [::filters ::ordering]))
+(s/def ::page  #{:home})
+(s/def ::view (s/keys :req-un [::range ::queue ::page]))
+(s/def ::db (s/keys :req-un [::user ::tasks ::view ::categories]))
 
 ;; {
 ;;  :user {:id :name :email}
-;;  :planned [{} {} {}]
-;;  :queue   [{} {} {}]
-;;  :actual  [{} {} {}]
-;;  :view {:range [{:date :filters}]
-;;         :filters []
-;;         :queue {:filters [] :ordering }}
+;;  :track [{} {} {}]
+;;  :queue [{} {} {}]
+;;  :view {:range {:filters :start :stop}
+;;         :queue {:filters [] :ordering }
+;;         :page}
 ;;  }
 
 (gen/generate (s/gen ::db))

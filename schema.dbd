@@ -22,6 +22,7 @@ tasks
 id pk int
 user_id int FK >- users.id
 category_id int FK >- categories.id
+priority int 
 
 periods
 ----
