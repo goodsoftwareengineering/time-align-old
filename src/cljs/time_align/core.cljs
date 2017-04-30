@@ -15,13 +15,20 @@
   (:import goog.History))
 
 (defn home-page []
-  (let [tasks @(rf/subscribe [:tasks])]
+  (let [tasks @(rf/subscribe [:tasks])
+        days  @(rf/subscribe [:visible-days])]
+
+    (pprint days)
+
     [:div
-     "tasks: " (str (count tasks))
-     (map (fn [task]
-            [:p {:key (:id task)}
-             (:name task)])
-          tasks)
+     {:style {:display "flex" :justify-content "flex-start"
+              :flex-wrap "no-wrap"}}
+     (->> days
+          (map #(let [date (.toDateString %)]
+                  [:svg {:key date :style {:display "inline-box"}
+                         :width "100%" :viewBox "0 0 100 100"}
+                   [:circle {:cx "50" :cy "50" :r "40"
+                             :fill "grey"}]])))
      ]
     )
   )
