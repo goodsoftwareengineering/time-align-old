@@ -1,32 +1,82 @@
 (ns time-align.db
   (:require [clojure.spec :as s]
-            [clojure.test.check.generators :as gen]))
+            [clojure.test.check.generators :as gen]
+
+            [cljs.pprint :refer [pprint]]
+            ))
 
 (s/def ::name string?)
+(s/def ::description string?)
 (s/def ::email string?)
-(s/def ::id (s/and
-             int?
-             #(> % 0)))
-(s/def ::moment (s/and ;; time is int (ms epoch) and positive
-                 int?
-                 #(> % 0)))
+(s/def ::id (s/and int? #(> % 0)))
+
+;; TODO move this
+;; <test-gen-deps>
+(def week-ms (->> 1
+                  (* 7)
+                  (* 24)
+                  (* 60)
+                  (* 60)
+                  (* 1000)))
+
+(def day-ms
+  (->> 1
+       (* 24)
+       (* 60)
+       (* 60)
+       (* 1000)))
+
+(def hour-ms
+  (->> 1
+       (* 60)
+       (* 60)
+       (* 1000)))
+
+(defn one-week-ago []
+  (.valueOf
+   (new js/Date (- (.valueOf (new js/Date)) week-ms))))
+
+(defn one-week-from-now []
+  (.valueOf
+   (new js/Date (+ (.valueOf (new js/Date)) week-ms))))
+
+(def time-range
+  (range (one-week-ago) (one-week-from-now) hour-ms))
+
+(def time-set
+  (set (->> time-range
+            (map #(new js/Date %)))))
+
+;; </test-gen-deps>
+
+(s/def ::moment (s/with-gen inst?
+                  #(s/gen time-set)))
 (s/def ::start ::moment)
 (s/def ::stop ::moment)
 (s/def ::priority int?)
-;; periods are valid when stop happens after start and the difference between
-;; them ins't greater than 1 days worth of ms
+
+;; TODO remove this
+;; I was concerned about the length of a period.
+;; Initially it seemed like they should not cross days
+;; It will be simpler to allow any length of period and just snip the rendering of any
+;; task to not render before or the start, or past the end, of a day.
+;; Some tasks will be double rendering on days and that is fine. To determine if a task
+;; is rendered on a day just test that the day is on or between the start and stop times.
+
 (s/def ::period (s/and
                  (s/keys :req-un [::start ::stop])
-                 #(> (:stop %) (:start %))
-                 #(> 86400000 (- (:stop %) (:start %)))))
+                 #(> (.valueOf (:stop %)) (.valueOf (:start %)))))
+
 (s/def ::periods (s/coll-of ::period))
-(s/def ::category (s/and
-                   string?
-                   #(> 256 (count %))))
+(s/def ::category (s/and string? #(> 256 (count %))))
 (s/def ::dependency ::id)
 (s/def ::dependencies (s/coll-of ::dependency))
-(s/def ::task (s/keys :req-un [::dependencies ::category]
-                      :opt-un [::periods ::priority]))
+(s/def ::planned boolean?)
+;; think about adding a condition that queue tasks (no periods) have to have planned true (? and priority)
+;; tasks that are not planned (:actual) cannot have periods in the future
+;; adding date support is going to need some cljc trickery
+(s/def ::task (s/keys :req-un [::id ::category ::planned ::name ::description]
+                      :opt-un [::dependencies ::periods ::priority]))
 (s/def ::tasks (s/coll-of ::task))
 (s/def ::user (s/keys :req-un [::name ::id ::email]))
 (s/def ::date ::moment)
@@ -40,10 +90,11 @@
 (s/def ::view (s/keys :req-un [::range ::queue ::page]))
 (s/def ::db (s/keys :req-un [::user ::tasks ::view ::categories]))
 
+;; db
 ;; {
 ;;  :user {:id :name :email}
-;;  :track [{} {} {}]
-;;  :queue [{} {} {}]
+;;  :tasks [{:category :planned
+;;           :dependencies :periods :priority}]
 ;;  :view {:range {:filters :start :stop}
 ;;         :queue {:filters [] :ordering }
 ;;         :page}

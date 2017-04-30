@@ -8,12 +8,23 @@
             [ajax.core :refer [GET POST]]
             [time-align.ajax :refer [load-interceptors!]]
             [time-align.handlers]
-            [time-align.subscriptions])
+            [time-align.subscriptions]
+
+            [cljs.pprint :refer [pprint]]
+            )
   (:import goog.History))
 
 (defn home-page []
-  [:div.container
-   "hello"])
+  (let [tasks @(rf/subscribe [:tasks])]
+    [:div
+     "tasks: " (str (count tasks))
+     (map (fn [task]
+            [:p {:key (:id task)}
+             (:name task)])
+          tasks)
+     ]
+    )
+  )
 
 (def pages
   {:home #'home-page})
