@@ -59,33 +59,39 @@
      (-> s (* 1000))
      ms)))
 
+(defn filter-tasks [day tasks])
+
+(defn get-periods [today-tasks])
+
 (defn home-page []
   (let [tasks @(rf/subscribe [:tasks])
         days  @(rf/subscribe [:visible-days])]
-
-    (pprint days)
 
     [:div
      {:style {:display "flex" :justify-content "flex-start"
               :flex-wrap "no-wrap"}}
      (->> days
-          (map #(let [date-str (.toDateString %)
-                      ms (get-ms %)
-                      angle (ms-to-angle ms)
-                      arc (describe-arc 40 40 40 0 90)]
+          (map (fn [day]
+                 (let [date-str (.toDateString day)
+                       ms (get-ms day)
+                       angle (ms-to-angle ms)
+                       today-tasks (filter-tasks day tasks)
+                       periods (get-periods today-tasks)]
 
-                  [:svg {:key date-str :style {:display "inline-box"}
-                         :width "100%" :viewBox "0 0 100 100"}
-                   [:circle {:cx "40" :cy "40" :r "40"
-                             :fill "grey"}]
-                   [:path {:d arc
-                           :stroke "black"
-                           :stroke-width "4"
-                           :fill "transparent"}]
-                   ])))
-     ]
-    )
-  )
+                   [:svg {:key date-str :style {:display "inline-box"}
+                          :width "100%" :viewBox "0 0 100 100"}
+                    [:circle {:cx "40" :cy "40" :r "40"
+                              :fill "grey"}]
+
+                    (if (> (count periods) 0)
+                      (map #(let [start-angle (ms-to-angle (:start %))
+                                  stop-angle  (ms-to-angle (:stop %))
+                                  arc (describe-arc 40 40 40 start-angle stop-angle)]
+
+                              [:path {:d arc
+                                      :stroke "black"
+                                      :stroke-width "4"
+                                      :fill "transparent"}])))]))))]))
 
 (def pages
   {:home #'home-page})
@@ -107,9 +113,9 @@
 (defn hook-browser-navigation! []
   (doto (History.)
     (events/listen
-      HistoryEventType/NAVIGATE
-      (fn [event]
-        (secretary/dispatch! (.-token event))))
+     HistoryEventType/NAVIGATE
+     (fn [event]
+       (secretary/dispatch! (.-token event))))
     (.setEnabled true)))
 
 ;; -------------------------
