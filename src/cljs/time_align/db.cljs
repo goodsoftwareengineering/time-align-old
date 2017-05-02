@@ -63,9 +63,18 @@
 ;; Some tasks will be double rendering on days and that is fine. To determine if a task
 ;; is rendered on a day just test that the day is on or between the start and stop times.
 
-(s/def ::period (s/and
-                 (s/keys :req-un [::start ::stop])
-                 #(> (.valueOf (:stop %)) (.valueOf (:start %)))))
+(s/def ::period (s/with-gen (s/and
+                             (s/keys :req-un [::start ::stop])
+                             #(> (.valueOf (:stop %)) (.valueOf (:start %))))
+
+                  ;; generator uses a generated moment and adds a random amount of time to it < 2 hrs
+                  #(gen/fmap (fn [moment]
+                               (let [start (.valueOf moment)
+                                   stop  (->> start
+                                              (+ (rand-int (* 2 hour-ms))))]
+                               {:start (new js/Date start )
+                                :stop (new js/Date stop)}))
+                            (s/gen ::moment))))
 
 (s/def ::periods (s/coll-of ::period))
 (s/def ::category (s/and string? #(> 256 (count %))))
@@ -103,3 +112,41 @@
 (def default-db
   (gen/generate (s/gen ::db)))
 
+(defn zero-in-day [date]
+  (pprint date)
+  (new js/Date (.getFullYear date) (.getMonth date) (.getDate date) 0 0 0 0))
+
+(defn period-in-day [day period]
+  (if (not (nil? period)) ;; TODO add spec here
+    (let [z-day   (.valueOf (zero-in-day day))
+          z-start (.valueOf (zero-in-day (:start period)))
+          z-stop  (.valueOf (zero-in-day (:stop period)))]
+      (or
+       (= z-day z-start)
+       (= z-day z-stop)))
+
+    false)
+  )
+
+(defn filter-periods [day tasks]
+  (map
+   #(let [all-periods (:periods %)]
+      (filter (partial period-in-day day)
+              all-periods))
+   tasks))
+
+(map #(:periods %) (:tasks default-db))
+
+(count (:tasks default-db))
+
+(def test-period (gen/generate (s/gen ::period)))
+(def test-task (gen/generate (s/gen ::task)))
+
+(pprint test-period)
+(pprint test-task)
+
+(period-in-day (new js/Date 2017 04 06) test-period)
+
+(->> (:tasks default-db)
+     (filter-periods (new js/Date 2017 03 26))
+     )

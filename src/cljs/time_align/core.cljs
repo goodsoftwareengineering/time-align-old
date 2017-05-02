@@ -59,7 +59,14 @@
      (-> s (* 1000))
      ms)))
 
-(defn filter-tasks [day tasks])
+(defn filter-tasks [day tasks]
+  (let [unix-date (.valueOf day)]
+    (filter (fn [task]
+              (filter #(and
+                        (>= unix-date (:start %))
+                        (<= unix-date (:stop %)))
+                      (:periods task)))
+            tasks)))
 
 (defn get-periods [today-tasks])
 
