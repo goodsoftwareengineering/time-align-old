@@ -109,44 +109,44 @@
 ;;         :page}
 ;;  }
 
-(def default-db
-  (gen/generate (s/gen ::db)))
-
-(defn zero-in-day [date]
-  (pprint date)
-  (new js/Date (.getFullYear date) (.getMonth date) (.getDate date) 0 0 0 0))
-
 (defn period-in-day [day period]
   (if (not (nil? period)) ;; TODO add spec here
-    (let [z-day   (.valueOf (zero-in-day day))
-          z-start (.valueOf (zero-in-day (:start period)))
-          z-stop  (.valueOf (zero-in-day (:stop period)))]
-      (or
-       (= z-day z-start)
-       (= z-day z-stop)))
+    (let [day-y   (.getFullYear day)
+          day-m   (.getMonth day)
+          day-d   (.getDate day)
+          day-str (str day-y day-m day-d)
 
-    false)
-  )
+          start   (:start period)
+          start-y (.getFullYear start)
+          start-m (.getMonth start)
+          start-d (.getDate start)
+          start-str (str start-y start-m start-d)
+
+          stop   (:stop period)
+          stop-y (.getFullYear stop)
+          stop-m (.getMonth stop)
+          stop-d (.getDate stop)
+          stop-str (str stop-y stop-m stop-d)]
+
+      (or
+       (= day-str start-str)
+       (= day-str stop-str)))
+    false))
 
 (defn filter-periods [day tasks]
-  (map
-   #(let [all-periods (:periods %)]
-      (filter (partial period-in-day day)
-              all-periods))
-   tasks))
+  (->> tasks
+       (map
+        #(let [all-periods (:periods %)]
+           (filter (partial period-in-day day) all-periods)))))
+
+(def default-db
+  (gen/generate (s/gen ::db)))
 
 (map #(:periods %) (:tasks default-db))
 
 (count (:tasks default-db))
 
-(def test-period (gen/generate (s/gen ::period)))
-(def test-task (gen/generate (s/gen ::task)))
-
-(pprint test-period)
-(pprint test-task)
-
-(period-in-day (new js/Date 2017 04 06) test-period)
-
 (->> (:tasks default-db)
-     (filter-periods (new js/Date 2017 03 26))
-     )
+     (filter-periods (new js/Date 2017 04 03)))
+
+;; add filter periods to core
