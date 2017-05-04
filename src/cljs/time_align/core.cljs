@@ -41,7 +41,7 @@
        (* 1000)))
 
 (defn ms-to-angle [ms]
-  (/ ms 360))
+  (* (/ 360 ms-in-day) ms))
 
 (defn get-ms [date]
   (let [h  (.getHours date)
@@ -59,16 +59,41 @@
      (-> s (* 1000))
      ms)))
 
-(defn filter-tasks [day tasks]
-  (let [unix-date (.valueOf day)]
-    (filter (fn [task]
-              (filter #(and
-                        (>= unix-date (:start %))
-                        (<= unix-date (:stop %)))
-                      (:periods task)))
-            tasks)))
+(defn period-in-day [day period]
+  (if (not (nil? period)) ;; TODO add spec here
+    (let [day-y   (.getFullYear day)
+          day-m   (.getMonth day)
+          day-d   (.getDate day)
+          day-str (str day-y day-m day-d)
 
-(defn get-periods [today-tasks])
+          start   (:start period)
+          start-y (.getFullYear start)
+          start-m (.getMonth start)
+          start-d (.getDate start)
+          start-str (str start-y start-m start-d)
+
+          stop   (:stop period)
+          stop-y (.getFullYear stop)
+          stop-m (.getMonth stop)
+          stop-d (.getDate stop)
+          stop-str (str stop-y stop-m stop-d)]
+
+      (or
+       (= day-str start-str)
+       (= day-str stop-str)))
+    false))
+
+(defn filter-periods [day tasks]
+  (->> tasks
+       (map
+        (fn [task]
+          (let [id (:id task)
+                all-periods (:periods task)]
+
+            (->> all-periods
+                 (filter (partial period-in-day day)) ;; filter out periods not in day
+                 (map #(assoc % :task-id id))))));; add task id to each period
+       (filter #(< 0 (count %)))))
 
 (defn home-page []
   (let [tasks @(rf/subscribe [:tasks])
@@ -82,23 +107,39 @@
                  (let [date-str (.toDateString day)
                        ms (get-ms day)
                        angle (ms-to-angle ms)
-                       today-tasks (filter-tasks day tasks)
-                       periods (get-periods today-tasks)]
+                       col-of-col-of-periods (filter-periods day tasks)
+                       ]
 
                    [:svg {:key date-str :style {:display "inline-box"}
                           :width "100%" :viewBox "0 0 100 100"}
                     [:circle {:cx "40" :cy "40" :r "40"
                               :fill "grey"}]
 
-                    (if (> (count periods) 0)
-                      (map #(let [start-angle (ms-to-angle (:start %))
-                                  stop-angle  (ms-to-angle (:stop %))
-                                  arc (describe-arc 40 40 40 start-angle stop-angle)]
+                    (->> col-of-col-of-periods
+                         (map (fn [periods]
+                                (pprint periods)
+                                (->> periods
+                                     (map #(let [id (:task-id %)
+                                                 start-date (:start %)
+                                                 start-ms (get-ms start-date)
+                                                 start-angle (ms-to-angle start-ms)
 
-                              [:path {:d arc
-                                      :stroke "black"
-                                      :stroke-width "4"
-                                      :fill "transparent"}])))]))))]))
+                                                 stop-angle  (ms-to-angle (get-ms (:stop %)))
+                                                 arc (describe-arc 40 40 40 start-angle stop-angle)]
+
+                                             (pprint {:start-date start-date :start-ms start-ms :start-angle start-angle })
+                                             [:path {:key (str id "-" start-ms)
+                                                     :d arc
+                                                     :stroke "black"
+                                                     :stroke-width "4"
+                                                     :fill "transparent"}]
+
+                                             )
+                                          )
+                                     )
+                                )))
+                    ]
+                   ))))]))
 
 (def pages
   {:home #'home-page})
