@@ -136,17 +136,21 @@
 (defn filter-periods [day tasks]
   (->> tasks
        (map
-        #(let [all-periods (:periods %)]
-           (filter (partial period-in-day day) all-periods)))))
+        (fn [task]
+          (let [id (:id task)
+                all-periods (:periods task)]
+
+            (->> all-periods
+                 (filter (partial period-in-day day)) ;; filter out periods not in day
+                 (map #(assoc % :task-id id))))));; add task id to each period
+       (filter #(< 0 (count %)))))
 
 (def default-db
   (gen/generate (s/gen ::db)))
 
-(map #(:periods %) (:tasks default-db))
+;; (map #(:periods %) (:tasks default-db))
 
-(count (:tasks default-db))
-
-(->> (:tasks default-db)
-     (filter-periods (new js/Date 2017 04 03)))
+;; (->> (:tasks default-db)
+;;      (filter-periods (new js/Date 2017 04 06)))
 
 ;; add filter periods to core
