@@ -10,136 +10,88 @@
             [time-align.handlers]
             [time-align.subscriptions]
             [clojure.string :as string]
+            [time-align.utilities :as utils]
 
             [cljs.pprint :refer [pprint]]
             )
   (:import goog.History))
 
-(defn polar-to-cartesian [cx cy r angle]
-  (let [angle-in-radians (-> angle
-                             (- 90)
-                             (* (/ (.-PI js/Math) 180)))]
-
-    {:x (+ cx (* r (.cos js/Math angle-in-radians)))
-     :y (+ cy (* r (.sin js/Math angle-in-radians)))}))
-
 (defn describe-arc [cx cy r start stop]
   (let [
-        p-start (polar-to-cartesian cx cy r start)
-        p-stop  (polar-to-cartesian cx cy r stop)
+        p-start (utils/polar-to-cartesian cx cy r start)
+        p-stop  (utils/polar-to-cartesian cx cy r stop)
 
         large-arc-flag (if (<= (- stop start) 180) "0" "1")]
 
     (string/join " " ["M" (:x p-start) (:y p-start)
                       "A" r r 0 large-arc-flag 1 (:x p-stop) (:y p-stop)])))
 
-(def ms-in-day
-  (->> 1
-       (* 24)
-       (* 60)
-       (* 60)
-       (* 1000)))
 
-(defn ms-to-angle [ms]
-  (* (/ 360 ms-in-day) ms))
+(defn render-periods [col-of-col-of-periods]
+  (->> col-of-col-of-periods
+       (map (fn [periods]
+              (->> periods
+                   (map #(let [id (:task-id %)
+                               start-date (:start %)
+                               start-ms (utils/get-ms start-date)
+                               start-angle (utils/ms-to-angle start-ms)
 
-(defn get-ms [date]
-  (let [h  (.getHours date)
-        m  (.getMinutes date)
-        s  (.getSeconds date)
-        ms (.getMilliseconds date)]
-    (+
-     (-> h
-         (* 60)
-         (* 60)
-         (* 1000))
-     (-> m
-         (* 60)
-         (* 1000))
-     (-> s (* 1000))
-     ms)))
+                               stop-date (:stop %)
+                               stop-ms (utils/get-ms stop-date)
+                               stop-angle (utils/ms-to-angle stop-ms)
 
-(defn period-in-day [day period]
-  (if (not (nil? period)) ;; TODO add spec here
-    (let [day-y   (.getFullYear day)
-          day-m   (.getMonth day)
-          day-d   (.getDate day)
-          day-str (str day-y day-m day-d)
+                               arc (describe-arc 50 50 30 start-angle stop-angle)]
 
-          start   (:start period)
-          start-y (.getFullYear start)
-          start-m (.getMonth start)
-          start-d (.getDate start)
-          start-str (str start-y start-m start-d)
+                           [:path {:key (str id "-" start-ms "-" stop-ms)
+                                   :d arc
+                                   :stroke "black"
+                                   :stroke-width "4"
+                                   :fill "transparent"}])))))))
 
-          stop   (:stop period)
-          stop-y (.getFullYear stop)
-          stop-m (.getMonth stop)
-          stop-d (.getDate stop)
-          stop-str (str stop-y stop-m stop-d)]
+(defn render-days [days tasks]
+  (->> days
+       (map (fn [day]
+              (let [date-str (.toDateString day)
+                    ms (utils/get-ms day)
+                    angle (utils/ms-to-angle ms)
+                    col-of-col-of-periods (utils/filter-periods day tasks)]
 
-      (or
-       (= day-str start-str)
-       (= day-str stop-str)))
-    false))
+                [:svg {:key date-str :style {:display "inline-box"}
+                       :width "100%" :viewBox "0 0 100 100"}
+                 [:circle {:cx "50" :cy "50" :r "30"
+                           :fill "grey"}]
+                 (render-periods col-of-col-of-periods)])))))
 
-(defn filter-periods [day tasks]
-  (->> tasks
-       (map
-        (fn [task]
-          (let [id (:id task)
-                all-periods (:periods task)]
-
-            (->> all-periods
-                 (filter (partial period-in-day day)) ;; filter out periods not in day
-                 (map #(assoc % :task-id id))))));; add task id to each period
-       (filter #(< 0 (count %)))))
+(defn selection-tools []
+  (let [icon-style {:margin "0.5em"}]
+    [:div {:class "selection-tools"
+           :style {:display "flex"
+                   :justify-content "center"
+                   :flex-wrap "nowrap"
+                   :align-content "flex-start"
+                   :margin-bottom "1em"
+                   :margin-top "1em"}}
+     [:i {:class "material-icons" :style icon-style
+          :onClick #(rf/dispatch [:set-view-range-day])} "view_day"]
+     [:i {:class "material-icons" :style icon-style
+          :onClick #(rf/dispatch [:set-view-range-week])} "view_week"]
+     [:i {:class "material-icons" :style icon-style
+          :onClick #(rf/dispatch [:set-view-range-week
+                                  {:start (new js/Date)
+                                   :stop (new js/Date)}])} "date_range"]]))
 
 (defn home-page []
   (let [tasks @(rf/subscribe [:tasks])
         days  @(rf/subscribe [:visible-days])]
 
+    (pprint {:days days :tasks tasks})
+
     [:div
-     {:style {:display "flex" :justify-content "flex-start"
-              :flex-wrap "no-wrap"}}
-     (->> days
-          (map (fn [day]
-                 (let [date-str (.toDateString day)
-                       ms (get-ms day)
-                       angle (ms-to-angle ms)
-                       col-of-col-of-periods (filter-periods day tasks)
-                       ]
-
-                   [:svg {:key date-str :style {:display "inline-box"}
-                          :width "100%" :viewBox "0 0 100 100"}
-                    [:circle {:cx "40" :cy "40" :r "40"
-                              :fill "grey"}]
-
-                    (->> col-of-col-of-periods
-                         (map (fn [periods]
-                                (pprint periods)
-                                (->> periods
-                                     (map #(let [id (:task-id %)
-                                                 start-date (:start %)
-                                                 start-ms (get-ms start-date)
-                                                 start-angle (ms-to-angle start-ms)
-
-                                                 stop-angle  (ms-to-angle (get-ms (:stop %)))
-                                                 arc (describe-arc 40 40 40 start-angle stop-angle)]
-
-                                             (pprint {:start-date start-date :start-ms start-ms :start-angle start-angle })
-                                             [:path {:key (str id "-" start-ms)
-                                                     :d arc
-                                                     :stroke "black"
-                                                     :stroke-width "4"
-                                                     :fill "transparent"}]
-
-                                             )
-                                          )
-                                     )
-                                )))
-                    ]
-                   ))))]))
+     (selection-tools)
+     [:div
+      {:style {:display "flex" :justify-content "flex-start"
+               :flex-wrap "no-wrap"}}
+      (render-days days tasks)]]))
 
 (def pages
   {:home #'home-page})
