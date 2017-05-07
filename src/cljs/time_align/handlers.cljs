@@ -32,3 +32,8 @@
  :set-view-range-custom
  (fn [db [_ range]]
    (assoc-in db [:view :range] range)))
+
+(reg-event-db
+ :set-drawer-state
+ (fn [db [_ new-bool]]
+   (assoc-in db [:view :drawer] new-bool)))

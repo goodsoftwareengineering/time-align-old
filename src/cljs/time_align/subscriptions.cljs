@@ -10,6 +10,11 @@
     (get-in db [:view :page])))
 
 (reg-sub
+ :drawer
+ (fn [db _]
+   (get-in db [:view :drawer])))
+
+(reg-sub
  :queue
  (fn [db _]
    (->> db

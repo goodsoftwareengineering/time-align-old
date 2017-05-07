@@ -1,5 +1,9 @@
 (ns time-align.core
   (:require [reagent.core :as r]
+            [cljsjs.material-ui]
+            [cljs-react-material-ui.core :refer [get-mui-theme color]]
+            [cljs-react-material-ui.reagent :as ui]
+            [cljs-react-material-ui.icons :as ic]
             [re-frame.core :as rf]
             [secretary.core :as secretary]
             [goog.events :as events]
@@ -10,10 +14,8 @@
             [time-align.handlers]
             [time-align.subscriptions]
             [clojure.string :as string]
-            [time-align.utilities :as utils]
-
-            [cljs.pprint :refer [pprint]]
-            )
+            [time-align.utilities :as utils] 
+            [cljs.pprint :refer [pprint]])
   (:import goog.History))
 
 (defn describe-arc [cx cy r start stop]
@@ -82,16 +84,26 @@
 
 (defn home-page []
   (let [tasks @(rf/subscribe [:tasks])
+        drawer-state (rf/subscribe [:drawer])
         days  @(rf/subscribe [:visible-days])]
 
     (pprint {:days days :tasks tasks})
 
-    [:div
-     (selection-tools)
+    [ui/mui-theme-provider
+     {:mui-theme (get-mui-theme {:palette {:text-color (color :blue200)}})}
      [:div
-      {:style {:display "flex" :justify-content "flex-start"
-               :flex-wrap "no-wrap"}}
-      (render-days days tasks)]]))
+      [ui/drawer {:open @drawer-state
+                  :docked false
+                  :on-request-change #(rf/dispatch [:set-drawer-state %])}]
+      [ui/paper
+       [ui/raised-button {:label "Blue button"
+                          :on-click #(rf/dispatch [:set-drawer-state true])}]
+
+       (selection-tools)
+       [:div
+        {:style {:display "flex" :justify-content "flex-start"
+                 :flex-wrap "no-wrap"}}
+        (render-days days tasks)]]]]))
 
 (def pages
   {:home #'home-page})

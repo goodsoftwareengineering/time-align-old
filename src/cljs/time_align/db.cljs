@@ -49,7 +49,8 @@
                       #(> (.valueOf (:stop %)) (.valueOf (:start %)))))
 (s/def ::queue (s/keys :req-un [::filters ::ordering]))
 (s/def ::page  #{:home})
-(s/def ::view (s/keys :req-un [::range ::queue ::page]))
+(s/def ::drawer boolean?)
+(s/def ::view (s/keys :req-un [::range ::queue ::page ::drawer]))
 (s/def ::db (s/keys :req-un [::user ::tasks ::view ::categories]))
 
 ;; db
