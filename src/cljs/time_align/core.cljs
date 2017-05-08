@@ -1,5 +1,9 @@
 (ns time-align.core
   (:require [reagent.core :as r]
+            [cljsjs.material-ui]
+            [cljs-react-material-ui.core :refer [get-mui-theme color]]
+            [cljs-react-material-ui.reagent :as ui]
+            [cljs-react-material-ui.icons :as ic]
             [re-frame.core :as rf]
             [secretary.core :as secretary]
             [goog.events :as events]
@@ -10,10 +14,8 @@
             [time-align.handlers]
             [time-align.subscriptions]
             [clojure.string :as string]
-            [time-align.utilities :as utils]
-
-            [cljs.pprint :refer [pprint]]
-            )
+            [time-align.utilities :as utils] 
+            [cljs.pprint :refer [pprint]])
   (:import goog.History))
 
 (defn describe-arc [cx cy r start stop]
@@ -80,18 +82,60 @@
                                   {:start (new js/Date)
                                    :stop (new js/Date)}])} "date_range"]]))
 
+(defn selectable-list-example []
+  (let [list-item-selected (atom 1)]
+    [ui/selectable-list
+     {:value @list-item-selected
+      :on-change (fn [event value]
+                   (reset! list-item-selected value))}
+     [ui/subheader {} "Selectable Contacts"]
+     [ui/list-item
+      {:value 1
+       :primary-text "Brendan Lim"
+       :nested-items
+       [(r/as-element
+         [ui/list-item
+          {:value 2
+           :key 8
+           :primary-text "Grace Ng"}])]}]
+     [ui/list-item
+      {:value 3
+       :primary-text "Kerem Suer"}]
+     [ui/list-item
+      {:value 4
+       :primary-text "Eric Hoffman"}]
+     [ui/list-item
+      {:value 5
+       :primary-text "Raquel Parrado"}]]))
+
 (defn home-page []
   (let [tasks @(rf/subscribe [:tasks])
+        drawer-state (rf/subscribe [:drawer])
         days  @(rf/subscribe [:visible-days])]
 
     (pprint {:days days :tasks tasks})
 
-    [:div
-     (selection-tools)
-     [:div
-      {:style {:display "flex" :justify-content "flex-start"
-               :flex-wrap "no-wrap"}}
-      (render-days days tasks)]]))
+    [ui/mui-theme-provider
+     {:mui-theme (get-mui-theme (aget js/MaterialUIStyles "DarkRawTheme"))}
+     [ui/paper
+      [ui/mui-theme-provider
+       {:mui-theme (get-mui-theme
+                    {:palette {:primary1-color (color :teal400)} })}
+       [ui/app-bar {:title "Title"
+                    :on-left-icon-button-touch-tap
+                    #(rf/dispatch [:set-drawer-state true])
+                    :icon-element-right
+                    (r/as-element [ui/icon-button
+                                   (ic/action-account-balance-wallet)])}] ]
+      [ui/drawer {:open @drawer-state
+                  :docked false
+                  :on-request-change #(rf/dispatch [:set-drawer-state %])} 
+       (selectable-list-example)]
+      (selection-tools)
+      [:div
+       {:style {:display "flex" :justify-content "flex-start"
+                :flex-wrap "no-wrap"}}
+       (render-days days tasks)]]]))
 
 (def pages
   {:home #'home-page})
