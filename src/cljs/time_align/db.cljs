@@ -55,12 +55,16 @@
 ;; db
 ;; {
 ;;  :user {:id :name :email}
-;;  :tasks [{:category :planned
-;;           :dependencies :periods :priority}]
+;;  :tasks [{:category
+;;           :dependencies []
+;;           :periods [{:start :stop :type}]
+;;           :priority
+;;           :completed }]
 ;;  :view {:range {:filters :start :stop}
 ;;         :queue {:filters [] :ordering }
 ;;         :page}
 ;;  }
+
 
 (def default-db
   (gen/generate (s/gen ::db)))
