@@ -82,6 +82,32 @@
                                   {:start (new js/Date)
                                    :stop (new js/Date)}])} "date_range"]]))
 
+(defn selectable-list-example []
+  (let [list-item-selected (atom 1)]
+    [ui/selectable-list
+     {:value @list-item-selected
+      :on-change (fn [event value]
+                   (reset! list-item-selected value))}
+     [ui/subheader {} "Selectable Contacts"]
+     [ui/list-item
+      {:value 1
+       :primary-text "Brendan Lim"
+       :nested-items
+       [(r/as-element
+         [ui/list-item
+          {:value 2
+           :key 8
+           :primary-text "Grace Ng"}])]}]
+     [ui/list-item
+      {:value 3
+       :primary-text "Kerem Suer"}]
+     [ui/list-item
+      {:value 4
+       :primary-text "Eric Hoffman"}]
+     [ui/list-item
+      {:value 5
+       :primary-text "Raquel Parrado"}]]))
+
 (defn home-page []
   (let [tasks @(rf/subscribe [:tasks])
         drawer-state (rf/subscribe [:drawer])
@@ -90,20 +116,26 @@
     (pprint {:days days :tasks tasks})
 
     [ui/mui-theme-provider
-     {:mui-theme (get-mui-theme {:palette {:text-color (color :blue200)}})}
-     [:div
+     {:mui-theme (get-mui-theme (aget js/MaterialUIStyles "DarkRawTheme"))}
+     [ui/paper
+      [ui/mui-theme-provider
+       {:mui-theme (get-mui-theme
+                    {:palette {:primary1-color (color :teal400)} })}
+       [ui/app-bar {:title "Title"
+                    :on-left-icon-button-touch-tap
+                    #(rf/dispatch [:set-drawer-state true])
+                    :icon-element-right
+                    (r/as-element [ui/icon-button
+                                   (ic/action-account-balance-wallet)])}] ]
       [ui/drawer {:open @drawer-state
                   :docked false
-                  :on-request-change #(rf/dispatch [:set-drawer-state %])}]
-      [ui/paper
-       [ui/raised-button {:label "Blue button"
-                          :on-click #(rf/dispatch [:set-drawer-state true])}]
-
-       (selection-tools)
-       [:div
-        {:style {:display "flex" :justify-content "flex-start"
-                 :flex-wrap "no-wrap"}}
-        (render-days days tasks)]]]]))
+                  :on-request-change #(rf/dispatch [:set-drawer-state %])} 
+       (selectable-list-example)]
+      (selection-tools)
+      [:div
+       {:style {:display "flex" :justify-content "flex-start"
+                :flex-wrap "no-wrap"}}
+       (render-days days tasks)]]]))
 
 (def pages
   {:home #'home-page})
