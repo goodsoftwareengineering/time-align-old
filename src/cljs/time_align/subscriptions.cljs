@@ -19,7 +19,7 @@
  (fn [db _]
    (->> db
         (:tasks)
-        (filter #(= 0 (count (:periods %)))))))
+        (filter :complete))))
 
 ;; TODO remove this
 (reg-sub

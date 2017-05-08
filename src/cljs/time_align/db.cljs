@@ -33,11 +33,12 @@
 (s/def ::category (s/and string? #(> 256 (count %))))
 (s/def ::dependency ::id)
 (s/def ::dependencies (s/coll-of ::dependency))
+(s/def ::complete boolean?)
 ;; think about adding a condition that queue tasks (no periods) have to have planned true
 ;; (? and priority)
 ;; tasks that are not planned (:actual) cannot have periods in the future
 ;; adding date support is going to need some cljc trickery
-(s/def ::task (s/keys :req-un [::id ::category ::name ::description]
+(s/def ::task (s/keys :req-un [::id ::category ::name ::description ::complete]
                       :opt-un [::dependencies ::periods ::priority]))
 (s/def ::tasks (s/coll-of ::task))
 (s/def ::user (s/keys :req-un [::name ::id ::email]))
