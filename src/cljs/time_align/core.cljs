@@ -14,7 +14,7 @@
             [time-align.handlers]
             [time-align.subscriptions]
             [clojure.string :as string]
-            [time-align.utilities :as utils] 
+            [time-align.utilities :as utils]
             [cljs.pprint :refer [pprint]])
   (:import goog.History))
 
@@ -27,7 +27,6 @@
 
     (string/join " " ["M" (:x p-start) (:y p-start)
                       "A" r r 0 large-arc-flag 1 (:x p-stop) (:y p-stop)])))
-
 
 (defn render-periods [col-of-col-of-periods]
   (->> col-of-col-of-periods
@@ -42,12 +41,20 @@
                                stop-ms (utils/get-ms stop-date)
                                stop-angle (utils/ms-to-angle stop-ms)
 
-                               arc (describe-arc 50 50 30 start-angle stop-angle)]
+                               type (:type %)
+                               color (if (= :actual type) "green" "blue")
+
+                               arc (describe-arc
+                                    50 50
+                                    (if (= :actual type)
+                                      35
+                                      25)
+                                    start-angle stop-angle)]
 
                            [:path {:key (str id "-" start-ms "-" stop-ms)
                                    :d arc
-                                   :stroke "black"
-                                   :stroke-width "4"
+                                   :stroke color
+                                   :stroke-width "10"
                                    :fill "transparent"}])))))))
 
 (defn render-days [days tasks]
@@ -110,10 +117,9 @@
 
 (defn home-page []
   (let [tasks @(rf/subscribe [:tasks])
-        drawer-state (rf/subscribe [:drawer])
+        queue @(rf/subscribe [:queue])
+        drawer-state @(rf/subscribe [:drawer])
         days  @(rf/subscribe [:visible-days])]
-
-    (pprint {:days days :tasks tasks})
 
     [ui/mui-theme-provider
      {:mui-theme (get-mui-theme (aget js/MaterialUIStyles "DarkRawTheme"))}
@@ -127,15 +133,28 @@
                     :icon-element-right
                     (r/as-element [ui/icon-button
                                    (ic/action-account-balance-wallet)])}] ]
-      [ui/drawer {:open @drawer-state
+      [ui/drawer {:open drawer-state
                   :docked false
-                  :on-request-change #(rf/dispatch [:set-drawer-state %])} 
+                  :on-request-change #(rf/dispatch [:set-drawer-state %])}
        (selectable-list-example)]
+
       (selection-tools)
+
       [:div
        {:style {:display "flex" :justify-content "flex-start"
                 :flex-wrap "no-wrap"}}
-       (render-days days tasks)]]]))
+       (render-days days tasks)]
+
+      [ui/list
+       (map
+        #(let [id (:id %)
+               name (:name %)
+               desc (:description %)]
+
+           [ui/list-item {:key id :primaryText name}])
+        queue)]
+
+      ]]))
 
 (def pages
   {:home #'home-page})

@@ -21,20 +21,6 @@
         (:tasks)
         (filter #(= 0 (count (:periods %)))))))
 
-(reg-sub
- :planned
- (fn [db _]
-   (->> db
-        (:tasks)
-        (filter #(:planned %)))))
-
-(reg-sub
- :actual
- (fn [db _]
-   (->> db
-        (:tasks)
-        (filter #(not (:planned %))))))
-
 ;; TODO remove this
 (reg-sub
  :tasks

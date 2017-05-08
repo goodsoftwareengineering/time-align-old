@@ -13,9 +13,10 @@
                   #(s/gen utils/time-set)))
 (s/def ::start ::moment)
 (s/def ::stop ::moment)
+(s/def ::type #{:actual :planned})
 (s/def ::priority int?)
 (s/def ::period (s/with-gen (s/and
-                             (s/keys :req-un [::start ::stop])
+                             (s/keys :req-un [::start ::stop ::type])
                              #(> (.valueOf (:stop %)) (.valueOf (:start %))))
 
                   ;; generator uses a generated moment and adds a random amount of time to it
@@ -25,18 +26,18 @@
                                    stop  (->> start
                                               (+ (rand-int (* 2 utils/hour-ms))))]
                                {:start (new js/Date start )
-                                :stop (new js/Date stop)}))
+                                :stop (new js/Date stop)
+                                :type (if (> 0.5 (rand)) :actual :planned)}))
                             (s/gen ::moment))))
 (s/def ::periods (s/coll-of ::period))
 (s/def ::category (s/and string? #(> 256 (count %))))
 (s/def ::dependency ::id)
 (s/def ::dependencies (s/coll-of ::dependency))
-(s/def ::planned boolean?)
 ;; think about adding a condition that queue tasks (no periods) have to have planned true
 ;; (? and priority)
 ;; tasks that are not planned (:actual) cannot have periods in the future
 ;; adding date support is going to need some cljc trickery
-(s/def ::task (s/keys :req-un [::id ::category ::planned ::name ::description]
+(s/def ::task (s/keys :req-un [::id ::category ::name ::description]
                       :opt-un [::dependencies ::periods ::priority]))
 (s/def ::tasks (s/coll-of ::task))
 (s/def ::user (s/keys :req-un [::name ::id ::email]))
@@ -63,7 +64,8 @@
 ;;           :completed }]
 ;;  :view {:range {:filters :start :stop}
 ;;         :queue {:filters [] :ordering }
-;;         :page}
+;;         :page
+;;         :drawer}
 ;;  }
 
 
