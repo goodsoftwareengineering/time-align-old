@@ -4,7 +4,7 @@
 
 users
 ----
-id pk int
+uid pk uuid
 name varchar(255)
 email varchar(255)
 hash_pass varchar(255)
@@ -12,7 +12,7 @@ hash_pass varchar(255)
 categories
 ----
 id pk int
-user_id int FK >- users.id
+user_uid uuid FK >- users.uid
 name varchar(255)
 color varchar(6)
 info jsonb
@@ -20,7 +20,7 @@ info jsonb
 tasks
 ----
 id pk int
-user_id int FK >- users.id
+user_uid uuid FK >- users.uid
 category_id int FK >- categories.id
 priority int 
 
@@ -47,6 +47,6 @@ CaseSensitive on
 users 577 236
 categories 278 157
 tasks 365 548
-dependencies 32 604
+dependencies -8 583
 periods 47 391
  
