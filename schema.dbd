@@ -28,8 +28,7 @@ periods
 ----
 id pk int
 task_id int FK >- tasks.id
-start_time timestamp
-end_time timestamp
+time_range tstzrange
 
 dependencies
 ----
@@ -39,18 +38,15 @@ dependency_id int FK >- tasks.id
 # check (task_id <> dependency_id)
 
 [settings]
-Position -12 -28
-Zoom 80
+Position 61 -100
+Zoom 100
 DefaultFieldType int
 CaseSensitive on
 
 [layout]
 users 577 236
-companies 1053 236
-memberships 840 233
-accounts 1286 240
-categories 272 479
-logins 575 69
-tasks 280 683
-dependencies 24 882
-periods 30 688
+categories 278 157
+tasks 365 548
+dependencies 32 604
+periods 47 391
+ 
