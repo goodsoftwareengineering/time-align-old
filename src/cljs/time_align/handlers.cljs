@@ -37,3 +37,8 @@
  :set-drawer-state
  (fn [db [_ new-bool]]
    (assoc-in db [:view :drawer] new-bool)))
+
+(reg-event-db
+ :set-selected-period
+ (fn [db [_ period-id]]
+   (assoc-in db [:view :selected-period] period-id)))

@@ -42,3 +42,7 @@
        (list (new js/Date start-ms))
        (map #(new js/Date %) days-in-ms)))))
 
+(reg-sub
+ :selected-period
+ (fn [db _]
+   (get-in db [:view :selected-period])))

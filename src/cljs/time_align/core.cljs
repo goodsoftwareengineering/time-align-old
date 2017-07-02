@@ -63,11 +63,11 @@
     (string/join " " ["M" (:x p-start) (:y p-start)
                       "A" r r 0 large-arc-flag 1 (:x p-stop) (:y p-stop)])))
 
-(defn render-periods [col-of-col-of-periods]
+(defn render-periods [col-of-col-of-periods selected-period]
   (->> col-of-col-of-periods
        (map (fn [periods]
               (->> periods
-                   (map #(let [id (:task-id %)
+                   (map #(let [id (:id %)
                                start-date (:start %)
                                start-ms (utils/get-ms start-date)
                                start-angle (utils/ms-to-angle start-ms)
@@ -77,22 +77,35 @@
                                stop-angle (utils/ms-to-angle stop-ms)
 
                                type (:type %)
-                               color (if (= :actual type) "#43a047" "#63ccff")
+                               color (cond
+                                       (and (or (nil? selected-period)
+                                                (= selected-period id))
+                                            (= :actual type))
+                                            "#43a047"
+                                       (and (or (nil? selected-period)
+                                                (= selected-period id))
+                                            (= :planned type))
+                                            "#63ccff"
+                                       :else "#aaaaaa")
 
-                               arc (describe-arc
-                                    50 50
-                                    (if (= :actual type)
-                                      35
-                                      25)
-                                    start-angle stop-angle)]
+                               arc (describe-arc 50 50
+                                                 (if (= :actual type) 35 25)
+                                                 start-angle stop-angle)]
 
-                           [:path {:key (str id "-" start-ms "-" stop-ms)
+                           [:path {:key (str id)
                                    :d arc
                                    :stroke color
                                    :stroke-width "10"
-                                   :fill "transparent"}])))))))
+                                   :fill "transparent"
+                                   :onClick (if (or (nil? selected-period)
+                                                    (= selected-period id))
+                                              (fn [e]
+                                                (.stopPropagation e)
+                                                (rf/dispatch [:set-selected-period id]))
+                                              (fn [e] (println "other period selected"))
+                                              )}])))))))
 
-(defn render-days [days tasks]
+(defn render-days [days tasks selected-period]
   (->> days
        (map (fn [day]
               (let [date-str (.toDateString day)
@@ -108,18 +121,19 @@
                  ;;               (select-keys svg-consts [:width :height :x :y]))]
                  [:circle (merge {:fill "#e8e8e8" :filter "url(#shadow-2dp)"} (select-keys svg-consts [:cx :cy :r]))]
                  [:circle (merge {:fill "#f1f1f1" :r (:inner-r svg-consts)} (select-keys svg-consts [:cx :cy]))]
-                 (render-periods col-of-col-of-periods)])))))
+                 (render-periods col-of-col-of-periods selected-period)])))))
 
 (defn home-page []
   (let [tasks @(rf/subscribe [:tasks])
         queue @(rf/subscribe [:queue])
-        days  @(rf/subscribe [:visible-days])]
+        days  @(rf/subscribe [:visible-days])
+        selected-period @(rf/subscribe [:selected-period])]
 
     [:div
      {:style {:display "flex" :justify-content "flex-start"
-              :flex-wrap "no-wrap"}}
-     (render-days days tasks)]
-    ))
+              :flex-wrap "no-wrap"}
+      :onClick (fn [e] (rf/dispatch [:set-selected-period nil]))}
+     (render-days days tasks selected-period)]))
 
 (def pages
   {:home #'home-page})

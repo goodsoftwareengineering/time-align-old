@@ -16,7 +16,7 @@
 (s/def ::type #{:actual :planned})
 (s/def ::priority int?)
 (s/def ::period (s/with-gen (s/and
-                             (s/keys :req-un [::start ::stop ::type])
+                             (s/keys :req-un [::start ::stop ::type ::id])
                              #(> (.valueOf (:stop %)) (.valueOf (:start %))))
 
                   ;; generator uses a generated moment and adds a random amount of time to it
@@ -27,7 +27,8 @@
                                               (+ (rand-int (* 2 utils/hour-ms))))]
                                {:start (new js/Date start )
                                 :stop (new js/Date stop)
-                                :type (if (> 0.5 (rand)) :actual :planned)}))
+                                :type (if (> 0.5 (rand)) :actual :planned)
+                                :id (random-uuid)}))
                             (s/gen ::moment))))
 (s/def ::periods (s/coll-of ::period))
 (s/def ::category (s/and string? #(> 256 (count %))))
@@ -52,21 +53,8 @@
 (s/def ::queue (s/keys :req-un [::filters ::ordering]))
 (s/def ::page  #{:home})
 (s/def ::drawer boolean?)
-(s/def ::view (s/keys :req-un [::range ::queue ::page ::drawer]))
+(s/def ::selected-period (s/or ::id nil?))
+(s/def ::view (s/keys :req-un [::range ::queue ::page ::drawer ::selected-period]))
 (s/def ::db (s/keys :req-un [::user ::tasks ::view ::categories]))
-
-;; db
-;; {
-;;  :user {:id :name :email}
-;;  :tasks [{:category
-;;           :dependencies []
-;;           :periods [{:start :stop :type}]
-;;           :priority
-;;           :completed }]
-;;  :view {:range {:filters :start :stop}
-;;         :queue {:filters [] :ordering }
-;;         :page
-;;         :drawer}
-;;  }
 
 (def default-db (gen/generate (s/gen ::db)))
