@@ -69,6 +69,4 @@
 ;;         :drawer}
 ;;  }
 
-
-(def default-db
-  (gen/generate (s/gen ::db)))
+(def default-db (gen/generate (s/gen ::db)))

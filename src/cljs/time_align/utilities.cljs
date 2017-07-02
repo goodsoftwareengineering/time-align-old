@@ -37,8 +37,19 @@
   (.valueOf
    (new js/Date (+ (.valueOf (new js/Date)) week-ms))))
 
+(defn start-of-today []
+  (-> (new js/Date)
+      (.setHours 0)))
+
+(defn end-of-today []
+  (-> (new js/Date)
+      (.setHours 20)))
+
+;; (def time-range
+;;   (range (one-week-ago) (one-week-from-now) hour-ms))
+
 (def time-range
-  (range (one-week-ago) (one-week-from-now) hour-ms))
+  (range (start-of-today) (end-of-today) hour-ms))
 
 (def time-set
   (set (->> time-range
