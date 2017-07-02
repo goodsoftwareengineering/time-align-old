@@ -8,7 +8,7 @@
 (s/def ::name string?)
 (s/def ::description string?)
 (s/def ::email string?)
-(s/def ::id (s/and int? #(> % 0)))
+(s/def ::id uuid?)
 (s/def ::moment (s/with-gen inst?
                   #(s/gen utils/time-set)))
 (s/def ::start ::moment)
@@ -39,7 +39,7 @@
 ;; tasks that are not planned (:actual) cannot have periods in the future
 ;; adding date support is going to need some cljc trickery
 (s/def ::task (s/keys :req-un [::id ::category ::name ::description ::complete]
-                      :opt-un [::dependencies ::periods ::priority]))
+                      :opt-un [::periods]))
 (s/def ::tasks (s/coll-of ::task))
 (s/def ::user (s/keys :req-un [::name ::id ::email]))
 (s/def ::date ::moment)
