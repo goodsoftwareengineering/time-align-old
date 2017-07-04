@@ -126,21 +126,27 @@
     (let [trans-pt (.matrixTransform pt (.inverse ctm))]
       {:x (.-x trans-pt) :y (.-y trans-pt)})))
 
+(defn handle-period-move [id evt]
+  (let [pos (convert-to-view-box id evt)
+        ;;       angle (convert-pos-to-angle pos)
+        ;;       time (convert-angle-to-time angle)
+        ]
+    
+    (.log js/console pos)
+  ;;   (rf/dispatch [:set-selected-period-start time])
+  ))
+
 (defn render-day [tasks selected-period day]
   (let [date-str (subs (.toISOString day) 0 10)
-        col-of-col-of-periods (utils/filter-periods day tasks)
-        mouse-position (atom {:x nil :y nil})]
+        col-of-col-of-periods (utils/filter-periods day tasks)]
 
     [:svg (merge {:key date-str
                   :id date-str
                   :style {:display "inline-box"}
                   :width "100%"
                   :height "600px"
-                  :onMouseMove
-                  (if (not (nil? selected-period))
-                    (fn [e]
-                      (.log js/console
-                            (convert-to-view-box date-str e))))}
+                  :onMouseMove (if (not (nil? selected-period))
+                                 (partial handle-period-move date-str))}
                  (select-keys svg-consts [:viewBox]))
      shadow-filter
      [:circle (merge {:fill "#e8e8e8" :filter "url(#shadow-2dp)"}
