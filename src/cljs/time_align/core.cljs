@@ -122,7 +122,11 @@
                     col-of-col-of-periods (utils/filter-periods day tasks)]
 
                 [:svg (merge {:key date-str
-                              :style {:display "inline-box"} :width "100%" :height "600px"}
+                              :style {:display "inline-box"}
+                              :width "100%"
+                              :height "600px"
+                              :onMouseMove (if (not (nil? selected-period))
+                                             #(println %))}
                              (select-keys svg-consts [:viewBox]))
                  shadow-filter
                  ;; [:rect (merge {:fill "#ffffff" :filter "url(#shadow-2dp)"}
