@@ -78,32 +78,37 @@
 
                                type (:type %)
                                color (cond
+                                       ;; actual
                                        (and (or (nil? selected-period)
                                                 (= selected-period id))
                                             (= :actual type))
-                                            "#43a047"
+                                       "#43a047"
+                                       ;; planned
                                        (and (or (nil? selected-period)
                                                 (= selected-period id))
                                             (= :planned type))
-                                            "#63ccff"
-                                       :else "#aaaaaa")
+                                       "#63ccff"
+                                       ;; something else selected
+                                       :else (if (= :planned type)
+                                               "#aaaaaa"
+                                               "#a1a1a1"))
 
                                arc (describe-arc 50 50
                                                  (if (= :actual type) 35 25)
                                                  start-angle stop-angle)]
 
-                           [:path {:key (str id)
-                                   :d arc
-                                   :stroke color
-                                   :stroke-width "10"
-                                   :fill "transparent"
-                                   :onClick (if (or (nil? selected-period)
-                                                    (= selected-period id))
-                                              (fn [e]
-                                                (.stopPropagation e)
-                                                (rf/dispatch [:set-selected-period id]))
-                                              (fn [e] (println "other period selected"))
-                                              )}])))))))
+                           [:path
+                            {:key (str id)
+                             :d arc
+                             :stroke color
+                             :stroke-width "10"
+                             :fill "transparent"
+                             :onClick
+                             (if (nil? selected-period)
+                               (fn [e]
+                                 (.stopPropagation e)
+                                 (rf/dispatch
+                                  [:set-selected-period id])))}])))))))
 
 (defn render-days [days tasks selected-period]
   (->> days
