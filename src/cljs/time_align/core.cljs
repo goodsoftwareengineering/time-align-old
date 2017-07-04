@@ -113,18 +113,34 @@
               (->> periods
                    (map (partial render-period selected-period)))))))
 
+(defn convert-to-view-box [id evt]
+  (let [pt (-> (.getElementById js/document id)
+               (.createSVGPoint))
+        ctm (-> evt
+                (.-target)
+                (.getScreenCTM))]
+
+    (set! (.-x pt) (.-clientX evt))
+    (set! (.-y pt) (.-clientY evt))
+
+    (let [trans-pt (.matrixTransform pt (.inverse ctm))]
+      {:x (.-x trans-pt) :y (.-y trans-pt)})))
+
 (defn render-day [tasks selected-period day]
-  (let [date-str (.toDateString day)
-        ms (utils/get-ms day)
-        angle (utils/ms-to-angle ms)
-        col-of-col-of-periods (utils/filter-periods day tasks)]
+  (let [date-str (subs (.toISOString day) 0 10)
+        col-of-col-of-periods (utils/filter-periods day tasks)
+        mouse-position (atom {:x nil :y nil})]
 
     [:svg (merge {:key date-str
+                  :id date-str
                   :style {:display "inline-box"}
                   :width "100%"
                   :height "600px"
-                  :onMouseMove (if (not (nil? selected-period))
-                                 #(println %))}
+                  :onMouseMove
+                  (if (not (nil? selected-period))
+                    (fn [e]
+                      (.log js/console
+                            (convert-to-view-box date-str e))))}
                  (select-keys svg-consts [:viewBox]))
      shadow-filter
      [:circle (merge {:fill "#e8e8e8" :filter "url(#shadow-2dp)"}
