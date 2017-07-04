@@ -113,27 +113,29 @@
               (->> periods
                    (map (partial render-period selected-period)))))))
 
+(defn render-day [tasks selected-period day]
+  (let [date-str (.toDateString day)
+        ms (utils/get-ms day)
+        angle (utils/ms-to-angle ms)
+        col-of-col-of-periods (utils/filter-periods day tasks)]
+
+    [:svg (merge {:key date-str
+                  :style {:display "inline-box"}
+                  :width "100%"
+                  :height "600px"
+                  :onMouseMove (if (not (nil? selected-period))
+                                 #(println %))}
+                 (select-keys svg-consts [:viewBox]))
+     shadow-filter
+     [:circle (merge {:fill "#e8e8e8" :filter "url(#shadow-2dp)"}
+                     (select-keys svg-consts [:cx :cy :r]))]
+     [:circle (merge {:fill "#f1f1f1" :r (:inner-r svg-consts)}
+                     (select-keys svg-consts [:cx :cy]))]
+     (render-periods col-of-col-of-periods selected-period)]))
+
 (defn render-days [days tasks selected-period]
   (->> days
-       (map (fn [day]
-              (let [date-str (.toDateString day)
-                    ms (utils/get-ms day)
-                    angle (utils/ms-to-angle ms)
-                    col-of-col-of-periods (utils/filter-periods day tasks)]
-
-                [:svg (merge {:key date-str
-                              :style {:display "inline-box"}
-                              :width "100%"
-                              :height "600px"
-                              :onMouseMove (if (not (nil? selected-period))
-                                             #(println %))}
-                             (select-keys svg-consts [:viewBox]))
-                 shadow-filter
-                 ;; [:rect (merge {:fill "#ffffff" :filter "url(#shadow-2dp)"}
-                 ;;               (select-keys svg-consts [:width :height :x :y]))]
-                 [:circle (merge {:fill "#e8e8e8" :filter "url(#shadow-2dp)"} (select-keys svg-consts [:cx :cy :r]))]
-                 [:circle (merge {:fill "#f1f1f1" :r (:inner-r svg-consts)} (select-keys svg-consts [:cx :cy]))]
-                 (render-periods col-of-col-of-periods selected-period)])))))
+       (map (partial render-day tasks selected-period))))
 
 (defn home-page []
   (let [tasks @(rf/subscribe [:tasks])
