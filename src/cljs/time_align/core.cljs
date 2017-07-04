@@ -63,52 +63,55 @@
     (string/join " " ["M" (:x p-start) (:y p-start)
                       "A" r r 0 large-arc-flag 1 (:x p-stop) (:y p-stop)])))
 
+(defn render-period [selected-period period]
+  (let [id (:id period)
+        start-date (:start period)
+        start-ms (utils/get-ms start-date)
+        start-angle (utils/ms-to-angle start-ms)
+
+        stop-date (:stop period)
+        stop-ms (utils/get-ms stop-date)
+        stop-angle (utils/ms-to-angle stop-ms)
+
+        type (:type period)
+        color (cond
+                ;; actual
+                (and (or (nil? selected-period)
+                         (= selected-period id))
+                     (= :actual type))
+                "#43a047"
+                ;; planned
+                (and (or (nil? selected-period)
+                         (= selected-period id))
+                     (= :planned type))
+                "#63ccff"
+                ;; something else selected
+                :else (if (= :planned type)
+                        "#aaaaaa"
+                        "#a1a1a1"))
+
+        arc (describe-arc 50 50
+                          (if (= :actual type) 35 25)
+                          start-angle stop-angle)]
+
+    [:path
+     {:key (str id)
+      :d arc
+      :stroke color
+      :opacity "0.5"
+      :stroke-width "10"
+      :fill "transparent"
+      :onClick (if (nil? selected-period)
+                 (fn [e]
+                   (.stopPropagation e)
+                   (rf/dispatch
+                    [:set-selected-period id])))}]))
+
 (defn render-periods [col-of-col-of-periods selected-period]
   (->> col-of-col-of-periods
        (map (fn [periods]
               (->> periods
-                   (map #(let [id (:id %)
-                               start-date (:start %)
-                               start-ms (utils/get-ms start-date)
-                               start-angle (utils/ms-to-angle start-ms)
-
-                               stop-date (:stop %)
-                               stop-ms (utils/get-ms stop-date)
-                               stop-angle (utils/ms-to-angle stop-ms)
-
-                               type (:type %)
-                               color (cond
-                                       ;; actual
-                                       (and (or (nil? selected-period)
-                                                (= selected-period id))
-                                            (= :actual type))
-                                       "#43a047"
-                                       ;; planned
-                                       (and (or (nil? selected-period)
-                                                (= selected-period id))
-                                            (= :planned type))
-                                       "#63ccff"
-                                       ;; something else selected
-                                       :else (if (= :planned type)
-                                               "#aaaaaa"
-                                               "#a1a1a1"))
-
-                               arc (describe-arc 50 50
-                                                 (if (= :actual type) 35 25)
-                                                 start-angle stop-angle)]
-
-                           [:path
-                            {:key (str id)
-                             :d arc
-                             :stroke color
-                             :stroke-width "10"
-                             :fill "transparent"
-                             :onClick
-                             (if (nil? selected-period)
-                               (fn [e]
-                                 (.stopPropagation e)
-                                 (rf/dispatch
-                                  [:set-selected-period id])))}])))))))
+                   (map (partial render-period selected-period)))))))
 
 (defn render-days [days tasks selected-period]
   (->> days
