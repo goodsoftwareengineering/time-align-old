@@ -113,7 +113,7 @@
               (->> periods
                    (map (partial render-period selected-period)))))))
 
-(defn convert-to-view-box [id evt]
+(defn convert-client-to-view-box [id evt]
   (let [pt (-> (.getElementById js/document id)
                (.createSVGPoint))
         ctm (-> evt
@@ -126,13 +126,59 @@
     (let [trans-pt (.matrixTransform pt (.inverse ctm))]
       {:x (.-x trans-pt) :y (.-y trans-pt)})))
 
+(defn convert-point-to-angle
+  ;; expects map {:x number :y number}
+  ;; in the form of circle centered cartesian coords
+  [{:keys [x y]}]
+
+  (let [pi (.-PI js/Math)
+        xa (.abs js/Math x)
+        ya (.abs js/Math y)
+        quadrant (cond
+                   (and (> x 0) (> y 0)) 1
+                   (and (> x 0) (< y 0)) 2
+                   (and (< x 0) (< y 0)) 3
+                   (and (< x 0) (> y 0)) 4
+                   :else 0)
+        special (cond
+                  (and (= x 0) (> y 0)) 0
+                  (and (> x 0) (= y 0)) (-> pi (/ 2))
+                  (and (= x 0) (< y 0)) pi
+                  (and (< x 0) (= y 0)) (-> pi (/ 2) (* 3))
+                  :else nil)
+        angle-in-radians (if (some? special)
+                           special
+                           (case quadrant
+                             1 (.tan js/Math (/ xa ya))
+                             2 (-> (.tan js/Math (/ ya xa)) (+ (/ pi 2)))
+                             3 (-> (.tan js/Math (/ ya xa)) (+ pi))
+                             4 (-> (.tan js/Math (-> (/ ya xa))) (+ (-> pi (/ 2) (* 3))))
+                             0))]
+
+    (/ (* angle-in-radians 180) pi)))
+
 (defn handle-period-move [id evt]
-  (let [pos (convert-to-view-box id evt)
-        ;;       angle (convert-pos-to-angle pos)
+  (let [
+        pos (convert-client-to-view-box id evt)
+
+        ;; viewbox coords to cartesian circle centered
+        x (:x pos)
+        y (:y pos)
+        cx (js/parseInt (:cx svg-consts))
+        cy (js/parseInt (:cy svg-consts))
+        xt (- x cx)
+        yt (if (>= y cy)
+             (- 0 (- y cy))
+             (- cy y))
+
+        angle (convert-point-to-angle {:x xt :y yt})
         ;;       time (convert-angle-to-time angle)
         ]
-    
+
+    (.log js/console "--------------")
     (.log js/console pos)
+    (.log js/console {:xt xt :yt yt})
+    (.log js/console angle)
   ;;   (rf/dispatch [:set-selected-period-start time])
   ))
 
