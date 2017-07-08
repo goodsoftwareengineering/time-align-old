@@ -78,8 +78,15 @@
     {:x (+ cx (* r (.cos js/Math angle-in-radians)))
      :y (+ cy (* r (.sin js/Math angle-in-radians)))}))
 
-(defn ms-to-angle [ms]
+(defn ms-to-angle
+  ;; takes milliseconds and returns angle in degrees
+  [ms]
   (* (/ 360 ms-in-day) ms))
+
+(defn angle-to-ms
+  ;; takes angle in degrees and returns milliseconds
+  [angle]
+  (* (/ ms-in-day 360) angle))
 
 (defn get-ms [date]
   (let [h  (.getHours date)

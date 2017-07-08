@@ -149,15 +149,16 @@
         angle-in-radians (if (some? special)
                            special
                            (case quadrant
-                             1 (.tan js/Math (/ xa ya))
-                             2 (-> (.tan js/Math (/ ya xa)) (+ (/ pi 2)))
-                             3 (-> (.tan js/Math (/ ya xa)) (+ pi))
-                             4 (-> (.tan js/Math (-> (/ ya xa))) (+ (-> pi (/ 2) (* 3))))
+                             1 (.atan js/Math (/ xa ya))
+                             2 (-> (.atan js/Math (/ ya xa)) (+ (/ pi 2)))
+                             3 (-> (.atan js/Math (/ xa ya)) (+ pi))
+                             4 (-> (.atan js/Math (-> (/ ya xa))) (+ (-> pi (/ 2) (* 3))))
                              0))]
 
     (/ (* angle-in-radians 180) pi)))
 
 (defn handle-period-move [id evt]
+  (.log js/console "--------------")
   (let [
         pos (convert-client-to-view-box id evt)
 
@@ -172,13 +173,16 @@
              (- cy y))
 
         angle (convert-point-to-angle {:x xt :y yt})
-        ;;       time (convert-angle-to-time angle)
+        time-ms (utils/angle-to-ms angle)
         ]
 
-    (.log js/console "--------------")
     (.log js/console pos)
     (.log js/console {:xt xt :yt yt})
     (.log js/console angle)
+    (.log js/console (-> time-ms
+                         (/ 1000)
+                         (/ 60)
+                         (/ 60)))
   ;;   (rf/dispatch [:set-selected-period-start time])
   ))
 
