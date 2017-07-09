@@ -140,3 +140,57 @@
                  (map #(assoc % :task-id id))))));; add task id to each period
        (filter #(< 0 (count %)))))
 
+(defn client-to-view-box [id evt]
+  (let [pt (-> (.getElementById js/document id)
+               (.createSVGPoint))
+        ctm (-> evt
+                (.-target)
+                (.getScreenCTM))]
+
+    (set! (.-x pt) (.-clientX evt))
+    (set! (.-y pt) (.-clientY evt))
+
+    (let [trans-pt (.matrixTransform pt (.inverse ctm))]
+      {:x (.-x trans-pt) :y (.-y trans-pt)})))
+
+(defn point-to-centered-circle
+  "converts an x,y coordinate from svg viewbox where (0,0) is at the top left
+  to a coordinate where (0,0) would be in the center"
+  [{:keys [x y cx cy]}]
+  (let [xt (- x cx)
+        yt (if (>= y cy)
+             (- 0 (- y cy))
+             (- cy y))]
+    {:x xt :y yt}))
+
+(defn point-to-angle
+  "expects map {:x number :y number}
+  in the form of circle centered cartesian coords
+  produces angle in degrees"
+  [{:keys [x y]}]
+
+  (let [pi (.-PI js/Math)
+        xa (.abs js/Math x)
+        ya (.abs js/Math y)
+        quadrant (cond
+                   (and (> x 0) (> y 0)) 1
+                   (and (> x 0) (< y 0)) 2
+                   (and (< x 0) (< y 0)) 3
+                   (and (< x 0) (> y 0)) 4
+                   :else 0)
+        special (cond
+                  (and (= x 0) (> y 0)) 0
+                  (and (> x 0) (= y 0)) (-> pi (/ 2))
+                  (and (= x 0) (< y 0)) pi
+                  (and (< x 0) (= y 0)) (-> pi (/ 2) (* 3))
+                  :else nil)
+        angle-in-radians (if (some? special)
+                           special
+                           (case quadrant
+                             1 (.atan js/Math (/ xa ya))
+                             2 (-> (.atan js/Math (/ ya xa)) (+ (/ pi 2)))
+                             3 (-> (.atan js/Math (/ xa ya)) (+ pi))
+                             4 (-> (.atan js/Math (-> (/ ya xa))) (+ (-> pi (/ 2) (* 3))))
+                             0))]
+
+    (/ (* angle-in-radians 180) pi)))

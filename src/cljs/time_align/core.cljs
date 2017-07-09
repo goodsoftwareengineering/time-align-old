@@ -113,73 +113,16 @@
               (->> periods
                    (map (partial render-period selected-period)))))))
 
-(defn convert-client-to-view-box [id evt]
-  (let [pt (-> (.getElementById js/document id)
-               (.createSVGPoint))
-        ctm (-> evt
-                (.-target)
-                (.getScreenCTM))]
-
-    (set! (.-x pt) (.-clientX evt))
-    (set! (.-y pt) (.-clientY evt))
-
-    (let [trans-pt (.matrixTransform pt (.inverse ctm))]
-      {:x (.-x trans-pt) :y (.-y trans-pt)})))
-
-(defn convert-point-to-angle
-  "expects map {:x number :y number}
-  in the form of circle centered cartesian coords"
-  [{:keys [x y]}]
-
-  (let [pi (.-PI js/Math)
-        xa (.abs js/Math x)
-        ya (.abs js/Math y)
-        quadrant (cond
-                   (and (> x 0) (> y 0)) 1
-                   (and (> x 0) (< y 0)) 2
-                   (and (< x 0) (< y 0)) 3
-                   (and (< x 0) (> y 0)) 4
-                   :else 0)
-        special (cond
-                  (and (= x 0) (> y 0)) 0
-                  (and (> x 0) (= y 0)) (-> pi (/ 2))
-                  (and (= x 0) (< y 0)) pi
-                  (and (< x 0) (= y 0)) (-> pi (/ 2) (* 3))
-                  :else nil)
-        angle-in-radians (if (some? special)
-                           special
-                           (case quadrant
-                             1 (.atan js/Math (/ xa ya))
-                             2 (-> (.atan js/Math (/ ya xa)) (+ (/ pi 2)))
-                             3 (-> (.atan js/Math (/ xa ya)) (+ pi))
-                             4 (-> (.atan js/Math (-> (/ ya xa))) (+ (-> pi (/ 2) (* 3))))
-                             0))]
-
-    (/ (* angle-in-radians 180) pi)))
-
-(defn convert-point-centered-circle
-  "converts an x,y coordinate from svg viewbox where (0,0) is at the top left
-  to a coordinate where (0,0) would be in the center"
-  [{:keys [x y]}]
+(defn handle-period-move [id evt]
   (let [cx (js/parseInt (:cx svg-consts))
         cy (js/parseInt (:cy svg-consts))
-        xt (- x cx)
-        yt (if (>= y cy)
-             (- 0 (- y cy))
-             (- cy y))]
-    {:x xt :y yt}))
-
-(defn handle-period-move [id evt]
-  (let [pos (convert-client-to-view-box id evt)
-        pos-t (convert-point-centered-circle pos)
-        angle (convert-point-to-angle pos-t)
+        pos (utils/client-to-view-box id evt)
+        pos-t (utils/point-to-centered-circle
+               (merge pos {:cx cx :cy cy}))
+        angle (utils/point-to-angle pos-t)
         time-ms (utils/angle-to-ms angle)]
 
-    (.log js/console angle)
-    (.log js/console time-ms)
-
-    (rf/dispatch [:move-selected-period time-ms])
-  ))
+    (rf/dispatch [:move-selected-period time-ms])))
 
 (defn render-day [tasks selected-period day]
   (let [date-str (subs (.toISOString day) 0 10)
@@ -211,17 +154,29 @@
         selected-period @(rf/subscribe [:selected-period])]
 
     [:div
-     {:style {:display "flex" :justify-content "flex-start"
-              :flex-wrap "no-wrap"}
-      :onClick (fn [e] (rf/dispatch [:set-selected-period nil]))}
-     (render-days days tasks selected-period)]))
+     [:div.days-container
+      {:style {:display "flex" :justify-content "flex-start"
+               :width "100%"
+               :flex-wrap "no-wrap"}
+       :onClick (fn [e] (rf/dispatch [:set-selected-period nil]))}
+
+      (render-days days tasks selected-period)]
+
+     [:div {:style {:display "flex" :justify-content "center"}}
+      [ui/raised-button {:icon (ic/content-add)
+                         :primary true}]
+      ]
+     ]))
 
 (def pages
   {:home #'home-page})
 
 (defn page []
-  [:div
-   [(pages @(rf/subscribe [:page]))]])
+  [ui/mui-theme-provider
+   [:div
+    [(pages @(rf/subscribe [:page]))]]
+   ]
+  )
 
 ;; -------------------------
 ;; Routes
