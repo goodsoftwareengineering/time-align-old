@@ -63,7 +63,7 @@
        (.getDate date)))
 
 (defn zero-in-day
-  "taking a date obj, or string, will return a new date object with Hours, Minutes, Seconds, and Milliseconds set to default 0"
+  "taking a date obj, or string, will return a new date object with Hours, Minutes, Seconds, and Milliseconds set to 0"
   [date]
   (let [d (if (string? date)
             (clojure.string/replace date #"-" "/") ;; sql needs "-" but js/Date does wierd time zone stuff unless the string uses "/"

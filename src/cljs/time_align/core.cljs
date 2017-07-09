@@ -127,8 +127,8 @@
       {:x (.-x trans-pt) :y (.-y trans-pt)})))
 
 (defn convert-point-to-angle
-  ;; expects map {:x number :y number}
-  ;; in the form of circle centered cartesian coords
+  "expects map {:x number :y number}
+  in the form of circle centered cartesian coords"
   [{:keys [x y]}]
 
   (let [pi (.-PI js/Math)
@@ -157,33 +157,28 @@
 
     (/ (* angle-in-radians 180) pi)))
 
-(defn handle-period-move [id evt]
-  (.log js/console "--------------")
-  (let [
-        pos (convert-client-to-view-box id evt)
-
-        ;; viewbox coords to cartesian circle centered
-        x (:x pos)
-        y (:y pos)
-        cx (js/parseInt (:cx svg-consts))
+(defn convert-point-centered-circle
+  "converts an x,y coordinate from svg viewbox where (0,0) is at the top left
+  to a coordinate where (0,0) would be in the center"
+  [{:keys [x y]}]
+  (let [cx (js/parseInt (:cx svg-consts))
         cy (js/parseInt (:cy svg-consts))
         xt (- x cx)
         yt (if (>= y cy)
              (- 0 (- y cy))
-             (- cy y))
+             (- cy y))]
+    {:x xt :y yt}))
 
-        angle (convert-point-to-angle {:x xt :y yt})
-        time-ms (utils/angle-to-ms angle)
-        ]
+(defn handle-period-move [id evt]
+  (let [pos (convert-client-to-view-box id evt)
+        pos-t (convert-point-centered-circle pos)
+        angle (convert-point-to-angle pos-t)
+        time-ms (utils/angle-to-ms angle)]
 
-    (.log js/console pos)
-    (.log js/console {:xt xt :yt yt})
     (.log js/console angle)
-    (.log js/console (-> time-ms
-                         (/ 1000)
-                         (/ 60)
-                         (/ 60)))
-  ;;   (rf/dispatch [:set-selected-period-start time])
+    (.log js/console time-ms)
+
+    (rf/dispatch [:move-selected-period time-ms])
   ))
 
 (defn render-day [tasks selected-period day]

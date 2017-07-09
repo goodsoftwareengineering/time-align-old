@@ -42,3 +42,55 @@
  :set-selected-period
  (fn [db [_ period-id]]
    (assoc-in db [:view :selected-period] period-id)))
+
+
+(reg-event-db
+ :move-selected-period
+ (fn [db [_ new-start-time-ms]]
+   (if (some? (get-in db [:view :selected-period]))
+     (let [
+           p-id (get-in db [:view :selected-period])
+           task (->> (:tasks db)
+                     (filter
+                      (fn [task]
+                        (and
+                         (some? (:periods task))
+                         (not (empty? (->> (:periods task)
+                                           (filter #(= p-id (:id %)))))))))
+                     (first))
+           period (->> (:periods task)
+                       (filter #(= p-id (:id %)))
+                       (first))
+           other-periods (->> (:periods task)
+                              (remove #(= p-id (:id %))))
+           other-tasks (->> (:tasks db)
+                            (remove
+                             (fn [t]
+                               (and
+                                (some? (:periods t))
+                                (not (empty?
+                                      (->> (:periods t)
+                                           (filter #(= p-id (:id %))))))))))
+           period-length-ms (- (.valueOf (:stop period))
+                               (.valueOf (:start period)))
+           new-start (->> (:start period)
+                         (utils/zero-in-day)
+                         (.valueOf)
+                         (+ new-start-time-ms)
+                         (new js/Date))
+           new-stop (->> new-start
+                        (.valueOf)
+                        (+ period-length-ms)
+                        (new js/Date))
+           new-period (merge period {:start new-start :stop new-stop})
+           new-periods (cons new-period other-periods)
+           new-task (merge task {:periods new-periods})
+           new-tasks (cons new-task other-tasks )
+           ]
+
+       (merge db {:tasks new-tasks})
+       )
+     (do (.log js/console "no period selected")
+         db)
+     )
+   ))
