@@ -41,15 +41,21 @@
 (reg-event-db
  :set-selected-period
  (fn [db [_ period-id]]
-   (assoc-in db [:view :selected-period] period-id)))
+   (assoc-in db [:view :selected ]
+             {:selected-period period-id :selected-task nil})))
 
+(reg-event-db
+ :set-selected-task
+ (fn [db [_ task-id]]
+   (assoc-in db [:view :selected ]
+             {:selected-period nil :selected-task task-id})))
 
 (reg-event-db
  :move-selected-period
  (fn [db [_ new-start-time-ms]]
-   (if (some? (get-in db [:view :selected-period]))
+   (if (some? (get-in db [:view :selected :selected-period]))
      (let [
-           p-id (get-in db [:view :selected-period])
+           p-id (get-in db [:view :selected :selected-period])
            task (->> (:tasks db)
                      (filter
                       (fn [task]

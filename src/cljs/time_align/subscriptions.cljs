@@ -45,4 +45,9 @@
 (reg-sub
  :selected-period
  (fn [db _]
-   (get-in db [:view :selected-period])))
+   (get-in db [:view :selected :selected-period])))
+
+(reg-sub
+ :selected-task
+ (fn [db _]
+   (get-in db [:view :selected :selected-task])))

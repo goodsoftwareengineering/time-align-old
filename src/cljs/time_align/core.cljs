@@ -147,25 +147,72 @@
   (->> days
        (map (partial render-day tasks selected-period))))
 
+(defn task-list [tasks]
+  [:div.tasks-list {:style {:display "flex" :align-self "center"}}
+   [ui/paper
+    [:div.task-list {:style {:overflow-y "scroll"}}
+     [ui/list
+      (->> tasks
+           (map
+            (fn [t]
+              [ui/list-item
+               {:key (:id t)
+                :primaryText (:name t)
+                :onTouchTap #(rf/dispatch
+                              [:set-selected-task (:id t)])
+                }
+               ])))]]]])
+
+;; (defn render-queue [tasks]
+;;   (map (fn [task]
+;;          (let [periods-no-stamps
+;;                (if (contains? tasks :periods)
+;;                  (filter
+;;                   (fn [period]
+;;                     (not (or (contains? period :start)
+;;                              (contains? period :stop))))
+;;                   (:periods tasks))
+;;                  nil
+;;                  )
+;;                ]
+           
+;;            )
+;;          )
+;;        tasks)
+;;   )
+
 (defn home-page []
   (let [tasks @(rf/subscribe [:tasks])
         queue @(rf/subscribe [:queue])
         days  @(rf/subscribe [:visible-days])
-        selected-period @(rf/subscribe [:selected-period])]
+        selected-period @(rf/subscribe [:selected-period])
+        selected-task @(rf/subscribe [:selected-task])]
 
-    [:div
+    [:div {:style {:display "flex"
+                   :flex-direction "row"
+                   :flex-wrap "nowrap"
+                   :justify-content "flex-start"
+                   :align-items "flex-start"}}
+
+     ;; (task-list tasks)
+
      [:div.days-container
-      {:style {:display "flex" :justify-content "flex-start"
-               :width "100%"
-               :flex-wrap "no-wrap"}
+      {:style {:display "flex" :flex-grow "1"}
        :onClick (fn [e] (rf/dispatch [:set-selected-period nil]))}
 
-      (render-days days tasks selected-period)]
+      (render-days days
+                   (if (some? selected-task)
+                     (filter #(= (:id %) selected-task) tasks)
+                     tasks)
+                   selected-period)]
 
-     [:div {:style {:display "flex" :justify-content "center"}}
-      [ui/raised-button {:icon (ic/content-add)
-                         :primary true}]
+     [:div.queue-container
+      {:style {:display "flex"}}
+
+      ;; (render-queue tasks)
       ]
+
+
      ]))
 
 (def pages
