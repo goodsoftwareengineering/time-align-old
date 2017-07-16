@@ -128,17 +128,30 @@
        (= day-str stop-str)))
     false))
 
-(defn filter-periods [day tasks]
+(defn filter-periods-with-stamps [tasks]
   (->> tasks
-       (map
-        (fn [task]
-          (let [id (:id task)
-                all-periods (:periods task)]
+       (filter (fn [task] (contains? task :periods)))
+       (map (fn [task]
+              (->> (:periods task)
+                   (filter
+                    (fn [period] (and (contains? period :start)
+                                      (contains? period :stop))))
+                   ((fn [periods] (merge task {:periods periods})))
+                   )))
+       ))
 
-            (->> all-periods
-                 (filter (partial period-in-day day)) ;; filter out periods not in day
-                 (map #(assoc % :task-id id))))));; add task id to each period
-       (filter #(< 0 (count %)))))
+(defn filter-periods-for-day [day tasks]
+  (let [new-tasks (filter-periods-with-stamps tasks)]
+    (->> new-tasks
+         (map
+          (fn [task]
+            (let [id (:id task)
+                  all-periods (:periods task)]
+
+              (->> all-periods
+                   (filter (partial period-in-day day)) ;; filter out periods not in day
+                   (map #(assoc % :task-id id))))));; add task id to each period
+         (filter #(< 0 (count %))))))
 
 (defn client-to-view-box [id evt]
   (let [pt (-> (.getElementById js/document id)

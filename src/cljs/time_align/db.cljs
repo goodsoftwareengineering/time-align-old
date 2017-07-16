@@ -16,20 +16,37 @@
 (s/def ::type #{:actual :planned})
 (s/def ::priority int?)
 (s/def ::period (s/with-gen (s/and
-                             (s/keys :req-un [::start ::stop ::type ::id])
-                             #(> (.valueOf (:stop %)) (.valueOf (:start %))))
+                             (s/keys :req-un [::type ::id]
+                                     :opt-un [::start ::stop])
+                             (fn [period]
+                               (cond
+                                 (and (contains? period :start) (contains? period :stop))
+                                 (> (.valueOf (:stop period)) (.valueOf (:start period)))
+
+                                 (not (and (contains? period :start) (contains? period :stop)))
+                                 (= :planned (:type period))
+
+                                 :else false
+
+                                 ))
+                             )
 
                   ;; generator uses a generated moment and adds a random amount of time to it
                   ;; < 2 hrs
                   #(gen/fmap (fn [moment]
-                               (let [start (.valueOf moment)
-                                   stop  (->> start
-                                              (+ (rand-int (* 2 utils/hour-ms))))]
-                               {:start (new js/Date start )
-                                :stop (new js/Date stop)
-                                :type (if (> 0.5 (rand)) :actual :planned)
-                                :id (random-uuid)}))
-                            (s/gen ::moment))))
+                               (let [queue-status (> 0.5 (rand))
+                                     type (if (> 0.5 (rand)) :actual :planned)
+                                     start (.valueOf moment)
+                                     stop  (->> start
+                                                (+ (rand-int (* 2 utils/hour-ms))))
+                                     stamps (if queue-status
+                                              {}
+                                              {:start (new js/Date start)
+                                               :stop (new js/Date stop)})]
+
+                                 (merge stamps {:type type
+                                                :id (random-uuid)})))
+                             (s/gen ::moment))))
 (s/def ::periods (s/coll-of ::period))
 (s/def ::category (s/and string? #(> 256 (count %))))
 (s/def ::dependency ::id)
@@ -53,8 +70,19 @@
 (s/def ::queue (s/keys :req-un [::filters ::ordering]))
 (s/def ::page  #{:home})
 (s/def ::drawer boolean?)
-(s/def ::selected-period (s/or ::id nil?))
-(s/def ::view (s/keys :req-un [::range ::queue ::page ::drawer ::selected-period]))
+(s/def ::selected-period (s/with-gen
+                           (s/or :period-id ::id
+                                 :none nil?)
+                          #(gen/return nil)))
+(s/def ::selected-task (s/with-gen
+                         (s/or :task-id ::id
+                               :none nil?)
+                         #(gen/return nil)))
+(s/def ::selected (s/and (s/keys :req-un [::selected-task ::selected-period])
+                         #(not (and (contains? (:selected-task %) :period-id)
+                                    (contains? (:selected-period %) :task-id)))))
+(s/def ::view (s/keys :req-un [::range ::queue ::page ::drawer
+                               ::selected-period ::selected]))
 (s/def ::db (s/keys :req-un [::user ::tasks ::view ::categories]))
 
 (def default-db (gen/generate (s/gen ::db)))

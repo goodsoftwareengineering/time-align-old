@@ -126,7 +126,7 @@
 
 (defn render-day [tasks selected-period day]
   (let [date-str (subs (.toISOString day) 0 10)
-        col-of-col-of-periods (utils/filter-periods day tasks)]
+        col-of-col-of-periods (utils/filter-periods-for-day day tasks)]
 
     [:svg (merge {:key date-str
                   :id date-str
