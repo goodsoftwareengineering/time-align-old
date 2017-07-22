@@ -2,10 +2,11 @@
   (:require [clojure.spec :as s]
             [clojure.test.check.generators :as gen]
             [time-align.utilities :as utils]
+            [clojure.string :as string]
 
             [cljs.pprint :refer [pprint]]))
 
-(s/def ::name string?)
+(s/def ::name (s/and string? #(> 256 (count %))))
 (s/def ::description string?)
 (s/def ::email string?)
 (s/def ::id uuid?)
@@ -17,7 +18,7 @@
 (s/def ::priority int?)
 (s/def ::period (s/with-gen (s/and
                              (s/keys :req-un [::type ::id]
-                                     :opt-un [::start ::stop])
+                                     :opt-un [::start ::stop ::description])
                              (fn [period]
                                (cond
                                  (and (contains? period :start) (contains? period :stop))
@@ -48,9 +49,24 @@
                                                 :id (random-uuid)})))
                              (s/gen ::moment))))
 (s/def ::periods (s/coll-of ::period))
-(s/def ::category (s/and string? #(> 256 (count %))))
-(s/def ::dependency ::id)
-(s/def ::dependencies (s/coll-of ::dependency))
+(s/def ::hex-digit (s/with-gen (s/and string? #(contains? (set "0123456789abcdef") %))
+                      #(s/gen (set "0123456789abcdef"))))
+(s/def ::hex-str (s/with-gen (s/and string? (fn [s] (every? #(s/valid? ::hex-digit %) (seq s))))
+                   #(gen/return (->> (range 1 (rand-int 100) 1)
+                                     (map (fn [_] (nth (seq "0123456789abcdef") (rand-int 15))))
+                                     (string/join)))))
+(s/def ::color (s/with-gen (s/and #(= "#" (first %))
+                                  #(s/valid? ::hex-str (string/join (rest %)))
+                                  #(= 7 (count %)))
+                 #(gen/return (->> (range 1 7 1)
+                                  (map (fn [_] (nth (seq "0123456789abcdef") (rand-int 15))))
+                                  (string/join)
+                                  (str "#")))))
+
+(gen/generate (s/gen ::color))
+(s/def ::category (s/keys :req-un [::name ::color]))
+;; (s/def ::dependency ::id) ;; TODO do tasks and periods have dependencies how to validate that they point correctly?
+;; (s/def ::dependencies (s/coll-of ::dependency))
 (s/def ::complete boolean?)
 ;; think about adding a condition that queue tasks (no periods) have to have planned true
 ;; (? and priority)
