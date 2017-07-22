@@ -62,9 +62,7 @@
                                   (map (fn [_] (nth (seq "0123456789abcdef") (rand-int 15))))
                                   (string/join)
                                   (str "#")))))
-
-(gen/generate (s/gen ::color))
-(s/def ::category (s/keys :req-un [::name ::color]))
+(s/def ::category (s/keys :req-un [::id ::name ::color]))
 ;; (s/def ::dependency ::id) ;; TODO do tasks and periods have dependencies how to validate that they point correctly?
 ;; (s/def ::dependencies (s/coll-of ::dependency))
 (s/def ::complete boolean?)
@@ -72,7 +70,7 @@
 ;; (? and priority)
 ;; tasks that are not planned (:actual) cannot have periods in the future
 ;; adding date support is going to need some cljc trickery
-(s/def ::task (s/keys :req-un [::id ::category ::name ::description ::complete]
+(s/def ::task (s/keys :req-un [::id ::name ::description ::complete]
                       :opt-un [::periods]))
 (s/def ::tasks (s/coll-of ::task))
 (s/def ::user (s/keys :req-un [::name ::id ::email]))
