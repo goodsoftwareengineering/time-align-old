@@ -97,6 +97,14 @@
                                     (contains? (:selected-period %) :task-id)))))
 (s/def ::view (s/keys :req-un [::range ::queue ::page ::drawer
                                ::selected-period ::selected]))
-(s/def ::db (s/keys :req-un [::user ::tasks ::view ::categories]))
+(s/def ::un-linked-db (s/keys :req-un [::user ::tasks ::view ::categories]))
+;; (s/def ::db (s/with-gen
+;;               (s/and ::un-linked-db
+;;                      ;; all category-id keys in :tasks match a category in :categories
+;;                      #()
+;;                      )
+;;               ;; generate an un-linked-db and randomly assign category id's to tasks
+;;               #()
+;;               ))
 
-(def default-db (gen/generate (s/gen ::db)))
+(def default-db (gen/generate (s/gen ::un-linked-db)))
