@@ -128,7 +128,9 @@
        (= day-str stop-str)))
     false))
 
-(defn filter-periods-with-stamps [tasks]
+(defn filter-periods-with-stamps
+  "Takes a list of tasks and returns a list of tasks with only periods that have stamps."
+  [tasks]
   (->> tasks
        (filter (fn [task] (contains? task :periods)))
        (map (fn [task]
@@ -136,11 +138,26 @@
                    (filter
                     (fn [period] (and (contains? period :start)
                                       (contains? period :stop))))
-                   ((fn [periods] (merge task {:periods periods})))
-                   )))
+                   ((fn [periods] (merge task {:periods periods}))))))))
+
+(defn filter-periods-no-stamps
+  "Takes a list of tasks and returns a list of modified periods."
+  [tasks]
+  (->> tasks
+       (filter (fn [task] (contains? task :periods)))
+       (map (fn [task]
+              (->> (:periods task)
+                   (filter
+                    (fn [period] (and (not (contains? period :start))
+                                      (not (contains? period :stop)))))
+                   (map (fn [period] (merge period {:task-id (:id task)
+                                                    :task-name (:name task)}))))))
+       (flatten)
        ))
 
-(defn filter-periods-for-day [day tasks]
+(defn filter-periods-for-day
+  "Takes a day and a list of tasks and returns a list of modified periods."
+  [day tasks]
   (let [new-tasks (filter-periods-with-stamps tasks)]
     (->> new-tasks
          (map
@@ -149,8 +166,10 @@
                   all-periods (:periods task)]
 
               (->> all-periods
-                   (filter (partial period-in-day day)) ;; filter out periods not in day
-                   (map #(assoc % :task-id id))))));; add task id to each period
+                   ;; filter out periods not in day
+                   (filter (partial period-in-day day))
+                   ;; add task id to each period
+                   (map #(assoc % :task-id id))))))
          (filter #(< 0 (count %))))))
 
 (defn client-to-view-box [id evt]

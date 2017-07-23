@@ -62,7 +62,6 @@
                                   (map (fn [_] (nth (seq "0123456789abcdef") (rand-int 15))))
                                   (string/join)
                                   (str "#")))))
-(s/def ::category (s/keys :req-un [::id ::name ::color]))
 ;; (s/def ::dependency ::id) ;; TODO do tasks and periods have dependencies how to validate that they point correctly?
 ;; (s/def ::dependencies (s/coll-of ::dependency))
 (s/def ::complete boolean?)
@@ -72,11 +71,15 @@
 ;; adding date support is going to need some cljc trickery
 (s/def ::task (s/keys :req-un [::id ::name ::description ::complete]
                       :opt-un [::periods]))
+;; TODO complete check (all periods are planned/actual are passed)
 (s/def ::tasks (s/coll-of ::task))
 (s/def ::user (s/keys :req-un [::name ::id ::email]))
 (s/def ::date ::moment)
+(s/def ::category (s/keys :req-un [::id ::name ::color ::tasks]))
 (s/def ::categories (s/coll-of ::category))
-(s/def ::filters (s/coll-of ::category))
+(s/def ::category-filters (s/coll-of ::id))
+(s/def ::task-filters (s/coll-of ::id))
+(s/def ::filters (s/keys :req-un [::category-filters ::task-filters]))
 (s/def ::order #{:category :name :priority})
 (s/def ::ordering string?)
 (s/def ::range (s/and (s/keys :req-un [::filters ::start ::stop])
@@ -97,14 +100,6 @@
                                     (contains? (:selected-period %) :task-id)))))
 (s/def ::view (s/keys :req-un [::range ::queue ::page ::drawer
                                ::selected-period ::selected]))
-(s/def ::un-linked-db (s/keys :req-un [::user ::tasks ::view ::categories]))
-;; (s/def ::db (s/with-gen
-;;               (s/and ::un-linked-db
-;;                      ;; all category-id keys in :tasks match a category in :categories
-;;                      #()
-;;                      )
-;;               ;; generate an un-linked-db and randomly assign category id's to tasks
-;;               #()
-;;               ))
+(s/def ::db (s/keys :req-un [::user ::view ::categories]))
+(def default-db (gen/generate (s/gen ::db)))
 
-(def default-db (gen/generate (s/gen ::un-linked-db)))

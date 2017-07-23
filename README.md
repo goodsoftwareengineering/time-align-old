@@ -59,6 +59,34 @@ generated using Luminus version "2.9.11.46"
       - [ ] edit all data (can't delete unless no periods)
     - [ ] delete
 
+## misc
+### linked code to save
+(s/def ::un-linked-db (s/keys :req-un [::user ::tasks ::view ::categories]))
+;; all category-id keys in :tasks match a category in :categories
+(s/def ::task-category-links ;; no generator, this is a supportting predicate
+  (fn [db]
+    (let [tasks (:tasks db)]
+      (if (nil? tasks)
+        true
+        (->> tasks
+             (every?
+              (fn [task]
+                (some #(= (:category-id task))
+                      (:categories db)))))))))
+
+(-> (gen/generate (s/gen ::un-linked-db))
+    ()
+ )
+
+;; (s/def ::db (s/with-gen
+;;               (s/and ::un-linked-db
+;;                      ::task-category-links
+;;                      ;; generate an un-linked-db and randomly assign category id's to tasks
+;;                      #()
+;;                      ))
+
+(def default-db (gen/generate (s/gen ::un-linked-db)))
+
 
 ## License
 ???

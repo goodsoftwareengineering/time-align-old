@@ -79,11 +79,13 @@
                 (and (or (nil? selected-period)
                          (= selected-period id))
                      (= :actual type))
+                ;; (:color period)
                 "#43a047"
                 ;; planned
                 (and (or (nil? selected-period)
                          (= selected-period id))
                      (= :planned type))
+                ;; (:color period)
                 "#63ccff"
                 ;; something else selected
                 :else (if (= :planned type)
@@ -98,7 +100,7 @@
      {:key (str id)
       :d arc
       :stroke color
-      :opacity "0.5"
+      :opacity (if (= :planned type) "0.4" "0.6")
       :stroke-width "10"
       :fill "transparent"
       :onClick (if (nil? selected-period)
@@ -148,7 +150,7 @@
        (map (partial render-day tasks selected-period))))
 
 (defn task-list [tasks]
-  [:div.tasks-list {:style {:display "flex" :align-self "center"}}
+  [:div.tasks-list {:style {:display "flex"}}
    [ui/paper
     [:div.task-list {:style {:overflow-y "scroll"}}
      [ui/list
@@ -163,23 +165,25 @@
                 }
                ])))]]]])
 
-;; (defn render-queue [tasks]
-;;   (map (fn [task]
-;;          (let [periods-no-stamps
-;;                (if (contains? tasks :periods)
-;;                  (filter
-;;                   (fn [period]
-;;                     (not (or (contains? period :start)
-;;                              (contains? period :stop))))
-;;                   (:periods tasks))
-;;                  nil
-;;                  )
-;;                ]
-           
-;;            )
-;;          )
-;;        tasks)
-;;   )
+(defn render-queue [tasks]
+  (let [periods-no-stamps (utils/filter-periods-no-stamps tasks)]
+    [:div.queue-container {:style {:display "flex" :align-self "center"}}
+     [ui/paper
+      [:div.queue {:style {:overflow-y "scroll"}}
+       [ui/list
+        (->> periods-no-stamps
+             (map (fn [period]
+                    [ui/list-item
+                     {:key (:id period)
+                      :primaryText (str "period-id " (:id period))
+                      :onTouchTap #(rf/dispatch
+                                    [:set-selected-task (:task-id period)])
+                      }
+                     ]
+                    )))
+        ]]]]
+    )
+  )
 
 (defn home-page []
   (let [tasks @(rf/subscribe [:tasks])
@@ -194,7 +198,7 @@
                    :justify-content "flex-start"
                    :align-items "flex-start"}}
 
-     ;; (task-list tasks)
+     (task-list tasks)
 
      [:div.days-container
       {:style {:display "flex" :flex-grow "1"}
@@ -209,7 +213,7 @@
      [:div.queue-container
       {:style {:display "flex"}}
 
-      ;; (render-queue tasks)
+      (render-queue tasks)
       ]
 
 

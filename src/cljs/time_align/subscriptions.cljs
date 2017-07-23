@@ -25,7 +25,11 @@
 (reg-sub
  :tasks
  (fn [db _]
-   (:tasks db)))
+   (->> (:categories db)
+        (map (fn [categories] (:tasks categories)))
+        (flatten)
+        (remove nil?)
+        (remove empty?))))
 
 (reg-sub
  :visible-days
