@@ -79,14 +79,14 @@
                 (and (or (nil? selected-period)
                          (= selected-period id))
                      (= :actual type))
-                ;; (:color period)
-                "#43a047"
+                (:color period)
+                ;; "#43a047"
                 ;; planned
                 (and (or (nil? selected-period)
                          (= selected-period id))
                      (= :planned type))
-                ;; (:color period)
-                "#63ccff"
+                (:color period)
+                ;; "#63ccff"
                 ;; something else selected
                 :else (if (= :planned type)
                         "#aaaaaa"
@@ -100,7 +100,7 @@
      {:key (str id)
       :d arc
       :stroke color
-      :opacity (if (= :planned type) "0.4" "0.6")
+      :opacity (if (= :planned type) "0.3" "0.6")
       :stroke-width "10"
       :fill "transparent"
       :onClick (if (nil? selected-period)
