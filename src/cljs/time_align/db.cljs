@@ -4,7 +4,8 @@
             [time-align.utilities :as utils]
             [clojure.string :as string]
 
-            [cljs.pprint :refer [pprint]]))
+            [cljs.pprint :refer [pprint]]
+            ))
 
 (s/def ::name (s/and string? #(> 256 (count %))))
 (s/def ::description string?)
@@ -48,7 +49,7 @@
                                  (merge stamps {:type type
                                                 :id (random-uuid)})))
                              (s/gen ::moment))))
-(s/def ::periods (s/coll-of ::period))
+(s/def ::periods (s/coll-of ::period :gen-max 5))
 (s/def ::hex-digit (s/with-gen (s/and string? #(contains? (set "0123456789abcdef") %))
                       #(s/gen (set "0123456789abcdef"))))
 (s/def ::hex-str (s/with-gen (s/and string? (fn [s] (every? #(s/valid? ::hex-digit %) (seq s))))
@@ -72,34 +73,23 @@
 (s/def ::task (s/keys :req-un [::id ::name ::description ::complete]
                       :opt-un [::periods]))
 ;; TODO complete check (all periods are planned/actual are passed)
-(s/def ::tasks (s/coll-of ::task))
+(s/def ::tasks (s/coll-of ::task :gen-max 10))
 (s/def ::user (s/keys :req-un [::name ::id ::email]))
 (s/def ::date ::moment)
 (s/def ::category (s/keys :req-un [::id ::name ::color ::tasks]))
-(s/def ::categories (s/coll-of ::category))
-(s/def ::category-filters (s/coll-of ::id))
-(s/def ::task-filters (s/coll-of ::id))
-(s/def ::filters (s/keys :req-un [::category-filters ::task-filters]))
+(s/def ::categories (s/coll-of ::category :gen-max 5))
 (s/def ::order #{:category :name :priority})
 (s/def ::ordering string?)
-(s/def ::range (s/and (s/keys :req-un [::filters ::start ::stop])
+(s/def ::range (s/and (s/keys :req-un [::start ::stop])
                       #(> (.valueOf (:stop %)) (.valueOf (:start %)))))
-(s/def ::queue (s/keys :req-un [::filters ::ordering]))
+(s/def ::queue (s/keys :req-un [::ordering]))
 (s/def ::page  #{:home})
 (s/def ::drawer boolean?)
-(s/def ::selected-period (s/with-gen
-                           (s/or :period-id ::id
-                                 :none nil?)
-                          #(gen/return nil)))
-(s/def ::selected-task (s/with-gen
-                         (s/or :task-id ::id
-                               :none nil?)
-                         #(gen/return nil)))
-(s/def ::selected (s/and (s/keys :req-un [::selected-task ::selected-period])
-                         #(not (and (contains? (:selected-task %) :period-id)
-                                    (contains? (:selected-period %) :task-id)))))
-(s/def ::view (s/keys :req-un [::range ::queue ::page ::drawer
-                               ::selected-period ::selected]))
+(s/def ::selected-type #{:category :task :period})
+(s/def ::selected (s/with-gen (s/or :selection (s/keys :req-un [::selected-type ::id])
+                                    :no-selection nil?)
+                    #(gen/return nil)))
+(s/def ::view (s/keys :req-un [::range ::queue ::page ::drawer ::selected]))
 (s/def ::db (s/keys :req-un [::user ::view ::categories]))
 (def default-db (gen/generate (s/gen ::db)))
 

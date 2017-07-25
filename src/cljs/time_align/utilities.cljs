@@ -163,13 +163,14 @@
          (map
           (fn [task]
             (let [id (:id task)
-                  all-periods (:periods task)]
+                  all-periods (:periods task)
+                  color (:color task)]
 
               (->> all-periods
                    ;; filter out periods not in day
                    (filter (partial period-in-day day))
                    ;; add task id to each period
-                   (map #(assoc % :task-id id))))))
+                   (map #(assoc % :task-id id :color color))))))
          (filter #(< 0 (count %))))))
 
 (defn client-to-view-box [id evt]
@@ -226,3 +227,40 @@
                              0))]
 
     (/ (* angle-in-radians 180) pi)))
+
+(defn pull-tasks [db]
+  (->> (:categories db)
+       (map (fn [category]
+              (let [color (:color category)
+                    category-id (:id category)]
+                (->>
+                 (:tasks category)
+                 (map (fn [task] (merge task {:color color :category-id category-id})))))))
+       (flatten)
+       (remove nil?)
+       (remove empty?)))
+
+(defn pull-periods [db]
+  (->> (:categories db)
+       (map (fn [category]
+              (let [color (:color category)
+                    category-id (:id category)]
+                (->>
+                 (:tasks category)
+                 (map (fn [task]
+                        (let [task-id (:id task)]
+                          (->>
+                           (:periods task)
+                           (map (fn [period]
+                                  (merge period {:color color
+                                                 :category-id category-id
+                                                 :task-id task-id}))))
+                          ))))
+                )
+              )
+            )
+       (flatten)
+       ;; (remove empty?)
+       ;; (remove nil?)
+       )
+  )

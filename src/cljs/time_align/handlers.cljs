@@ -42,41 +42,55 @@
  :set-selected-period
  (fn [db [_ period-id]]
    (assoc-in db [:view :selected ]
-             {:selected-period period-id :selected-task nil})))
+             {:selected-type :period
+              :id period-id})))
 
 (reg-event-db
  :set-selected-task
  (fn [db [_ task-id]]
    (assoc-in db [:view :selected ]
-             {:selected-period nil :selected-task task-id})))
+             {:selected-type :task
+              :id task-id})))
+
+(defn fell-tree-with-period-id [db p-id]
+  (let [periods (utils/pull-periods db)
+        period (->> periods
+                    (filter #(= p-id (:id %)))
+                    (first))
+        t-id (:task-id period)
+        c-id (:category-id period)
+        category (->> (:categories db)
+                      (filter #(= c-id (:id %)))
+                      (first))
+        task (->> (:tasks category)
+                  (filter #(= t-id (:id %)))
+                  (first))]
+    {:category category
+     :task task
+     :period period}))
+
+(defn period-selected? [db]
+  (and (= :period (get-in db [:view :selected :selected-type]))
+       (some? (get-in db [:view :selected :id]))))
 
 (reg-event-db
  :move-selected-period
  (fn [db [_ new-start-time-ms]]
-   (if (some? (get-in db [:view :selected :selected-period]))
+   (if (period-selected? db)
      (let [
-           p-id (get-in db [:view :selected :selected-period])
-           task (->> (:tasks db)
-                     (filter
-                      (fn [task]
-                        (and
-                         (some? (:periods task))
-                         (not (empty? (->> (:periods task)
-                                           (filter #(= p-id (:id %)))))))))
-                     (first))
-           period (->> (:periods task)
-                       (filter #(= p-id (:id %)))
-                       (first))
+           p-id (get-in db [:view :selected :id])
+           chopped-tree (fell-tree-with-period-id db p-id)
+           task (:task chopped-tree)
+           t-id (:id task)
+           category (:category chopped-tree)
+           c-id (:id category)
+           period (:period chopped-tree)
            other-periods (->> (:periods task)
                               (remove #(= p-id (:id %))))
-           other-tasks (->> (:tasks db)
-                            (remove
-                             (fn [t]
-                               (and
-                                (some? (:periods t))
-                                (not (empty?
-                                      (->> (:periods t)
-                                           (filter #(= p-id (:id %))))))))))
+           other-tasks (->> (:tasks category)
+                            (remove #(= t-id (:id %))))
+           other-categories (->> (:categories db)
+                                 (remove #(= c-id (:id %))))
            period-length-ms (- (.valueOf (:stop period))
                                (.valueOf (:start period)))
            new-start (->> (:start period)
@@ -91,10 +105,12 @@
            new-period (merge period {:start new-start :stop new-stop})
            new-periods (cons new-period other-periods)
            new-task (merge task {:periods new-periods})
-           new-tasks (cons new-task other-tasks )
+           new-tasks (cons new-task other-tasks)
+           new-category (merge category {:tasks new-tasks})
+           new-categories (cons new-category other-categories)
            ]
 
-       (merge db {:tasks new-tasks})
+       (merge db {:categories new-categories})
        )
      (do (.log js/console "no period selected")
          db)

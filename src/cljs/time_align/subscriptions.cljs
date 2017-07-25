@@ -25,11 +25,7 @@
 (reg-sub
  :tasks
  (fn [db _]
-   (->> (:categories db)
-        (map (fn [categories] (:tasks categories)))
-        (flatten)
-        (remove nil?)
-        (remove empty?))))
+   (utils/pull-tasks db)))
 
 (reg-sub
  :visible-days
@@ -49,9 +45,19 @@
 (reg-sub
  :selected-period
  (fn [db _]
-   (get-in db [:view :selected :selected-period])))
+   (let [selection (get-in db [:view :selected])
+         is-period (= :period (:selected-type selection))
+         id (:id selection)]
+     (if is-period
+       id
+       nil))))
 
 (reg-sub
  :selected-task
  (fn [db _]
-   (get-in db [:view :selected :selected-task])))
+   (let [selection (get-in db [:view :selected])
+         is-task (= :task (:selected-type selection))
+         id (:id selection)]
+     (if is-task
+       id
+       nil))))
