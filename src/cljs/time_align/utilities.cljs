@@ -37,8 +37,19 @@
   (.valueOf
    (new js/Date (+ (.valueOf (new js/Date)) week-ms))))
 
+(defn start-of-today []
+  (-> (new js/Date)
+      (.setHours 0)))
+
+(defn end-of-today []
+  (-> (new js/Date)
+      (.setHours 20)))
+
+;; (def time-range
+;;   (range (one-week-ago) (one-week-from-now) hour-ms))
+
 (def time-range
-  (range (one-week-ago) (one-week-from-now) hour-ms))
+  (range (start-of-today) (end-of-today) hour-ms))
 
 (def time-set
   (set (->> time-range
@@ -52,7 +63,7 @@
        (.getDate date)))
 
 (defn zero-in-day
-  "taking a date obj, or string, will return a new date object with Hours, Minutes, Seconds, and Milliseconds set to default 0"
+  "taking a date obj, or string, will return a new date object with Hours, Minutes, Seconds, and Milliseconds set to 0"
   [date]
   (let [d (if (string? date)
             (clojure.string/replace date #"-" "/") ;; sql needs "-" but js/Date does wierd time zone stuff unless the string uses "/"
@@ -67,8 +78,15 @@
     {:x (+ cx (* r (.cos js/Math angle-in-radians)))
      :y (+ cy (* r (.sin js/Math angle-in-radians)))}))
 
-(defn ms-to-angle [ms]
+(defn ms-to-angle
+  ;; takes milliseconds and returns angle in degrees
+  [ms]
   (* (/ 360 ms-in-day) ms))
+
+(defn angle-to-ms
+  ;; takes angle in degrees and returns milliseconds
+  [angle]
+  (* (/ ms-in-day 360) angle))
 
 (defn get-ms [date]
   (let [h  (.getHours date)
@@ -110,15 +128,139 @@
        (= day-str stop-str)))
     false))
 
-(defn filter-periods [day tasks]
+(defn filter-periods-with-stamps
+  "Takes a list of tasks and returns a list of tasks with only periods that have stamps."
+  [tasks]
   (->> tasks
-       (map
-        (fn [task]
-          (let [id (:id task)
-                all-periods (:periods task)]
+       (filter (fn [task] (contains? task :periods)))
+       (map (fn [task]
+              (->> (:periods task)
+                   (filter
+                    (fn [period] (and (contains? period :start)
+                                      (contains? period :stop))))
+                   ((fn [periods] (merge task {:periods periods}))))))))
 
-            (->> all-periods
-                 (filter (partial period-in-day day)) ;; filter out periods not in day
-                 (map #(assoc % :task-id id))))));; add task id to each period
-       (filter #(< 0 (count %)))))
+(defn filter-periods-no-stamps
+  "Takes a list of tasks and returns a list of modified periods."
+  [tasks]
+  (->> tasks
+       (filter (fn [task] (contains? task :periods)))
+       (map (fn [task]
+              (->> (:periods task)
+                   (filter
+                    (fn [period] (and (not (contains? period :start))
+                                      (not (contains? period :stop)))))
+                   (map (fn [period] (merge period {:task-id (:id task)
+                                                    :task-name (:name task)}))))))
+       (flatten)
+       ))
 
+(defn filter-periods-for-day
+  "Takes a day and a list of tasks and returns a list of modified periods."
+  [day tasks]
+  (let [new-tasks (filter-periods-with-stamps tasks)]
+    (->> new-tasks
+         (map
+          (fn [task]
+            (let [id (:id task)
+                  all-periods (:periods task)
+                  color (:color task)]
+
+              (->> all-periods
+                   ;; filter out periods not in day
+                   (filter (partial period-in-day day))
+                   ;; add task id to each period
+                   (map #(assoc % :task-id id :color color))))))
+         (filter #(< 0 (count %))))))
+
+(defn client-to-view-box [id evt]
+  (let [pt (-> (.getElementById js/document id)
+               (.createSVGPoint))
+        ctm (-> evt
+                (.-target)
+                (.getScreenCTM))]
+
+    (set! (.-x pt) (.-clientX evt))
+    (set! (.-y pt) (.-clientY evt))
+
+    (let [trans-pt (.matrixTransform pt (.inverse ctm))]
+      {:x (.-x trans-pt) :y (.-y trans-pt)})))
+
+(defn point-to-centered-circle
+  "converts an x,y coordinate from svg viewbox where (0,0) is at the top left
+  to a coordinate where (0,0) would be in the center"
+  [{:keys [x y cx cy]}]
+  (let [xt (- x cx)
+        yt (if (>= y cy)
+             (- 0 (- y cy))
+             (- cy y))]
+    {:x xt :y yt}))
+
+(defn point-to-angle
+  "expects map {:x number :y number}
+  in the form of circle centered cartesian coords
+  produces angle in degrees"
+  [{:keys [x y]}]
+
+  (let [pi (.-PI js/Math)
+        xa (.abs js/Math x)
+        ya (.abs js/Math y)
+        quadrant (cond
+                   (and (> x 0) (> y 0)) 1
+                   (and (> x 0) (< y 0)) 2
+                   (and (< x 0) (< y 0)) 3
+                   (and (< x 0) (> y 0)) 4
+                   :else 0)
+        special (cond
+                  (and (= x 0) (> y 0)) 0
+                  (and (> x 0) (= y 0)) (-> pi (/ 2))
+                  (and (= x 0) (< y 0)) pi
+                  (and (< x 0) (= y 0)) (-> pi (/ 2) (* 3))
+                  :else nil)
+        angle-in-radians (if (some? special)
+                           special
+                           (case quadrant
+                             1 (.atan js/Math (/ xa ya))
+                             2 (-> (.atan js/Math (/ ya xa)) (+ (/ pi 2)))
+                             3 (-> (.atan js/Math (/ xa ya)) (+ pi))
+                             4 (-> (.atan js/Math (-> (/ ya xa))) (+ (-> pi (/ 2) (* 3))))
+                             0))]
+
+    (/ (* angle-in-radians 180) pi)))
+
+(defn pull-tasks [db]
+  (->> (:categories db)
+       (map (fn [category]
+              (let [color (:color category)
+                    category-id (:id category)]
+                (->>
+                 (:tasks category)
+                 (map (fn [task] (merge task {:color color :category-id category-id})))))))
+       (flatten)
+       (remove nil?)
+       (remove empty?)))
+
+(defn pull-periods [db]
+  (->> (:categories db)
+       (map (fn [category]
+              (let [color (:color category)
+                    category-id (:id category)]
+                (->>
+                 (:tasks category)
+                 (map (fn [task]
+                        (let [task-id (:id task)]
+                          (->>
+                           (:periods task)
+                           (map (fn [period]
+                                  (merge period {:color color
+                                                 :category-id category-id
+                                                 :task-id task-id}))))
+                          ))))
+                )
+              )
+            )
+       (flatten)
+       ;; (remove empty?)
+       ;; (remove nil?)
+       )
+  )

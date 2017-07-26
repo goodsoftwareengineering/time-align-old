@@ -25,7 +25,7 @@
 (reg-sub
  :tasks
  (fn [db _]
-   (:tasks db)))
+   (utils/pull-tasks db)))
 
 (reg-sub
  :visible-days
@@ -42,3 +42,22 @@
        (list (new js/Date start-ms))
        (map #(new js/Date %) days-in-ms)))))
 
+(reg-sub
+ :selected-period
+ (fn [db _]
+   (let [selection (get-in db [:view :selected])
+         is-period (= :period (:selected-type selection))
+         id (:id selection)]
+     (if is-period
+       id
+       nil))))
+
+(reg-sub
+ :selected-task
+ (fn [db _]
+   (let [selection (get-in db [:view :selected])
+         is-task (= :task (:selected-type selection))
+         id (:id selection)]
+     (if is-task
+       id
+       nil))))

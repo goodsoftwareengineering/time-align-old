@@ -18,6 +18,41 @@
             [cljs.pprint :refer [pprint]])
   (:import goog.History))
 
+(def svg-consts {:viewBox "0 0 100 100"
+                 :width "90" :height "90" :x "5" :y "5"
+                 :cx "50" :cy "50" :r "40" :inner-r "30"})
+
+(def shadow-filter
+  [:defs
+   [:filter {:id "shadow-2dp"
+             :x "-50%" :y "-100%"
+             :width "200%" :height "300%"}
+    [:feOffset {:in "SourceAlpha" :result "offA" :dy "2"}]
+    [:feOffset {:in "SourceAlpha" :result "offB" :dy "1"}]
+    [:feOffset {:in "SourceAlpha" :result "offC" :dy "3"}]
+    [:feMorphology {:in "offC" :result "spreadC"
+                    :operator "erode" :radius "2"}]
+    [:feGaussianBlur {:in "offA" :result "blurA"
+                      :stdDeviation "1"}]
+    [:feGaussianBlur {:in "offB" :result "blurB"
+                      :stdDeviation "2.5"}]
+    [:feGaussianBlur {:in "spreadC" :result "blurC"
+                      :stdDeviation "0.5"}]
+    [:feFlood {:flood-opacity "0.14" :result "opA"}]
+    [:feFlood {:flood-opacity "0.12" :result "opB"}]
+    [:feFlood {:flood-opacity "0.20" :result "opC"}]
+    [:feComposite {:in "opA" :in2 "blurA"
+                   :result "shA" :operator "in"}]
+    [:feComposite {:in "opB" :in2 "blurB"
+                   :result "shB" :operator "in"}]
+    [:feComposite {:in "opC" :in2 "blurC"
+                   :result "shC" :operator "in"}]
+    [:feMerge
+     [:feMergeNode {:in "shA"}]
+     [:feMergeNode {:in "shB"}]
+     [:feMergeNode {:in "shC"}]
+     [:feMergeNode {:in "SourceGraphic"}]]]])
+
 (defn describe-arc [cx cy r start stop]
   (let [
         p-start (utils/polar-to-cartesian cx cy r start)
@@ -28,140 +63,171 @@
     (string/join " " ["M" (:x p-start) (:y p-start)
                       "A" r r 0 large-arc-flag 1 (:x p-stop) (:y p-stop)])))
 
-(defn render-periods [col-of-col-of-periods]
+(defn render-period [selected-period period]
+  (let [id (:id period)
+        start-date (:start period)
+        start-ms (utils/get-ms start-date)
+        start-angle (utils/ms-to-angle start-ms)
+
+        stop-date (:stop period)
+        stop-ms (utils/get-ms stop-date)
+        stop-angle (utils/ms-to-angle stop-ms)
+
+        type (:type period)
+        color (cond
+                ;; actual
+                (and (or (nil? selected-period)
+                         (= selected-period id))
+                     (= :actual type))
+                (:color period)
+                ;; "#43a047"
+                ;; planned
+                (and (or (nil? selected-period)
+                         (= selected-period id))
+                     (= :planned type))
+                (:color period)
+                ;; "#63ccff"
+                ;; something else selected
+                :else (if (= :planned type)
+                        "#aaaaaa"
+                        "#a1a1a1"))
+
+        arc (describe-arc 50 50
+                          (if (= :actual type) 35 25)
+                          start-angle stop-angle)]
+
+    [:path
+     {:key (str id)
+      :d arc
+      :stroke color
+      :opacity (if (= :planned type) "0.3" "0.6")
+      :stroke-width "10"
+      :fill "transparent"
+      :onClick (if (nil? selected-period)
+                 (fn [e]
+                   (.stopPropagation e)
+                   (rf/dispatch
+                    [:set-selected-period id])))}]))
+
+(defn render-periods [col-of-col-of-periods selected-period]
   (->> col-of-col-of-periods
        (map (fn [periods]
               (->> periods
-                   (map #(let [id (:task-id %)
-                               start-date (:start %)
-                               start-ms (utils/get-ms start-date)
-                               start-angle (utils/ms-to-angle start-ms)
+                   (map (partial render-period selected-period)))))))
 
-                               stop-date (:stop %)
-                               stop-ms (utils/get-ms stop-date)
-                               stop-angle (utils/ms-to-angle stop-ms)
+(defn handle-period-move [id evt]
+  (let [cx (js/parseInt (:cx svg-consts))
+        cy (js/parseInt (:cy svg-consts))
+        pos (utils/client-to-view-box id evt)
+        pos-t (utils/point-to-centered-circle
+               (merge pos {:cx cx :cy cy}))
+        angle (utils/point-to-angle pos-t)
+        time-ms (utils/angle-to-ms angle)]
 
-                               type (:type %)
-                               color (if (= :actual type) "green" "blue")
+    (rf/dispatch [:move-selected-period time-ms])))
 
-                               arc (describe-arc
-                                    50 50
-                                    (if (= :actual type)
-                                      35
-                                      25)
-                                    start-angle stop-angle)]
+(defn render-day [tasks selected-period day]
+  (let [date-str (subs (.toISOString day) 0 10)
+        col-of-col-of-periods (utils/filter-periods-for-day day tasks)]
 
-                           [:path {:key (str id "-" start-ms "-" stop-ms)
-                                   :d arc
-                                   :stroke color
-                                   :stroke-width "10"
-                                   :fill "transparent"}])))))))
+    [:svg (merge {:key date-str
+                  :id date-str
+                  :style {:display "inline-box"}
+                  :width "100%"
+                  :height "600px"
+                  :onMouseMove (if (not (nil? selected-period))
+                                 (partial handle-period-move date-str))}
+                 (select-keys svg-consts [:viewBox]))
+     shadow-filter
+     [:circle (merge {:fill "#e8e8e8" :filter "url(#shadow-2dp)"}
+                     (select-keys svg-consts [:cx :cy :r]))]
+     [:circle (merge {:fill "#f1f1f1" :r (:inner-r svg-consts)}
+                     (select-keys svg-consts [:cx :cy]))]
+     (render-periods col-of-col-of-periods selected-period)]))
 
-(defn render-days [days tasks]
+(defn render-days [days tasks selected-period]
   (->> days
-       (map (fn [day]
-              (let [date-str (.toDateString day)
-                    ms (utils/get-ms day)
-                    angle (utils/ms-to-angle ms)
-                    col-of-col-of-periods (utils/filter-periods day tasks)]
+       (map (partial render-day tasks selected-period))))
 
-                [:svg {:key date-str :style {:display "inline-box"}
-                       :width "100%" :viewBox "0 0 100 100"}
-                 [:circle {:cx "50" :cy "50" :r "30"
-                           :fill "grey"}]
-                 (render-periods col-of-col-of-periods)])))))
+(defn task-list [tasks]
+  [:div.tasks-list {:style {:display "flex"}}
+   [ui/paper
+    [:div.task-list {:style {:overflow-y "scroll"}}
+     [ui/list
+      (->> tasks
+           (map
+            (fn [t]
+              [ui/list-item
+               {:key (:id t)
+                :primaryText (:name t)
+                :onTouchTap #(rf/dispatch
+                              [:set-selected-task (:id t)])
+                }
+               ])))]]]])
 
-(defn selection-tools []
-  (let [icon-style {:margin "0.5em"}]
-    [:div {:class "selection-tools"
-           :style {:display "flex"
-                   :justify-content "center"
-                   :flex-wrap "nowrap"
-                   :align-content "flex-start"
-                   :margin-bottom "1em"
-                   :margin-top "1em"}}
-     [:i {:class "material-icons" :style icon-style
-          :onClick #(rf/dispatch [:set-view-range-day])} "view_day"]
-     [:i {:class "material-icons" :style icon-style
-          :onClick #(rf/dispatch [:set-view-range-week])} "view_week"]
-     [:i {:class "material-icons" :style icon-style
-          :onClick #(rf/dispatch [:set-view-range-week
-                                  {:start (new js/Date)
-                                   :stop (new js/Date)}])} "date_range"]]))
-
-(defn selectable-list-example []
-  (let [list-item-selected (atom 1)]
-    [ui/selectable-list
-     {:value @list-item-selected
-      :on-change (fn [event value]
-                   (reset! list-item-selected value))}
-     [ui/subheader {} "Selectable Contacts"]
-     [ui/list-item
-      {:value 1
-       :primary-text "Brendan Lim"
-       :nested-items
-       [(r/as-element
-         [ui/list-item
-          {:value 2
-           :key 8
-           :primary-text "Grace Ng"}])]}]
-     [ui/list-item
-      {:value 3
-       :primary-text "Kerem Suer"}]
-     [ui/list-item
-      {:value 4
-       :primary-text "Eric Hoffman"}]
-     [ui/list-item
-      {:value 5
-       :primary-text "Raquel Parrado"}]]))
+(defn render-queue [tasks]
+  (let [periods-no-stamps (utils/filter-periods-no-stamps tasks)]
+    [:div.queue-container {:style {:display "flex" :align-self "center"}}
+     [ui/paper
+      [:div.queue {:style {:overflow-y "scroll"}}
+       [ui/list
+        (->> periods-no-stamps
+             (map (fn [period]
+                    [ui/list-item
+                     {:key (:id period)
+                      :primaryText (str "period-id " (:id period))
+                      :onTouchTap #(rf/dispatch
+                                    [:set-selected-task (:task-id period)])
+                      }
+                     ]
+                    )))
+        ]]]]
+    )
+  )
 
 (defn home-page []
   (let [tasks @(rf/subscribe [:tasks])
         queue @(rf/subscribe [:queue])
-        drawer-state @(rf/subscribe [:drawer])
-        days  @(rf/subscribe [:visible-days])]
+        days  @(rf/subscribe [:visible-days])
+        selected-period @(rf/subscribe [:selected-period])
+        selected-task @(rf/subscribe [:selected-task])]
 
-    [ui/mui-theme-provider
-     {:mui-theme (get-mui-theme (aget js/MaterialUIStyles "DarkRawTheme"))}
-     [ui/paper
-      [ui/mui-theme-provider
-       {:mui-theme (get-mui-theme
-                    {:palette {:primary1-color (color :teal400)} })}
-       [ui/app-bar {:title "Title"
-                    :on-left-icon-button-touch-tap
-                    #(rf/dispatch [:set-drawer-state true])
-                    :icon-element-right
-                    (r/as-element [ui/icon-button
-                                   (ic/action-account-balance-wallet)])}] ]
-      [ui/drawer {:open drawer-state
-                  :docked false
-                  :on-request-change #(rf/dispatch [:set-drawer-state %])}
-       (selectable-list-example)]
+    [:div {:style {:display "flex"
+                   :flex-direction "row"
+                   :flex-wrap "nowrap"
+                   :justify-content "flex-start"
+                   :align-items "flex-start"}}
 
-      (selection-tools)
+     (task-list tasks)
 
-      [:div
-       {:style {:display "flex" :justify-content "flex-start"
-                :flex-wrap "no-wrap"}}
-       (render-days days tasks)]
+     [:div.days-container
+      {:style {:display "flex" :flex-grow "1"}
+       :onClick (fn [e] (rf/dispatch [:set-selected-period nil]))}
 
-      [ui/list
-       (map
-        #(let [id (:id %)
-               name (:name %)
-               desc (:description %)]
+      (render-days days
+                   (if (some? selected-task)
+                     (filter #(= (:id %) selected-task) tasks)
+                     tasks)
+                   selected-period)]
 
-           [ui/list-item {:key id :primaryText name}])
-        queue)]
+     [:div.queue-container
+      {:style {:display "flex"}}
 
-      ]]))
+      (render-queue tasks)
+      ]
+
+
+     ]))
 
 (def pages
   {:home #'home-page})
 
 (defn page []
-  [:div
-   [(pages @(rf/subscribe [:page]))]])
+  [ui/mui-theme-provider
+   [:div
+    [(pages @(rf/subscribe [:page]))]]
+   ]
+  )
 
 ;; -------------------------
 ;; Routes
