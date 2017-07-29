@@ -15,10 +15,9 @@
                   #(s/gen utils/time-set)))
 (s/def ::start ::moment)
 (s/def ::stop ::moment)
-(s/def ::type #{:actual :planned})
 (s/def ::priority int?)
 (s/def ::period (s/with-gen (s/and
-                             (s/keys :req-un [::type ::id]
+                             (s/keys :req-un [::id]
                                      :opt-un [::start ::stop ::description])
                              (fn [period]
                                (cond
@@ -79,15 +78,20 @@
 (s/def ::categories (s/coll-of ::category :gen-max 20))
 (s/def ::page  #{:home})
 (s/def ::type #{:category :task :period})
-(s/def ::current-selection (s/keys :req-un [::type ::id]))
-(s/def ::previous-selection (s/keys :req-un [::type ::id]))
-(s/def ::selected (s/with-gen
-                    (s/or
-                     :selection (s/keys :req-un [::current-selection
-                                                 ::previous-selection])
-                     :no-selection nil?)
-                    #(gen/return nil)))
-(s/def ::view (s/keys :req-un [::queue ::page ::selected]))
+(s/def ::type-or-nil (s/with-gen
+                       (s/or :is-type ::type
+                             :is-nil nil?)
+                       #(gen/return nil)))
+(s/def ::id-or-nil (s/with-gen
+                       (s/or :is-id ::id
+                             :is-nil nil?)
+                       #(gen/return nil)))
+(s/def ::current-selection (s/keys :req-un [::type-or-nil ::id-or-nil]))
+(s/def ::previous-selection (s/keys :req-un [::type-or-nil ::id-or-nil]))
+(s/def ::selected (s/keys :req-un [::current-selection
+                                   ::previous-selection]))
+(s/def ::view (s/keys :req-un [::page
+                               ::selected]))
 (s/def ::db (s/keys :req-un [::user ::view ::categories]))
 (def default-db (gen/generate (s/gen ::db)))
 

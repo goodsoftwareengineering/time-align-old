@@ -199,19 +199,23 @@
   )
 
 (defn home-page []
-  (let [tasks @(rf/subscribe [:tasks])
-        visible-days  @(rf/subscribe [:visible-days])
-        selected-period @(rf/subscribe [:selected-period])
-        selected-task @(rf/subscribe [:selected-task])]
+  (let []
 
-    [:div {:style {:display "flex"
-                   :flex-wrap "wrap"
-                   :justify-content "center"
-                   :align-content "space-between"
-                   :height "100%"
-                   :border "yellow solid 0.1em"
-                   :box-sizing "border-box"}}
+    [:div.app-container
+     {:style {:display "flex"
+              :flex-wrap "wrap"
+              :justify-content "center"
+              :align-content "space-between"
+              :height "100%"
+              :border "yellow solid 0.1em"
+              :box-sizing "border-box"}}
 
+     [:div.app-bar-container
+      {:style {:display "flex"
+               :flex "1 0 100%"
+               :border "green solid 0.1em"
+               :box-sizing "border-box"}}
+      "app bar"]
 
      [:div.day-container
       {:style {:display "flex"
@@ -220,12 +224,7 @@
                :border "red solid 0.1em"
                :box-sizing "border-box"}
        :onClick (fn [e] (rf/dispatch [:set-selected-period nil]))}
-
-      (days visible-days
-                   (if (some? selected-task)
-                     (filter #(= (:id %) selected-task) tasks)
-                     tasks)
-                   selected-period)
+      "day display"
       ]
 
      [:div.queue-container
