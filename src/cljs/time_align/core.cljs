@@ -63,7 +63,7 @@
     (string/join " " ["M" (:x p-start) (:y p-start)
                       "A" r r 0 large-arc-flag 1 (:x p-stop) (:y p-stop)])))
 
-(defn render-period [selected-period period]
+(defn period [selected-period period]
   (let [id (:id period)
         start-date (:start period)
         start-ms (utils/get-ms start-date)
@@ -109,11 +109,11 @@
                    (rf/dispatch
                     [:set-selected-period id])))}]))
 
-(defn render-periods [col-of-col-of-periods selected-period]
+(defn periods [col-of-col-of-periods selected-period]
   (->> col-of-col-of-periods
        (map (fn [periods]
               (->> periods
-                   (map (partial render-period selected-period)))))))
+                   (map (partial period selected-period)))))))
 
 (defn handle-period-move [id evt]
   (let [cx (js/parseInt (:cx svg-consts))
@@ -126,7 +126,7 @@
 
     (rf/dispatch [:move-selected-period time-ms])))
 
-(defn render-day [tasks selected-period day]
+(defn day [tasks selected-period day]
   (let [date-str (subs (.toISOString day) 0 10)
         col-of-col-of-periods (utils/filter-periods-for-day day tasks)]
 
@@ -143,11 +143,11 @@
                      (select-keys svg-consts [:cx :cy :r]))]
      [:circle (merge {:fill "#f1f1f1" :r (:inner-r svg-consts)}
                      (select-keys svg-consts [:cx :cy]))]
-     (render-periods col-of-col-of-periods selected-period)]))
+     (periods col-of-col-of-periods selected-period)]))
 
-(defn render-days [days tasks selected-period]
+(defn days [days tasks selected-period]
   (->> days
-       (map (partial render-day tasks selected-period))))
+       (map (partial day tasks selected-period))))
 
 (defn task-list [tasks]
   [:div.tasks-list {:style {:display "flex"}}
@@ -165,7 +165,7 @@
                 }
                ])))]]]])
 
-(defn render-queue [tasks]
+(defn queue [tasks]
   (let [periods-no-stamps (utils/filter-periods-no-stamps tasks)]
     [:div.queue-container {:style {:display "flex" :align-self "center"}}
      [ui/paper
@@ -187,8 +187,7 @@
 
 (defn home-page []
   (let [tasks @(rf/subscribe [:tasks])
-        queue @(rf/subscribe [:queue])
-        days  @(rf/subscribe [:visible-days])
+        visible-days  @(rf/subscribe [:visible-days])
         selected-period @(rf/subscribe [:selected-period])
         selected-task @(rf/subscribe [:selected-task])]
 
@@ -198,13 +197,12 @@
                    :justify-content "flex-start"
                    :align-items "flex-start"}}
 
-     (task-list tasks)
 
      [:div.days-container
       {:style {:display "flex" :flex-grow "1"}
        :onClick (fn [e] (rf/dispatch [:set-selected-period nil]))}
 
-      (render-days days
+      (days visible-days
                    (if (some? selected-task)
                      (filter #(= (:id %) selected-task) tasks)
                      tasks)
@@ -213,7 +211,6 @@
      [:div.queue-container
       {:style {:display "flex"}}
 
-      (render-queue tasks)
       ]
 
 
