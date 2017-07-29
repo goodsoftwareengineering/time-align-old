@@ -60,6 +60,8 @@ generated using Luminus version "2.9.11.46"
     - [ ] delete
 
 ## misc
+### css solution garden
+https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life-after-sass-bdf5bc80a24f
 ### linked code to save
 (s/def ::un-linked-db (s/keys :req-un [::user ::tasks ::view ::categories]))
 ;; all category-id keys in :tasks match a category in :categories

@@ -19,8 +19,10 @@
   (:import goog.History))
 
 (def svg-consts {:viewBox "0 0 100 100"
-                 :width "90" :height "90" :x "5" :y "5"
-                 :cx "50" :cy "50" :r "40" :inner-r "30"})
+                 ;; :width "90" :height "90" :x "5" :y "5"
+                 :cx "50" :cy "50" :r "40"
+                 :inner-r "30"
+                 :period-width "10"})
 
 (def shadow-filter
   [:defs
@@ -91,17 +93,28 @@
                 :else (if (= :planned type)
                         "#aaaaaa"
                         "#a1a1a1"))
+        period-width (js/parseInt (:period-width svg-consts))
+        cx      (js/parseInt (:cx svg-consts))
+        cy      (js/parseInt (:cy svg-consts))
+        ;; radii need to be offset to account for path using
+        ;; A (arc) command having radius as the center of path
+        ;; instead of edge (like circle)
+        r       (-> (js/parseInt (:r svg-consts))
+                    (- (/ period-width 2)))
+        inner-r (-> (js/parseInt (:inner-r svg-consts))
+                    (- (/ period-width 2)))
 
-        arc (describe-arc 50 50
-                          (if (= :actual type) 35 25)
+
+        arc (describe-arc cx cy
+                          (if (= :actual type) r inner-r)
                           start-angle stop-angle)]
 
     [:path
      {:key (str id)
       :d arc
       :stroke color
-      :opacity (if (= :planned type) "0.3" "0.6")
-      :stroke-width "10"
+      :opacity (if (= :planned type) "0.6" "0.3")
+      :stroke-width period-width
       :fill "transparent"
       :onClick (if (nil? selected-period)
                  (fn [e]
@@ -134,7 +147,7 @@
                   :id date-str
                   :style {:display "inline-box"}
                   :width "100%"
-                  :height "600px"
+                  :height "100%"
                   :onMouseMove (if (not (nil? selected-period))
                                  (partial handle-period-move date-str))}
                  (select-keys svg-consts [:viewBox]))
@@ -192,25 +205,43 @@
         selected-task @(rf/subscribe [:selected-task])]
 
     [:div {:style {:display "flex"
-                   :flex-direction "row"
-                   :flex-wrap "nowrap"
-                   :justify-content "flex-start"
-                   :align-items "flex-start"}}
+                   :flex-wrap "wrap"
+                   :justify-content "center"
+                   :align-content "space-between"
+                   :height "100%"
+                   :border "yellow solid 0.1em"
+                   :box-sizing "border-box"}}
 
 
-     [:div.days-container
-      {:style {:display "flex" :flex-grow "1"}
+     [:div.day-container
+      {:style {:display "flex"
+               :flex "1 0 100%"
+               :max-height "60%"
+               :border "red solid 0.1em"
+               :box-sizing "border-box"}
        :onClick (fn [e] (rf/dispatch [:set-selected-period nil]))}
 
       (days visible-days
                    (if (some? selected-task)
                      (filter #(= (:id %) selected-task) tasks)
                      tasks)
-                   selected-period)]
+                   selected-period)
+      ]
 
      [:div.queue-container
-      {:style {:display "flex"}}
+      {:style {:display "flex"
+               :flex "1 0 50%"
+               :border "blue solid 0.1em"
+               :box-sizing "border-box"}}
+      "queue display"
+      ]
 
+     [:div.action-container
+      {:style {:display "flex"
+               :flex "1 0 50%"
+               :border "green solid 0.1em"
+               :box-sizing "border-box"}}
+      "action display"
       ]
 
 

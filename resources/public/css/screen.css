@@ -1,7 +1,13 @@
-html,
-body {
+html, body
+{
 	font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   height: 100%;
-  margin: 0px;
+  margin: 0;
+  padding: 0;
   background-color: #c2c2c2;
 }
+
+div#app {height: inherit;}
+div#app>div {height: inherit;}
+
+
