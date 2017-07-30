@@ -219,13 +219,30 @@
                    :onLeftIconButtonTouchTap (fn [e] (rf/dispatch [:toggle-main-drawer]))}]
       [ui/drawer {:docked false :open main-drawer-state
                   :onRequestChange (fn [new-state] (rf/dispatch [:set-main-drawer new-state]))}
-       [ui/menu-item {:onTouchTap #(rf/dispatch [:set-main-drawer false])}
-        [:i.material-icons "person"] "Account"]
-       [ui/menu-item {:onTouchTap #(rf/dispatch [:set-main-drawer false])}
-        [:i.material-icons "settings"] "Settings"]
-       ;; [ui/menu-item {:onTouchTap #(rf/dispatch [:set-main-drawer false])}
-       ;;  [ui/svg-icon {:marginRight "24"} [:p {:d "M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"}]] "???"]
-       ]]
+       [ui/menu-item {:onTouchTap #(rf/dispatch [:set-main-drawer false])
+                      :innerDivStyle {:display "flex" :align-items "center"}}
+        ;; these shit custom icons will be replaced
+        [ui/svg-icon {:viewBox "0 0 1000 1000" :style {:marginRight "0.5em"}}
+         [:path {:d "m 301.10485,251.13502 0,196.68543 c 0,0 298.89515,4.54175 300,0 C 450,502.3622 450,602.3622 600,648.3622 l -150,0 0,200 300,0 c -150,54 -150,154 0,200.5417 l -397.5301,2.2098 -1.10485,-203.90393 -3.31457,-194.7597 L 201.10485,652.14472 200,548.78259 200,248.75638 c 0,0 -150,3.60582 -145.874634,4.01566 4.125366,0.40983 -7.69835,-198.985158 -5.625852,-198.98022 l 249.561646,0.59466 294.9284,-1.912377 c 0.18827,66.675467 -0.25657,133.347547 -0.68787,200.020867 z"}]]
+        [:span "Categories"]]
+       [ui/menu-item {:onTouchTap #(rf/dispatch [:set-main-drawer false])
+                      :innerDivStyle {:display "flex" :align-items "center"}}
+        [ui/svg-icon {:viewBox "0 0 1000 1000" :style {:marginRight "0.5em"}}
+         [:path {:d "m 301.10485,251.13502 0,196.68543 c 0,0 397.22719,3.4369 398.33204,-1.10485 -1.10485,4.54175 -1.10485,194.54175 -1.10485,200.54175 L 450,648.3622 l 0,200 300,0 c -150,54 -150,154 0,200.5417 l -397.5301,2.2098 -1.10485,-203.90393 -3.31457,-194.7597 L 201.10485,652.14472 200,548.78259 200,248.75638 c 0,0 -150,3.60582 -145.874634,4.01566 4.125366,0.40983 -7.69835,-198.985158 -5.625852,-198.98022 l 249.561646,0.59466 294.9284,-1.912377 C 450,102.3622 450,202.3622 592.30169,252.49497 Z"}]]
+        [:span "Tasks"]]
+       [ui/menu-item {:onTouchTap #(rf/dispatch [:set-main-drawer false])
+                      :innerDivStyle {:display "flex" :align-items "center"}}
+        [ui/svg-icon {:viewBox "0 0 1000 1000" :style {:marginRight "0.5em"}}
+         [:path {:d "m 301.10485,251.13502 0,196.68543 c 0,0 397.22719,3.4369 398.33204,-1.10485 -1.10485,4.54175 -1.10485,194.54175 -1.10485,200.54175 L 450,648.3622 l 0,200 300,0 c -150,54 -150,154 0,200.5417 l -397.5301,2.2098 -1.10485,-203.90393 -3.31457,-194.7597 L 201.10485,652.14472 200,548.78259 200,248.75638 c 0,0 -150,3.60582 -145.874634,4.01566 4.125366,0.40983 -7.69835,-198.985158 -5.625852,-198.98022 l 249.561646,0.59466 294.9284,-1.912377 C 450,102.3622 450,202.3622 592.30169,252.49497 Z"}]]
+        [:span "Periods"]]
+       [ui/menu-item {:onTouchTap #(rf/dispatch [:set-main-drawer false])
+                      :innerDivStyle {:display "flex" :align-items "center"}}
+        [ic/social-person {:style {:marginRight "0.5em"}}]
+        [:span "Account"]]
+       [ui/menu-item {:onTouchTap #(rf/dispatch [:set-main-drawer false])
+                      :innerDivStyle {:display "flex" :align-items "center"}}
+        [ic/action-settings {:style {:marginRight "0.5em"}}]
+        [:span "Settings"]]]]
 
      [:div.day-container
       {:style {:display "flex"
