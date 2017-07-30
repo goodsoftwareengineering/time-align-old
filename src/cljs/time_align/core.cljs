@@ -65,7 +65,7 @@
     (string/join " " ["M" (:x p-start) (:y p-start)
                       "A" r r 0 large-arc-flag 1 (:x p-stop) (:y p-stop)])))
 
-(defn period [selected-period period]
+(defn actual-period [selected period]
   (let [id (:id period)
         start-date (:start period)
         start-ms (utils/get-ms start-date)
@@ -74,6 +74,11 @@
         stop-date (:stop period)
         stop-ms (utils/get-ms stop-date)
         stop-angle (utils/ms-to-angle stop-ms)
+
+        is-period-selected (= :period (get-in selected [:current-selection :type]))
+        selected-period (if is-period-selected
+                          (get-in selected [:current-selection :id])
+                          nil)
 
         type (:type period)
         color (cond
@@ -101,19 +106,14 @@
         ;; instead of edge (like circle)
         r       (-> (js/parseInt (:r svg-consts))
                     (- (/ period-width 2)))
-        inner-r (-> (js/parseInt (:inner-r svg-consts))
-                    (- (/ period-width 2)))
 
-
-        arc (describe-arc cx cy
-                          (if (= :actual type) r inner-r)
-                          start-angle stop-angle)]
+        arc (describe-arc cx cy r start-angle stop-angle)]
 
     [:path
      {:key (str id)
       :d arc
       :stroke color
-      :opacity (if (= :planned type) "0.6" "0.3")
+      :opacity "0.6"
       :stroke-width period-width
       :fill "transparent"
       :onClick (if (nil? selected-period)
@@ -122,11 +122,15 @@
                    (rf/dispatch
                     [:set-selected-period id])))}]))
 
-(defn periods [col-of-col-of-periods selected-period]
-  (->> col-of-col-of-periods
+(defn periods [periods selected]
+  (->> (:actual periods)
        (map (fn [periods]
               (->> periods
-                   (map (partial period selected-period)))))))
+                   (map (partial actual-period selected))))))
+  (->> (:planned periods)
+       (map (fn [periods]
+              (->> periods
+                   (map (partial actual-period selected)))))))
 
 (defn handle-period-move [id evt]
   (let [cx (js/parseInt (:cx svg-consts))
@@ -139,24 +143,25 @@
 
     (rf/dispatch [:move-selected-period time-ms])))
 
-(defn day [tasks selected-period day]
+(defn day [tasks selected day]
   (let [date-str (subs (.toISOString day) 0 10)
-        col-of-col-of-periods (utils/filter-periods-for-day day tasks)]
+        filtered-periods (utils/filter-periods-for-day day tasks)]
 
     [:svg (merge {:key date-str
                   :id date-str
                   :style {:display "inline-box"}
                   :width "100%"
                   :height "100%"
-                  :onMouseMove (if (not (nil? selected-period))
-                                 (partial handle-period-move date-str))}
+                  ;; :onMouseMove (if (not (nil? selected-period))
+                  ;;                (partial handle-period-move date-str))
+                  }
                  (select-keys svg-consts [:viewBox]))
      shadow-filter
      [:circle (merge {:fill "#e8e8e8" :filter "url(#shadow-2dp)"}
                      (select-keys svg-consts [:cx :cy :r]))]
      [:circle (merge {:fill "#f1f1f1" :r (:inner-r svg-consts)}
                      (select-keys svg-consts [:cx :cy]))]
-     (periods col-of-col-of-periods selected-period)]))
+     (periods filtered-periods selected)]))
 
 (defn days [days tasks selected-period]
   (->> days
@@ -199,7 +204,9 @@
   )
 
 (defn home-page []
-  (let [main-drawer-state @(rf/subscribe [:main-drawer-state])]
+  (let [main-drawer-state @(rf/subscribe [:main-drawer-state])
+        tasks @(rf/subscribe [:tasks])
+        selected @(rf/subscribe [:selected])]
 
     [:div.app-container
      {:style {:display "flex"
@@ -251,6 +258,7 @@
                :border "red solid 0.1em"
                :box-sizing "border-box"}
        :onClick (fn [e] (.log js/console "I used to deselect things"))}
+      (day tasks selected (new js/Date))
       "day display"
       ]
 

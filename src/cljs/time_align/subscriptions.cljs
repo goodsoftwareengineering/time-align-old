@@ -15,14 +15,6 @@
    (get-in db [:view :main-drawer])))
 
 (reg-sub
- :queue
- (fn [db _]
-   (->> db
-        (:tasks)
-        (filter :complete))))
-
-;; TODO remove this
-(reg-sub
  :tasks
  (fn [db _]
    (utils/pull-tasks db)))
@@ -43,21 +35,8 @@
        (map #(new js/Date %) days-in-ms)))))
 
 (reg-sub
- :selected-period
+ :selected
  (fn [db _]
-   (let [selection (get-in db [:view :selected])
-         is-period (= :period (:selected-type selection))
-         id (:id selection)]
-     (if is-period
-       id
-       nil))))
+   (get-in db [:view :selected])))
 
-(reg-sub
- :selected-task
- (fn [db _]
-   (let [selection (get-in db [:view :selected])
-         is-task (= :task (:selected-type selection))
-         id (:id selection)]
-     (if is-task
-       id
-       nil))))
+

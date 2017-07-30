@@ -92,3 +92,16 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
 
 ## License
 ???
+
+## left off
+core needs : 
+```clojure
+{:planned-periods [coll-of modified periods] :actual-periods [coll-of modified periods]}
+```
+utils needs :
+(fn filter-for-day [tasks day]
+maps over tasks
+for any actual periods with stamps 
+map carrying in color and task id
+do the same for planned
+)
