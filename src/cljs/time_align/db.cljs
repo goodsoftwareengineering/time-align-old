@@ -90,8 +90,12 @@
 (s/def ::previous-selection (s/keys :req-un [::type-or-nil ::id-or-nil]))
 (s/def ::selected (s/keys :req-un [::current-selection
                                    ::previous-selection]))
+(s/def ::main-drawer (s/with-gen
+                       boolean?
+                       #(gen/return false)))
 (s/def ::view (s/keys :req-un [::page
-                               ::selected]))
+                               ::selected
+                               ::main-drawer]))
 (s/def ::db (s/keys :req-un [::user ::view ::categories]))
 (def default-db (gen/generate (s/gen ::db)))
 

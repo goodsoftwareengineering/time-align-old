@@ -199,7 +199,7 @@
   )
 
 (defn home-page []
-  (let []
+  (let [main-drawer-state @(rf/subscribe [:main-drawer-state])]
 
     [:div.app-container
      {:style {:display "flex"
@@ -207,15 +207,25 @@
               :justify-content "center"
               :align-content "space-between"
               :height "100%"
-              :border "yellow solid 0.1em"
+              ;; :border "yellow solid 0.1em"
               :box-sizing "border-box"}}
 
      [:div.app-bar-container
       {:style {:display "flex"
                :flex "1 0 100%"
-               :border "green solid 0.1em"
+               ;; :border "green solid 0.1em"
                :box-sizing "border-box"}}
-      "app bar"]
+      [ui/app-bar {:title "Time Align"
+                   :onLeftIconButtonTouchTap (fn [e] (rf/dispatch [:toggle-main-drawer]))}]
+      [ui/drawer {:docked false :open main-drawer-state
+                  :onRequestChange (fn [new-state] (rf/dispatch [:set-main-drawer new-state]))}
+       [ui/menu-item {:onTouchTap #(rf/dispatch [:set-main-drawer false])}
+        [:i.material-icons "person"] "Account"]
+       [ui/menu-item {:onTouchTap #(rf/dispatch [:set-main-drawer false])}
+        [:i.material-icons "settings"] "Settings"]
+       ;; [ui/menu-item {:onTouchTap #(rf/dispatch [:set-main-drawer false])}
+       ;;  [ui/svg-icon {:marginRight "24"} [:p {:d "M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"}]] "???"]
+       ]]
 
      [:div.day-container
       {:style {:display "flex"
@@ -223,7 +233,7 @@
                :max-height "60%"
                :border "red solid 0.1em"
                :box-sizing "border-box"}
-       :onClick (fn [e] (rf/dispatch [:set-selected-period nil]))}
+       :onClick (fn [e] (.log js/console "I used to deselect things"))}
       "day display"
       ]
 

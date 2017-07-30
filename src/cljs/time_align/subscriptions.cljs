@@ -10,9 +10,9 @@
     (get-in db [:view :page])))
 
 (reg-sub
- :drawer
+ :main-drawer-state
  (fn [db _]
-   (get-in db [:view :drawer])))
+   (get-in db [:view :main-drawer])))
 
 (reg-sub
  :queue

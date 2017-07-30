@@ -34,9 +34,14 @@
    (assoc-in db [:view :range] range)))
 
 (reg-event-db
- :set-drawer-state
- (fn [db [_ new-bool]]
-   (assoc-in db [:view :drawer] new-bool)))
+ :toggle-main-drawer
+ (fn [db [_ _]]
+   (update-in db [:view :main-drawer] not)))
+
+(reg-event-db
+ :set-main-drawer
+ (fn [db [_ new-state]]
+   (assoc-in db [:view :main-drawer] new-state)))
 
 (reg-event-db
  :set-selected-period
