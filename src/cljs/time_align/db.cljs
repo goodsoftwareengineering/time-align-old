@@ -36,7 +36,6 @@
                   ;; < 2 hrs
                   #(gen/fmap (fn [moment]
                                (let [queue-status (> 0.5 (rand))
-                                     type (if (> 0.5 (rand)) :actual :planned)
                                      start (.valueOf moment)
                                      stop  (->> start
                                                 (+ (rand-int (* 2 utils/hour-ms))))
@@ -45,8 +44,7 @@
                                               {:start (new js/Date start)
                                                :stop (new js/Date stop)})]
 
-                                 (merge stamps {:type type
-                                                :id (random-uuid)})))
+                                 (merge stamps {:id (random-uuid)})))
                              (s/gen ::moment))))
 (s/def ::periods (s/coll-of ::period :gen-max 5))
 (s/def ::hex-digit (s/with-gen (s/and string? #(contains? (set "0123456789abcdef") %))

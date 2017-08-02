@@ -77,7 +77,7 @@
 
         is-period-selected (= :period (get-in selected [:current-selection :type]))
         selected-period (if is-period-selected
-                          (get-in selected [:current-selection :id])
+                          (get-in selected [:current-selection :id-or-nil])
                           nil)
 
         type (:type period)
@@ -123,14 +123,19 @@
                     [:set-selected-period id])))}]))
 
 (defn periods [periods selected]
-  (->> (:actual periods)
-       (map (fn [periods]
-              (->> periods
-                   (map (partial actual-period selected))))))
-  (->> (:planned periods)
-       (map (fn [periods]
-              (->> periods
-                   (map (partial actual-period selected)))))))
+  (let [actual (:actual-periods periods)]
+    [:g
+     (if (some? actual)
+       (->> actual
+            (map (fn [period] (actual-period selected period))))
+      )
+     ]
+    )
+  ;; (->> (:planned periods)
+  ;;      (map (fn [periods]
+  ;;             (->> periods
+  ;;                  (map (partial planned-period selected))))))
+  )
 
 (defn handle-period-move [id evt]
   (let [cx (js/parseInt (:cx svg-consts))

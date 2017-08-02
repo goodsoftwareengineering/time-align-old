@@ -128,30 +128,27 @@
        (= day-str stop-str)))
     false))
 
+(defn filter-out-stamps
+  "Takes a keyword indicating type of period and the task. If the task contains periods of that type it will filter out the those types of periods with no stamps and return the task with that type of period collection modified."
+  [type task]
+  (->> (type task)
+       (filter
+        (fn [period] (and (contains? period :start)
+                          (contains? period :stop))))
+       ((fn [periods] (if (empty? periods)
+                        (dissoc task type)
+                        (merge task {type periods}))))))
+
 (defn filter-periods-with-stamps
   "Takes a list of tasks and returns a list of tasks with only periods that have stamps."
   [tasks]
-  (let [actual-periods
-        (->> tasks
-             (filter (fn [task] (contains? task :actual-periods)))
-             (map (fn [task]
-                    (->> (:actual-periods task)
-                         (filter
-                          (fn [period] (and (contains? period :start)
-                                            (contains? period :stop))))
-                         ((fn [periods] (merge task {:periods periods})))))))
-        planned-periods
-        (->> tasks
-             (filter (fn [task] (contains? task :planned-periods)))
-             (map (fn [task]
-                    (->> (:planned-periods task)
-                         (filter
-                          (fn [period] (and (contains? period :start)
-                                            (contains? period :stop))))
-                         ((fn [periods] (merge task {:periods periods})))))))]
-    {:actual-periods actual-periods
-     :planned-periods planned-periods}))
-
+  (->> tasks
+       (filter (fn [task] (or (contains? task :actual-periods)
+                              (contains? task :planned-periods))))
+       (map (partial filter-out-stamps :actual-periods))
+       (map (partial filter-out-stamps :planned-periods))
+       )
+  )
 
 (defn filter-periods-no-stamps
   "Takes a list of tasks and returns a list of modified periods."
@@ -169,41 +166,33 @@
              (flatten))]
     planned-periods))
 
+(defn modify-and-pull-periods
+  "Takes a keyword indicating period type, and the task containing periods. Returns a collection of periods with parent task info."
+  [type tasks]
+  (->> tasks
+       (map
+        (fn [task]
+          (let [id (:id task)
+                periods (type task)
+                color (:color task)]
+            (->> periods
+                 (map #(assoc % :task-id id :color color))))))
+       (flatten))
+  )
+
 (defn filter-periods-for-day
   "Takes a day and a list of tasks and returns a list of modified periods."
   [day tasks]
   (let [new-tasks (filter-periods-with-stamps tasks)
-        actual-periods (->> (:actual-periods new-tasks)
-                            (map
-                             (fn [task]
-                               (let [id (:id task)
-                                     all-periods (:actual-periods task)
-                                     color (:color task)]
+        actual-periods (modify-and-pull-periods :actual-periods new-tasks)
+        actual-filtered (->> actual-periods
+                             (filter (partial period-in-day day)))
+        planned-periods (modify-and-pull-periods :planned-periods new-tasks)
+        planned-filtered (->> planned-periods
+                              (filter (partial period-in-day day)))]
 
-                                 (->> all-periods
-                                      ;; filter out periods not in day
-                                      (filter (partial period-in-day day))
-                                      ;; add task id to each period
-                                      (map #(assoc % :task-id id :color color))))))
-                            (filter #(< 0 (count %))))
-        planned-periods (->> (:planned-periods new-tasks)
-                             (map
-                              (fn [task]
-                                (let [id (:id task)
-                                      all-periods (:planned-periods task)
-                                      color (:color task)]
-
-                                  (->> all-periods
-                                       ;; filter out periods not in day
-                                       (filter (partial period-in-day day))
-                                       ;; add task id to each period
-                                       (map #(assoc % :task-id id :color color))))))
-                             (filter #(< 0 (count %))))]
-    {:actual-periods actual-periods
-     :planned-periods planned-periods}
-    ))
-
-(filter-periods-for-day (new js/Date) (pull-tasks @re-frame.db/app-db))
+    {:actual-periods actual-filtered
+     :planned-periods planned-filtered}))
 
 (defn client-to-view-box [id evt]
   (let [pt (-> (.getElementById js/document id)
