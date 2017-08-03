@@ -75,29 +75,20 @@
         stop-ms (utils/get-ms stop-date)
         stop-angle (utils/ms-to-angle stop-ms)
 
-        is-period-selected (= :period (get-in selected [:current-selection :type]))
+        is-period-selected (= :period (get-in selected [:current-selection :type-or-nil]))
         selected-period (if is-period-selected
                           (get-in selected [:current-selection :id-or-nil])
                           nil)
 
         type (:type period)
         color (cond
-                ;; actual
-                (and (or (nil? selected-period)
-                         (= selected-period id))
-                     (= :actual type))
+                (or (nil? selected-period)
+                    (= selected-period id))
                 (:color period)
-                ;; "#43a047"
-                ;; planned
-                (and (or (nil? selected-period)
-                         (= selected-period id))
-                     (= :planned type))
-                (:color period)
-                ;; "#63ccff"
-                ;; something else selected
-                :else (if (= :planned type)
-                        "#aaaaaa"
-                        "#a1a1a1"))
+                (and (some? selected-period)
+                     (not= selected-period id))
+                "#aaaaaa"
+                :else "#000000")
         period-width (js/parseInt (:period-width svg-consts))
         cx      (js/parseInt (:cx svg-consts))
         cy      (js/parseInt (:cy svg-consts))
@@ -119,6 +110,7 @@
       :onClick (if (nil? selected-period)
                  (fn [e]
                    (.stopPropagation e)
+                   (println "clicked me")
                    (rf/dispatch
                     [:set-selected-period id])))}]))
 
@@ -262,7 +254,7 @@
                :max-height "60%"
                :border "red solid 0.1em"
                :box-sizing "border-box"}
-       :onClick (fn [e] (.log js/console "I used to deselect things"))}
+       :onClick (fn [e] (rf/dispatch [:set-selected-period nil]))}
       (day tasks selected (new js/Date))
       "day display"
       ]

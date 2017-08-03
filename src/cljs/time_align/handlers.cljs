@@ -46,9 +46,14 @@
 (reg-event-db
  :set-selected-period
  (fn [db [_ period-id]]
-   (assoc-in db [:view :selected ]
-             {:selected-type :period
-              :id period-id})))
+   (let [type (if (nil? period-id) nil :period)
+         prev (get-in db [:view :selected :current-selection])
+         curr {:type-or-nil type :id-or-nil period-id}]
+     (assoc-in db [:view :selected]
+               {:current-selection curr
+                :previous-selection prev})
+     )
+   ))
 
 (reg-event-db
  :set-selected-task
