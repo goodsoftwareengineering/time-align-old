@@ -65,7 +65,7 @@
     (string/join " " ["M" (:x p-start) (:y p-start)
                       "A" r r 0 large-arc-flag 1 (:x p-stop) (:y p-stop)])))
 
-(defn actual-period [selected period]
+(defn period [selected type period]
   (let [id (:id period)
         start-date (:start period)
         start-ms (utils/get-ms start-date)
@@ -80,7 +80,6 @@
                           (get-in selected [:current-selection :id-or-nil])
                           nil)
 
-        type (:type period)
         color (cond
                 (or (nil? selected-period)
                     (= selected-period id))
@@ -95,7 +94,11 @@
         ;; radii need to be offset to account for path using
         ;; A (arc) command having radius as the center of path
         ;; instead of edge (like circle)
-        r       (-> (js/parseInt (:r svg-consts))
+        r       (-> (case type
+                      :actual (:r svg-consts)
+                      :planned (:inner-r svg-consts)
+                      (* 0.5 (:inner-r svg-consts)))
+                    (js/parseInt )
                     (- (/ period-width 2)))
 
         arc (describe-arc cx cy r start-angle stop-angle)]
@@ -115,14 +118,26 @@
                     [:set-selected-period id])))}]))
 
 (defn periods [periods selected]
-  (let [actual (:actual-periods periods)]
+  (let [actual (:actual-periods periods)
+        planned (:planned-periods periods)]
     [:g
-     (if (some? actual)
-       (->> actual
-            (map (fn [period] (actual-period selected period))))
-      )
+     [:g
+      (if (some? actual)
+        (->> actual
+             (map (fn [actual-period] (period selected :actual
+                                              actual-period))))
+        )
+
+      ]
+     [:g
+      (if (some? planned)
+        (->> planned
+             (map (fn [planned-period] (period selected :planned
+                                               planned-period))))
+        )
+      ]
      ]
-    )
+        )
   ;; (->> (:planned periods)
   ;;      (map (fn [periods]
   ;;             (->> periods
