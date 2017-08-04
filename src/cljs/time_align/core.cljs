@@ -260,12 +260,12 @@
                :box-sizing "border-box"}
        :onClick (fn [e] (rf/dispatch [:set-selected-period nil]))}
       (day tasks selected (new js/Date))
-      "day display"
       ]
 
      [:div.queue-container
       {:style {:display "flex"
                :flex "1 0 50%"
+               :height "100%"
                :border "blue solid 0.1em"
                :box-sizing "border-box"}}
       "queue display"
@@ -274,6 +274,7 @@
      [:div.action-container
       {:style {:display "flex"
                :flex "1 0 50%"
+               :height "100%"
                :border "green solid 0.1em"
                :box-sizing "border-box"}}
       "action display"
