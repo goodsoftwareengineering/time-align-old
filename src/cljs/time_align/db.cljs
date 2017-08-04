@@ -84,8 +84,14 @@
                        (s/or :is-id ::id
                              :is-nil nil?)
                        #(gen/return nil)))
-(s/def ::current-selection (s/keys :req-un [::type-or-nil ::id-or-nil]))
-(s/def ::previous-selection (s/keys :req-un [::type-or-nil ::id-or-nil]))
+(s/def ::current-selection (s/and (s/keys :req-un [::type-or-nil ::id-or-nil])
+                                  (fn [sel] (if (some? (:type-or-nil sel))
+                                              (some? (:id-or-nil sel))
+                                              false))))
+(s/def ::previous-selection (s/and (s/keys :req-un [::type-or-nil ::id-or-nil])
+                                   (fn [sel] (if (some? (:type-or-nil sel))
+                                               (some? (:id-or-nil sel))
+                                               false))))
 (s/def ::selected (s/keys :req-un [::current-selection
                                    ::previous-selection]))
 (s/def ::main-drawer (s/with-gen

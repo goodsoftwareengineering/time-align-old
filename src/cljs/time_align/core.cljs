@@ -142,15 +142,19 @@
 
 (defn day [tasks selected day]
   (let [date-str (subs (.toISOString day) 0 10)
-        filtered-periods (utils/filter-periods-for-day day tasks)]
+        filtered-periods (utils/filter-periods-for-day day tasks)
+        selected-period (if (= :period
+                               (get-in selected [:current-selection :type-or-nil]))
+                          (get-in selected [:current-selection :id-or-nil])
+                          nil)]
 
     [:svg (merge {:key date-str
                   :id date-str
                   :style {:display "inline-box"}
                   :width "100%"
                   :height "100%"
-                  ;; :onMouseMove (if (not (nil? selected-period))
-                  ;;                (partial handle-period-move date-str))
+                  :onMouseMove (if (not (nil? selected-period))
+                                 (partial handle-period-move date-str))
                   }
                  (select-keys svg-consts [:viewBox]))
      shadow-filter

@@ -261,6 +261,14 @@
        (remove nil?)
        (remove empty?)))
 
+(defn modify-periods [category-id task-id color type periods]
+  (->> periods
+   (map (fn [period]
+          (merge period {:color color
+                         :category-id category-id
+                         :task-id task-id
+                         :type type})))))
+
 (defn pull-periods [db]
   (->> (:categories db)
        (map (fn [category]
@@ -269,19 +277,26 @@
                 (->>
                  (:tasks category)
                  (map (fn [task]
-                        (let [task-id (:id task)]
-                          (->>
-                           (:periods task)
-                           (map (fn [period]
-                                  (merge period {:color color
-                                                 :category-id category-id
-                                                 :task-id task-id}))))
+                        (let [task-id (:id task)
+                              actual (modify-periods
+                                      category-id
+                                      task-id
+                                      color
+                                      :actual
+                                      (:actual-periods task))
+                              planned (modify-periods
+                                       category-id
+                                       task-id
+                                       color
+                                       :planned
+                                       (:planned-periods task))]
+                          (concat actual planned)
                           ))))
                 )
               )
             )
        (flatten)
-       ;; (remove empty?)
-       ;; (remove nil?)
+       (remove empty?)
+       (remove nil?)
        )
   )

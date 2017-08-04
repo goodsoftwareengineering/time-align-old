@@ -80,22 +80,26 @@
      :period period}))
 
 (defn period-selected? [db]
-  (and (= :period (get-in db [:view :selected :selected-type]))
-       (some? (get-in db [:view :selected :id]))))
+  (= :period (get-in db [:view :selected :current-selection :type-or-nil])))
 
 (reg-event-db
  :move-selected-period
  (fn [db [_ new-start-time-ms]]
    (if (period-selected? db)
      (let [
-           p-id (get-in db [:view :selected :id])
+           p-id (get-in db [:view :selected :current-selection :id-or-nil])
            chopped-tree (fell-tree-with-period-id db p-id)
            task (:task chopped-tree)
            t-id (:id task)
            category (:category chopped-tree)
            c-id (:id category)
-           period (:period chopped-tree)
-           other-periods (->> (:periods task)
+           _period (:period chopped-tree)
+           period-type (:type _period)
+           type-coll (case period-type
+                       :actual :actual-periods
+                       :planned :planned-periods)
+           period (dissoc _period :type)
+           other-periods (->> (type-coll task)
                               (remove #(= p-id (:id %))))
            other-tasks (->> (:tasks category)
                             (remove #(= t-id (:id %))))
@@ -114,12 +118,11 @@
                         (new js/Date))
            new-period (merge period {:start new-start :stop new-stop})
            new-periods (cons new-period other-periods)
-           new-task (merge task {:periods new-periods})
+           new-task (merge task {type-coll new-periods})
            new-tasks (cons new-task other-tasks)
            new-category (merge category {:tasks new-tasks})
            new-categories (cons new-category other-categories)
            ]
-
        (merge db {:categories new-categories})
        )
      (do (.log js/console "no period selected")
