@@ -119,3 +119,10 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
    - no task can be moved so that its stop time goes past end of day (default 23:59) 
    - In order to have a task go over day divisor it must be _selected_ and then _split_ through the action button.
    - _splitting_ will create two tasks of half the duration of the original. One will have a stop that ends on the current day divisor and the other will have a start that begins at the next day divisor
+
+
+- [ ] fix touchy touch handler
+- [ ] add other stretch handle (rename circle to drag handle)
+- [ ] place/implement zoom in buttons
+- [ ] change drag to move by mid-point
+- [ ] implement stretch handle
