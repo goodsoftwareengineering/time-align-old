@@ -271,7 +271,7 @@
       {:style {:display "flex"
                :flex "1 0 100%"
                :max-height "60%"
-               :border "red solid 0.1em"
+               ;; :border "red solid 0.1em"
                :box-sizing "border-box"}
        :onClick (fn [e] (rf/dispatch [:set-selected-period nil]))}
       (day tasks selected (new js/Date))
@@ -279,20 +279,32 @@
 
      [:div.queue-container
       {:style {:display "flex"
-               :flex "1 0 50%"
-               :height "100%"
-               :border "blue solid 0.1em"
+               :flex "1 0 100%"
+               ;; :border "blue solid 0.1em"
                :box-sizing "border-box"}}
-      "queue display"
+      [ui/paper {:style {:width "100%"
+                         }}
+       [ui/list {:style {:width "100%"
+                         }}
+        (->> (range 1 100 1)
+             (map (fn [i] [ui/list-item {:key (str i "--test-item")
+                                         :primaryText (str "some item--" i)
+                                         :style {:width "100%"}}]))
+             )
+        ]
+       ]
       ]
 
      [:div.action-container
-      {:style {:display "flex"
-               :flex "1 0 50%"
-               :height "100%"
-               :border "green solid 0.1em"
+      {:style {:position "fixed"
+               :right "0"
+               :z-index "99"
+               :padding "0.75em"
+               :bottom "0"
+               ;; :border "green solid 0.1em"
                :box-sizing "border-box"}}
-      "action display"
+      [ui/floating-action-button
+       [ic/content-add {:color "white"}]]
       ]
 
 
