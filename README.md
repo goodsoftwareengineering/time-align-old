@@ -97,8 +97,18 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
 - period 
   - assigns `onTouchStart` and `onMouseDown` event handlers to itself **if** selection is not period
     - they select the period 
+  - assigns `onTouchStart` and `onMouseDown` event handlers to itself **if** selection is self
+    - they set is moving period
 - day 
-  - assigns `onTouchEnd` `onMouseUp` **if** selection is a period 
-    - they set selection nil
-  - assigns `onTouchMove` and `onMouseMove` **if** selection is a period
+  - assigns `onTouchEnd` `onMouseUp` **if** is-moving-period
+    - they set is-moving-period false
+  - assigns `onTouchMove` and `onMouseMove` **if** is-moving-period
     - they call `(handleMove)`
+    
+- when a period is selected (but not moving) there will be two indicators on each end for stretching and shrinking and an indicator in the center for sliding
+- movement will alter the _middle time_ instead of the start time
+  - this can be done by taking the _time_ of the position and setting start 
+ ```
+  pos_time = start + (d/2)
+  start = pos_time - (d/2) 
+ ```
