@@ -173,7 +173,8 @@
     [:svg (merge {:key date-str
                   :id date-str
                   :style {:display "inline-box"
-                          :touch-action "pinch-zoom"}
+                          :touch-action "pinch-zoom" ;; this stops scrolling when moving period
+                          }
                   :width "100%"
                   :height "100%"
                   :onTouchEnd (if (some? selected-period)
