@@ -163,7 +163,8 @@
                                             (not (contains? period :stop)))))
                          (map
                           (fn [period] (merge period {:task-id (:id task)
-                                                      :task-name (:name task)}))))))
+                                                      :task-name (:name task)
+                                                      :color (:color task)}))))))
              (flatten))]
     periods))
 

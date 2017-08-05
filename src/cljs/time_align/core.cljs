@@ -201,21 +201,32 @@
 
 (defn queue [tasks]
   (let [periods-no-stamps (utils/filter-periods-no-stamps tasks)]
-    [:div.queue-container {:style {:display "flex" :align-self "center"}}
-     [ui/paper
-      [:div.queue {:style {:overflow-y "scroll"}}
-       [ui/list
+       [ui/list {:style {:width "100%"}}
         (->> periods-no-stamps
              (map (fn [period]
                     [ui/list-item
-                     {:key (:id period)
-                      :primaryText (str "period-id " (:id period))
-                      :onTouchTap #(rf/dispatch
-                                    [:set-selected-task (:task-id period)])
+                     {:style {:width "100%"}
+                      :key (:id period)
+                      :leftIcon (r/as-element
+                                 [ui/svg-icon {:viewBox "0 0 1000 1000" :style {:margin-left "0.5em"}}
+                                  [:circle {:cx "500" :cy "500" :r "500" :fill (:color period)}]])
+                      :primaryText (if (some? (:description period))
+                                     (if (< 10 (count (:description period)))
+                                       (str (string/join "" (take 10 (:description period))) " ...")
+                                       (:description period))
+                                     (r/as-element
+                                      [:span {:style {:text-decoration "italic"
+                                                      :color "grey"}}
+                                       "No period description ..."]))
+                      :onTouchTap (fn [e]
+                                    (println "touched me")
+                                    ;; (rf/dispatch
+                                    ;;    [:set-selected-task (:task-id period)])
+                                    )
                       }
                      ]
                     )))
-        ]]]]
+        ]
     )
   )
 
@@ -282,16 +293,8 @@
                :flex "1 0 100%"
                ;; :border "blue solid 0.1em"
                :box-sizing "border-box"}}
-      [ui/paper {:style {:width "100%"
-                         }}
-       [ui/list {:style {:width "100%"
-                         }}
-        (->> (range 1 100 1)
-             (map (fn [i] [ui/list-item {:key (str i "--test-item")
-                                         :primaryText (str "some item--" i)
-                                         :style {:width "100%"}}]))
-             )
-        ]
+      [ui/paper {:style {:width "100%"}}
+       (queue tasks)
        ]
       ]
 
