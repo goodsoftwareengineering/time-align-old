@@ -196,15 +196,25 @@
     {:actual-periods actual-filtered
      :planned-periods planned-filtered}))
 
-(defn client-to-view-box [id evt]
+(defn client-to-view-box [id evt type]
   (let [pt (-> (.getElementById js/document id)
                (.createSVGPoint))
         ctm (-> evt
                 (.-target)
                 (.getScreenCTM))]
 
-    (set! (.-x pt) (.-clientX evt))
-    (set! (.-y pt) (.-clientY evt))
+    (set! (.-x pt) (if (= :touch type)
+                     (as-> evt e
+                          (.-touches e)
+                          (.item e 0)
+                          (.-clientX e))
+                     (.-clientX evt)))
+    (set! (.-y pt) (if (= :touch type)
+                     (as-> evt e
+                          (.-touches e)
+                          (.item e 0)
+                          (.-clientY e))
+                     (.-clientY evt)))
 
     (let [trans-pt (.matrixTransform pt (.inverse ctm))]
       {:x (.-x trans-pt) :y (.-y trans-pt)})))

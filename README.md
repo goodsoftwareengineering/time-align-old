@@ -93,6 +93,12 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
 ## License
 ???
 
-## left off
-- make period sliding work with mobile
-- figure out how to size containers with flex box
+## work space
+- period 
+  - assigns `onTouchStart` and `onMouseDown` event handlers to itself **if** selection is not period
+    - they select the period 
+- day 
+  - assigns `onTouchEnd` `onMouseUp` **if** selection is a period 
+    - they set selection nil
+  - assigns `onTouchMove` and `onMouseMove` **if** selection is a period
+    - they call `(handleMove)`

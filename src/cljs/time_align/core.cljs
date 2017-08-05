@@ -110,12 +110,17 @@
       :opacity "0.6"
       :stroke-width period-width
       :fill "transparent"
-      :onClick (if (nil? selected-period)
-                 (fn [e]
-                   (.stopPropagation e)
-                   (println "clicked me")
-                   (rf/dispatch
-                    [:set-selected-period id])))}]))
+      :onTouchStart (if (not is-period-selected)
+                      (fn [e]
+                        ;; (.stopPropagation e)
+                        (println "touch start")
+                        (rf/dispatch
+                         [:set-selected-period id])))
+      :onMouseDown (if (not is-period-selected)
+                     (fn [e]
+                       (println "mouse down")
+                       (rf/dispatch
+                        [:set-selected-period id])))}]))
 
 (defn periods [periods selected]
   (let [actual (:actual-periods periods)
@@ -144,14 +149,16 @@
   ;;                  (map (partial planned-period selected))))))
   )
 
-(defn handle-period-move [id evt]
+(defn handle-period-move [id type evt]
   (let [cx (js/parseInt (:cx svg-consts))
         cy (js/parseInt (:cy svg-consts))
-        pos (utils/client-to-view-box id evt)
+        pos (utils/client-to-view-box id evt type)
         pos-t (utils/point-to-centered-circle
                (merge pos {:cx cx :cy cy}))
         angle (utils/point-to-angle pos-t)
         time-ms (utils/angle-to-ms angle)]
+
+    (println (str "moved " type))
 
     (rf/dispatch [:move-selected-period time-ms])))
 
@@ -165,11 +172,22 @@
 
     [:svg (merge {:key date-str
                   :id date-str
-                  :style {:display "inline-box"}
+                  :style {:display "inline-box"
+                          :touch-action "pinch-zoom"}
                   :width "100%"
                   :height "100%"
-                  :onMouseMove (if (not (nil? selected-period))
-                                 (partial handle-period-move date-str))
+                  :onTouchEnd (if (some? selected-period)
+                                (fn [e]
+                                  (println "touch end")
+                                  (rf/dispatch [:set-selected-period nil])))
+                  :onMouseUp (if (some? selected-period)
+                                (fn [e]
+                                  (println "mouse up")
+                                  (rf/dispatch [:set-selected-period nil])))
+                  :onTouchMove (if (some? selected-period)
+                                 (partial handle-period-move date-str :touch))
+                  :onMouseMove (if (some? selected-period)
+                                 (partial handle-period-move date-str :mouse))
                   }
                  (select-keys svg-consts [:viewBox]))
      shadow-filter
@@ -199,8 +217,9 @@
                 }
                ])))]]]])
 
-(defn queue [tasks]
-  (let [periods-no-stamps (utils/filter-periods-no-stamps tasks)]
+(defn queue [tasks selected]
+  (let [periods-no-stamps (utils/filter-periods-no-stamps tasks)
+        ]
        [ui/list {:style {:width "100%"}}
         (->> periods-no-stamps
              (map (fn [period]
@@ -222,13 +241,7 @@
                                     (println "touched me")
                                     ;; (rf/dispatch
                                     ;;    [:set-selected-task (:task-id period)])
-                                    )
-                      }
-                     ]
-                    )))
-        ]
-    )
-  )
+                                    )}])))]))
 
 (defn home-page []
   (let [main-drawer-state @(rf/subscribe [:main-drawer-state])
@@ -284,7 +297,7 @@
                :max-height "60%"
                ;; :border "red solid 0.1em"
                :box-sizing "border-box"}
-       :onClick (fn [e] (rf/dispatch [:set-selected-period nil]))}
+       }
       (day tasks selected (new js/Date))
       ]
 
@@ -294,7 +307,7 @@
                ;; :border "blue solid 0.1em"
                :box-sizing "border-box"}}
       [ui/paper {:style {:width "100%"}}
-       (queue tasks)
+       (queue tasks selected)
        ]
       ]
 
