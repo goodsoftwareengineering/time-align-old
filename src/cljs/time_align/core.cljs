@@ -65,7 +65,7 @@
     (string/join " " ["M" (:x p-start) (:y p-start)
                       "A" r r 0 large-arc-flag 1 (:x p-stop) (:y p-stop)])))
 
-(defn period [selected type period]
+(defn period [selected is-moving-period type period]
   (let [id (:id period)
         start-date (:start period)
         start-ms (utils/get-ms start-date)
@@ -106,55 +106,64 @@
                     (js/parseInt )
                     (- (/ period-width 2)))
 
+        mid-point-angle (+ start-angle
+                           (/ (- stop-angle start-angle) 2))
+        mid-point (utils/polar-to-cartesian
+                   cx cy r
+                   mid-point-angle)
+        arc-length (*
+                    (/ (- stop-angle start-angle) 360)
+                    (* 2 (.-PI js/Math) r))
+
         arc (describe-arc cx cy r start-angle stop-angle)
-        touch-click-handler (cond
+        touch-click-handler (if
                               (not is-period-selected)
                               (fn [e]
                                 (.stopPropagation e)
                                 (rf/dispatch
-                                 [:set-selected-period id]))
-                              (= selected-period id)
-                              (fn [e]
-                                (.stopPropagation e)
-                                (rf/dispatch
-                                 [:set-moving-period true])))]
+                                 [:set-selected-period id])))
+        movement-handler (fn [e]
+                           (.stopPropagation e)
+                           (rf/dispatch
+                            [:set-moving-period true]))]
+    [:g {:key (str id)}
+     [:path
+         {:d arc
+          :stroke color
+          :opacity "0.6"
+          :stroke-width period-width
+          :fill "transparent"
+          :onTouchStart touch-click-handler
+          :onMouseDown touch-click-handler
+          }]
+     (if (and is-period-selected
+              (= selected-period id))
+       [:circle {:cx (:x mid-point) :cy (:y mid-point)
+                 :r (/ arc-length 5)
+                 :fill "white"
+                 :onTouchStart movement-handler
+                 :onMouseDown movement-handler}])]
+    ))
 
-    [:path
-     {:key (str id)
-      :d arc
-      :stroke color
-      :opacity "0.6"
-      :stroke-width period-width
-      :fill "transparent"
-      :onTouchStart touch-click-handler
-      :onMouseDown touch-click-handler}]))
-
-(defn periods [periods selected]
+(defn periods [periods selected is-moving-period]
   (let [actual (:actual-periods periods)
         planned (:planned-periods periods)]
     [:g
      [:g
       (if (some? actual)
         (->> actual
-             (map (fn [actual-period] (period selected :actual
-                                              actual-period))))
-        )
-
-      ]
+             (map (fn [actual-period] (period selected
+                                              is-moving-period
+                                              :actual
+                                              actual-period)))))]
      [:g
       (if (some? planned)
         (->> planned
-             (map (fn [planned-period] (period selected :planned
+             (map (fn [planned-period] (period selected
+                                               is-moving-period
+                                               :planned
                                                planned-period))))
-        )
-      ]
-     ]
-        )
-  ;; (->> (:planned periods)
-  ;;      (map (fn [periods]
-  ;;             (->> periods
-  ;;                  (map (partial planned-period selected))))))
-  )
+        )]]))
 
 (defn handle-period-move [id type evt]
   (let [cx (js/parseInt (:cx svg-consts))
@@ -163,11 +172,10 @@
         pos-t (utils/point-to-centered-circle
                (merge pos {:cx cx :cy cy}))
         angle (utils/point-to-angle pos-t)
-        time-ms (utils/angle-to-ms angle)]
+        new-start-time-ms (utils/angle-to-ms angle)]
 
     (println (str "moved " type))
-
-    (rf/dispatch [:move-selected-period time-ms])))
+    (rf/dispatch [:move-selected-period new-start-time-ms])))
 
 (defn day [tasks selected day]
   (let [date-str (subs (.toISOString day) 0 10)
@@ -216,7 +224,7 @@
                      (select-keys svg-consts [:cx :cy :r]))]
      [:circle (merge {:fill "#f1f1f1" :r (:inner-r svg-consts)}
                      (select-keys svg-consts [:cx :cy]))]
-     (periods filtered-periods selected)]))
+     (periods filtered-periods selected is-moving-period)]))
 
 (defn days [days tasks selected-period]
   (->> days

@@ -122,14 +122,20 @@
                         (.valueOf)
                         (+ period-length-ms)
                         (new js/Date))
-           new-period (merge period {:start new-start :stop new-stop})
+           new-period (merge period
+                             {:start new-start :stop new-stop})
            new-periods (cons new-period other-periods)
            new-task (merge task {type-coll new-periods})
            new-tasks (cons new-task other-tasks)
            new-category (merge category {:tasks new-tasks})
            new-categories (cons new-category other-categories)
            ]
-       (merge db {:categories new-categories})
+
+       (if (>= (+ new-start-time-ms period-length-ms)
+               (- utils/ms-in-day 1))
+         (do (.log js/console "must split task can't straddle")
+             db)
+         (merge db {:categories new-categories}))
        )
      (do (.log js/console "no period selected")
          db)

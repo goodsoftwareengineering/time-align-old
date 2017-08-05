@@ -114,3 +114,8 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
   pos_time = start + (d/2)
   start = pos_time - (d/2) 
  ```
+ 
+ - for dealing with tasks _straddling_ the division between yesterday and today (default 00:00) the rule shoudl be that
+   - no task can be moved so that its stop time goes past end of day (default 23:59) 
+   - In order to have a task go over day divisor it must be _selected_ and then _split_ through the action button.
+   - _splitting_ will create two tasks of half the duration of the original. One will have a stop that ends on the current day divisor and the other will have a start that begins at the next day divisor
