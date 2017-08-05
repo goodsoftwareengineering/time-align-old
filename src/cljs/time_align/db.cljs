@@ -20,31 +20,32 @@
                              (s/keys :req-un [::id]
                                      :opt-un [::start ::stop ::description])
                              (fn [period]
-                               (cond
-                                 (and (contains? period :start) (contains? period :stop))
-                                 (> (.valueOf (:stop period)) (.valueOf (:start period)))
-
-                                 (not (and (contains? period :start) (contains? period :stop)))
-                                 (= :planned (:type period))
-
-                                 :else false
-
+                               (if (and
+                                    (contains? period :start)
+                                    (contains? period :stop))
+                                 (> (.valueOf (:stop period))
+                                    (.valueOf (:start period)))
+                                 true
                                  ))
                              )
 
                   ;; generator uses a generated moment and adds a random amount of time to it
                   ;; < 2 hrs
                   #(gen/fmap (fn [moment]
-                               (let [queue-status (> 0.5 (rand))
+                               (let [queue-chance (> 0.5 (rand))
+                                     desc-chance (> 0.5 (rand))
                                      start (.valueOf moment)
                                      stop  (->> start
                                                 (+ (rand-int (* 2 utils/hour-ms))))
-                                     stamps (if queue-status
+                                     stamps (if queue-chance
                                               {}
                                               {:start (new js/Date start)
-                                               :stop (new js/Date stop)})]
+                                               :stop (new js/Date stop)})
+                                     desc (if desc-chance
+                                            {:description (gen/generate (s/gen ::description))}
+                                            {})]
 
-                                 (merge stamps {:id (random-uuid)})))
+                                 (merge stamps desc {:id (random-uuid)})))
                              (s/gen ::moment))))
 (s/def ::periods (s/coll-of ::period :gen-max 5))
 (s/def ::hex-digit (s/with-gen (s/and string? #(contains? (set "0123456789abcdef") %))
@@ -65,7 +66,11 @@
 ;; (? and priority)
 ;; tasks that are not planned (:actual) cannot have periods in the future
 ;; adding date support is going to need some cljc trickery
-(s/def ::actual-periods ::periods)
+(s/def ::actual-period (s/and ::period
+                              (fn [period]
+                                (and (contains? period :start)
+                                     (contains? period :stop)))))
+(s/def ::actual-periods (s/coll-of ::actual-period ::gen-max 2))
 (s/def ::planned-periods ::periods)
 (s/def ::task (s/keys :req-un [::id ::name ::description ::complete]
                       :opt-un [::actual-periods ::planned-periods]))

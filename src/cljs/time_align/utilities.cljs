@@ -153,18 +153,19 @@
 (defn filter-periods-no-stamps
   "Takes a list of tasks and returns a list of modified periods."
   [tasks]
-  (let [planned-periods
+  (let [periods
         (->> tasks
-             (filter (fn [task] (contains? task :actual-periods)))
+             (filter (fn [task] (contains? task :planned-periods)))
              (map (fn [task]
                     (->> (:planned-periods task)
                          (filter
                           (fn [period] (and (not (contains? period :start))
                                             (not (contains? period :stop)))))
-                         (map (fn [period] (merge period {:task-id (:id task)
-                                                          :task-name (:name task)}))))))
+                         (map
+                          (fn [period] (merge period {:task-id (:id task)
+                                                      :task-name (:name task)}))))))
              (flatten))]
-    planned-periods))
+    periods))
 
 (defn modify-and-pull-periods
   "Takes a keyword indicating period type, and the task containing periods. Returns a collection of periods with parent task info."
