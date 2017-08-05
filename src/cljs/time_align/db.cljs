@@ -102,9 +102,26 @@
 (s/def ::main-drawer (s/with-gen
                        boolean?
                        #(gen/return false)))
-(s/def ::view (s/keys :req-un [::page
-                               ::selected
-                               ::main-drawer]))
+(s/def ::moving-period (s/with-gen
+                         boolean?
+                         #(gen/return false)))
+(s/def ::continous-action (s/keys :req-un [::moving-period]))
+(s/def ::view (s/and (s/keys :req-un [::page
+                                      ::selected
+                                      ::continous-action
+                                      ::main-drawer])
+                     (fn [view]
+                       (if (get-in
+                            view
+                            [:continous-action
+                             :moving-period])
+
+                         (= :period
+                            (get-in
+                             view
+                             [:selected :current-selection
+                              :type-or-nil]))
+                         true))))
 (s/def ::db (s/keys :req-un [::user ::view ::categories]))
 (def default-db (gen/generate (s/gen ::db)))
 

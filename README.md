@@ -103,8 +103,10 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
   - assigns `onTouchEnd` `onMouseUp` **if** is-moving-period
     - they set is-moving-period false
   - assigns `onTouchMove` and `onMouseMove` **if** is-moving-period
-    - they call `(handleMove)`
-    
+    - they call `(handleMove)` fn
+  - assigns `onTouchStart` and `onMouseDown` **if** selection is period 
+    - sets selection nil
+
 - when a period is selected (but not moving) there will be two indicators on each end for stretching and shrinking and an indicator in the center for sliding
 - movement will alter the _middle time_ instead of the start time
   - this can be done by taking the _time_ of the position and setting start 

@@ -56,6 +56,12 @@
    ))
 
 (reg-event-db
+ :set-moving-period
+ (fn [db [_ is-moving-bool]]
+   (assoc-in db [:view :continous-action :moving-period]
+             is-moving-bool)))
+
+(reg-event-db
  :set-selected-task
  (fn [db [_ task-id]]
    (assoc-in db [:view :selected ]

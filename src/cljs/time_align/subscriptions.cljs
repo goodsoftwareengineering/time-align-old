@@ -20,6 +20,11 @@
    (utils/pull-tasks db)))
 
 (reg-sub
+ :is-moving-period
+ (fn [db _]
+   (get-in db [:view :continous-action :moving-period])))
+
+(reg-sub
  :visible-days
  (fn [db _]
    (let [start-inst (get-in db [:view :range :start])

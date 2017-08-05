@@ -75,9 +75,14 @@
         stop-ms (utils/get-ms stop-date)
         stop-angle (utils/ms-to-angle stop-ms)
 
-        is-period-selected (= :period (get-in selected [:current-selection :type-or-nil]))
+        is-period-selected (= :period
+                              (get-in
+                               selected
+                               [:current-selection :type-or-nil]))
         selected-period (if is-period-selected
-                          (get-in selected [:current-selection :id-or-nil])
+                          (get-in
+                           selected
+                           [:current-selection :id-or-nil])
                           nil)
 
         color (cond
@@ -101,7 +106,18 @@
                     (js/parseInt )
                     (- (/ period-width 2)))
 
-        arc (describe-arc cx cy r start-angle stop-angle)]
+        arc (describe-arc cx cy r start-angle stop-angle)
+        touch-click-handler (cond
+                              (not is-period-selected)
+                              (fn [e]
+                                (.stopPropagation e)
+                                (rf/dispatch
+                                 [:set-selected-period id]))
+                              (= selected-period id)
+                              (fn [e]
+                                (.stopPropagation e)
+                                (rf/dispatch
+                                 [:set-moving-period true])))]
 
     [:path
      {:key (str id)
@@ -110,17 +126,8 @@
       :opacity "0.6"
       :stroke-width period-width
       :fill "transparent"
-      :onTouchStart (if (not is-period-selected)
-                      (fn [e]
-                        ;; (.stopPropagation e)
-                        (println "touch start")
-                        (rf/dispatch
-                         [:set-selected-period id])))
-      :onMouseDown (if (not is-period-selected)
-                     (fn [e]
-                       (println "mouse down")
-                       (rf/dispatch
-                        [:set-selected-period id])))}]))
+      :onTouchStart touch-click-handler
+      :onMouseDown touch-click-handler}]))
 
 (defn periods [periods selected]
   (let [actual (:actual-periods periods)
@@ -166,29 +173,42 @@
   (let [date-str (subs (.toISOString day) 0 10)
         filtered-periods (utils/filter-periods-for-day day tasks)
         selected-period (if (= :period
-                               (get-in selected [:current-selection :type-or-nil]))
-                          (get-in selected [:current-selection :id-or-nil])
-                          nil)]
+                               (get-in
+                                selected
+                                [:current-selection :type-or-nil]))
+                          (get-in selected
+                                  [:current-selection :id-or-nil])
+                          nil)
+        is-moving-period @(rf/subscribe [:is-moving-period])
+        stop-touch-click-handler (if is-moving-period
+                                   (fn [e]
+                                     (rf/dispatch
+                                      [:set-moving-period false]
+                                      )))
+        on-touch-click-handler (if selected-period
+                                 (fn [e]
+                                   (rf/dispatch
+                                    [:set-selected-period nil])))]
 
     [:svg (merge {:key date-str
                   :id date-str
                   :style {:display "inline-box"
-                          :touch-action "pinch-zoom" ;; this stops scrolling when moving period
+                          :touch-action "pinch-zoom"
+                          ;; this stops scrolling
+                          ;; when moving period
                           }
                   :width "100%"
                   :height "100%"
-                  :onTouchEnd (if (some? selected-period)
-                                (fn [e]
-                                  (println "touch end")
-                                  (rf/dispatch [:set-selected-period nil])))
-                  :onMouseUp (if (some? selected-period)
-                                (fn [e]
-                                  (println "mouse up")
-                                  (rf/dispatch [:set-selected-period nil])))
-                  :onTouchMove (if (some? selected-period)
-                                 (partial handle-period-move date-str :touch))
-                  :onMouseMove (if (some? selected-period)
-                                 (partial handle-period-move date-str :mouse))
+                  :onTouchEnd stop-touch-click-handler
+                  :onMouseUp stop-touch-click-handler
+                  :onTouchMove (if is-moving-period
+                                 (partial handle-period-move
+                                          date-str :touch))
+                  :onMouseMove (if is-moving-period
+                                 (partial handle-period-move
+                                          date-str :mouse))
+                  :onTouchStart on-touch-click-handler
+                  :onMouseDown on-touch-click-handler
                   }
                  (select-keys svg-consts [:viewBox]))
      shadow-filter
