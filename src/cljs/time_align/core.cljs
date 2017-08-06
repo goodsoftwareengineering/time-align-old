@@ -159,7 +159,9 @@
        [:g
         [:circle {:cx           (:x mid-point) :cy (:y mid-point)
                   :r            (* 0.7 (/ period-width 2))
-                  :fill         "black"
+                  :fill         "transparent"
+                  :stroke       "black"
+                  :stroke-width "1"
                   :onTouchStart movement-handler
                   :onMouseDown  movement-handler}]
         [:path
