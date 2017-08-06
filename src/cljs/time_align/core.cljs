@@ -119,13 +119,24 @@
         start-ms                  (utils/angle-to-ms start-angle)
         stop-ms                   (utils/angle-to-ms stop-angle)
         hour-ms                   utils/hour-ms
-        width-stretch-ms          (* 1.5 hour-ms)
+        width-stretch-ms          (* 0.5 hour-ms)
         gap-stretch-ms            (* 0.25 hour-ms)
+
         start-stretch-start-ms    (- start-ms (+ width-stretch-ms gap-stretch-ms))
         start-stretch-start-angle (utils/ms-to-angle start-stretch-start-ms)
         start-stretch-stop-angle  (utils/ms-to-angle
                                    (+ start-stretch-start-ms
                                       width-stretch-ms))
+        start-stretch-point (utils/polar-to-cartesian
+                             cx cy r
+                             start-stretch-start-angle)
+        start-stretch-back-bottom-point (utils/polar-to-cartesian
+                                         cx cy (- r (/ period-width 2))
+                                         start-stretch-stop-angle)
+        start-stretch-back-top-point (utils/polar-to-cartesian
+                                         cx cy (+ r (/ period-width 2))
+                                         start-stretch-stop-angle)
+
         stop-stretch-start-ms     (+ stop-ms gap-stretch-ms)
         stop-stretch-start-angle  (utils/ms-to-angle stop-stretch-start-ms)
         stop-stretch-stop-angle   (utils/ms-to-angle
@@ -164,22 +175,26 @@
                   :stroke-width "1"
                   :onTouchStart movement-handler
                   :onMouseDown  movement-handler}]
-        [:path
-         {:d            (describe-arc
-                         cx cy r
-                         start-stretch-start-angle
-                         start-stretch-stop-angle)
-          :stroke       "black"
-          :fill         "transparent"
-          :stroke-width period-width}]
-        [:path
-         {:d            (describe-arc
-                         cx cy r
-                         stop-stretch-start-angle
-                         stop-stretch-stop-angle)
-          :stroke       "black"
-          :fill         "transparent"
-          :stroke-width period-width}]
+        [:polyline {:fill "transparent"
+                    :stroke "black"
+                    :stroke-width "1"
+                    :stroke-linecap "round"
+                    :points (str
+                             (:x start-stretch-point) ","
+                             (:y start-stretch-point) " "
+                             (:x start-stretch-back-bottom-point) ","
+                             (:y start-stretch-back-bottom-point) " "
+                             )}]
+        [:polyline {:fill "transparent"
+                    :stroke "black"
+                    :stroke-width "1"
+                    :stroke-linecap "round"
+                    :points (str
+                             (:x start-stretch-point) ","
+                             (:y start-stretch-point) " "
+                             (:x start-stretch-back-top-point) ","
+                             (:y start-stretch-back-top-point) " "
+                             )}]
         ]
        )
      ]

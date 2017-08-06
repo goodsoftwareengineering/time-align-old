@@ -126,6 +126,8 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
 - [x] place/implement zoom in buttons
 - [x] change drag to move by mid-point
 - [ ] implement stretch handle
-  - [ ] changle stretch handle to be part of the drag button set
-    - [ ] make an svg icon that is basically `<-O->`
-    - [ ] place that `r` above `cx cy` then rotate by mid-point-angle (that will keep the handles _in line_)
+  - [ ] make an svg icon that is basically `<O>`
+    - [x] `<O`
+    - [ ] add stop stretch handle `>`
+  - [ ] add handler to group?
+
