@@ -417,10 +417,10 @@
                                           date-str :mouse))
                   }
                  (case zoom
-                   :q1 {:viewBox "0 0 50 50"}
-                   :q2 {:viewBox "50 0 50 50"}
-                   :q3 {:viewBox "0 50 50 50"}
-                   :q4 {:viewBox "50 50 50 50"}
+                   :q1 {:viewBox "0 0 60 60"}
+                   :q2 {:viewBox "40 0 60 60"}
+                   :q3 {:viewBox "0 40 60 60"}
+                   :q4 {:viewBox "40 40 60 60"}
                    (select-keys svg-consts [:viewBox])
                    ))
      shadow-filter
