@@ -121,8 +121,8 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
    - _splitting_ will create two tasks of half the duration of the original. One will have a stop that ends on the current day divisor and the other will have a start that begins at the next day divisor
 
 
-- [ ] fix touchy touch handler
-- [ ] add other stretch handle (rename circle to drag handle)
-- [ ] place/implement zoom in buttons
+- [x] fix touchy touch handler
+- [x] add other stretch handle (rename circle to drag handle)
+- [x] place/implement zoom in buttons
 - [ ] change drag to move by mid-point
 - [ ] implement stretch handle
