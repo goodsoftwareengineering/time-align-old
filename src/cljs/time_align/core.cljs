@@ -115,18 +115,21 @@
         arc-length                (*
                                    (/ (- stop-angle start-angle) 360)
                                    (* 2 (.-PI js/Math) r))
-        start-stretch-start-angle (- start-angle
-                                     (/ (- mid-point-angle
-                                           start-angle) 3))
-        start-stretch-stop-angle  (+ start-stretch-start-angle
-                                     (/ (- mid-point-angle
-                                           start-angle) 2.9))
-        stop-stretch-start-angle  (+ stop-angle
-                                     (/ (- mid-point-angle
-                                           start-angle) 3))
-        stop-stretch-stop-angle   (- stop-stretch-start-angle
-                                     (/ (- mid-point-angle
-                                           start-angle) 2.9))
+        start-ms (utils/angle-to-ms start-angle)
+        stop-ms (utils/angle-to-ms stop-angle)
+        hour-ms utils/hour-ms
+        width-stretch-ms (* 1.5 hour-ms)
+        gap-stretch-ms (* 0.25 hour-ms)
+        start-stretch-start-ms (- start-ms (+ width-stretch-ms gap-stretch-ms))
+        start-stretch-start-angle (utils/ms-to-angle start-stretch-start-ms)
+        start-stretch-stop-angle  (utils/ms-to-angle
+                                   (+ start-stretch-start-ms
+                                      width-stretch-ms))
+        stop-stretch-start-ms (+ stop-ms gap-stretch-ms)
+        stop-stretch-start-angle  (utils/ms-to-angle stop-stretch-start-ms)
+        stop-stretch-stop-angle  (utils/ms-to-angle
+                                  (+ stop-stretch-start-ms
+                                     width-stretch-ms)) 
 
         arc                 (describe-arc cx cy r start-angle stop-angle)
         touch-click-handler (if
@@ -154,7 +157,7 @@
               (= selected-period id))
        [:g
         [:circle {:cx           (:x mid-point) :cy (:y mid-point)
-                  :r            (/ arc-length 5)
+                  :r            (* 0.7 (/ period-width 2))
                   :fill         "black"
                   :onTouchStart movement-handler
                   :onMouseDown  movement-handler}]
@@ -206,10 +209,10 @@
         pos-t             (utils/point-to-centered-circle
                            (merge pos {:cx cx :cy cy}))
         angle             (utils/point-to-angle pos-t)
-        new-start-time-ms (utils/angle-to-ms angle)]
+        mid-point-time-ms (utils/angle-to-ms angle)]
 
     (println (str "moved " type))
-    (rf/dispatch [:move-selected-period new-start-time-ms])))
+    (rf/dispatch [:move-selected-period mid-point-time-ms])))
 
 (defn x-svg [{:keys [cx cy r fill stroke shadow click] }]
   (let [pi        (.-PI js/Math)

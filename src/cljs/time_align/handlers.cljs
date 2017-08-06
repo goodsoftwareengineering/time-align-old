@@ -95,7 +95,7 @@
 
 (reg-event-db
  :move-selected-period
- (fn [db [_ new-start-time-ms]]
+ (fn [db [_ mid-point-time-ms]]
    (if (period-selected? db)
      (let [
            p-id (get-in db [:view :selected :current-selection :id-or-nil])
@@ -118,15 +118,20 @@
                                  (remove #(= c-id (:id %))))
            period-length-ms (- (.valueOf (:stop period))
                                (.valueOf (:start period)))
-           new-start (->> (:start period)
-                         (utils/zero-in-day)
+
+           new-start-ms (.max js/Math
+                              (- mid-point-time-ms (/ period-length-ms 2))
+                              0) ;; handles part of the tricky divisor
+           new-stop-ms (+ new-start-ms period-length-ms)
+           zero-day (utils/zero-in-day (:start period))
+           new-start (->> zero-day
+                          (.valueOf)
+                          (+ new-start-ms)
+                          (new js/Date))
+           new-stop (->> zero-day
                          (.valueOf)
-                         (+ new-start-time-ms)
+                         (+ new-stop-ms)
                          (new js/Date))
-           new-stop (->> new-start
-                        (.valueOf)
-                        (+ period-length-ms)
-                        (new js/Date))
            new-period (merge period
                              {:start new-start :stop new-stop})
            new-periods (cons new-period other-periods)
@@ -136,7 +141,7 @@
            new-categories (cons new-category other-categories)
            ]
 
-       (if (>= (+ new-start-time-ms period-length-ms)
+       (if (>= (+ new-stop-ms) ;; handles other part of tricky divisor
                (- utils/ms-in-day 1))
          (do (.log js/console "must split task can't straddle")
              db)

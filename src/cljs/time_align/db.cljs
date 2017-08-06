@@ -47,7 +47,7 @@
 
                                  (merge stamps desc {:id (random-uuid)})))
                              (s/gen ::moment))))
-(s/def ::periods (s/coll-of ::period :gen-max 5))
+(s/def ::periods (s/coll-of ::period :gen-max 5 :gen-min 1))
 (s/def ::hex-digit (s/with-gen (s/and string? #(contains? (set "0123456789abcdef") %))
                       #(s/gen (set "0123456789abcdef"))))
 (s/def ::hex-str (s/with-gen (s/and string? (fn [s] (every? #(s/valid? ::hex-digit %) (seq s))))
@@ -70,15 +70,15 @@
                               (fn [period]
                                 (and (contains? period :start)
                                      (contains? period :stop)))))
-(s/def ::actual-periods (s/coll-of ::actual-period ::gen-max 2))
+(s/def ::actual-periods (s/coll-of ::actual-period :gen-max 5 :gen-min 1))
 (s/def ::planned-periods ::periods)
 (s/def ::task (s/keys :req-un [::id ::name ::description ::complete]
                       :opt-un [::actual-periods ::planned-periods]))
 ;; TODO complete check (all periods are planned/actual are passed)
-(s/def ::tasks (s/coll-of ::task :gen-max 10))
+(s/def ::tasks (s/coll-of ::task :gen-max 2 :gen-min 1))
 (s/def ::user (s/keys :req-un [::name ::id ::email]))
 (s/def ::category (s/keys :req-un [::id ::name ::color ::tasks]))
-(s/def ::categories (s/coll-of ::category :gen-max 20))
+(s/def ::categories (s/coll-of ::category :gen-max 2 :gen-min 1))
 (s/def ::page  #{:home})
 (s/def ::type #{:category :task :period})
 (s/def ::type-or-nil (s/with-gen
