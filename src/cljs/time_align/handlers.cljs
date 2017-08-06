@@ -24,14 +24,14 @@
  (fn [db [_ _]]
    (assoc-in db [:view :range]
              {:start (new js/Date)
-              :stop (new js/Date)})))
+              :stop  (new js/Date)})))
 
 (reg-event-db
  :set-view-range-week
  (fn [db [_ _]]
    (assoc-in db [:view :range]
              {:start (utils/one-week-ago)
-              :stop (new js/Date)})))
+              :stop  (new js/Date)})))
 
 (reg-event-db
  :set-view-range-custom
@@ -55,7 +55,7 @@
          prev (get-in db [:view :selected :current-selection])
          curr {:type-or-nil type :id-or-nil period-id}]
      (assoc-in db [:view :selected]
-               {:current-selection curr
+               {:current-selection  curr
                 :previous-selection prev})
      )
    ))
@@ -71,24 +71,24 @@
  (fn [db [_ task-id]]
    (assoc-in db [:view :selected ]
              {:selected-type :task
-              :id task-id})))
+              :id            task-id})))
 
 (defn fell-tree-with-period-id [db p-id]
-  (let [periods (utils/pull-periods db)
-        period (->> periods
-                    (filter #(= p-id (:id %)))
-                    (first))
-        t-id (:task-id period)
-        c-id (:category-id period)
+  (let [periods  (utils/pull-periods db)
+        period   (->> periods
+                      (filter #(= p-id (:id %)))
+                      (first))
+        t-id     (:task-id period)
+        c-id     (:category-id period)
         category (->> (:categories db)
                       (filter #(= c-id (:id %)))
                       (first))
-        task (->> (:tasks category)
-                  (filter #(= t-id (:id %)))
-                  (first))]
+        task     (->> (:tasks category)
+                      (filter #(= t-id (:id %)))
+                      (first))]
     {:category category
-     :task task
-     :period period}))
+     :task     task
+     :period   period}))
 
 (defn period-selected? [db]
   (= :period (get-in db [:view :selected :current-selection :type-or-nil])))
@@ -98,47 +98,47 @@
  (fn [db [_ mid-point-time-ms]]
    (if (period-selected? db)
      (let [
-           p-id (get-in db [:view :selected :current-selection :id-or-nil])
-           chopped-tree (fell-tree-with-period-id db p-id)
-           task (:task chopped-tree)
-           t-id (:id task)
-           category (:category chopped-tree)
-           c-id (:id category)
-           _period (:period chopped-tree)
-           period-type (:type _period)
-           type-coll (case period-type
-                       :actual :actual-periods
-                       :planned :planned-periods)
-           period (dissoc _period :type)
-           other-periods (->> (type-coll task)
-                              (remove #(= p-id (:id %))))
-           other-tasks (->> (:tasks category)
-                            (remove #(= t-id (:id %))))
+           p-id             (get-in db [:view :selected :current-selection :id-or-nil])
+           chopped-tree     (fell-tree-with-period-id db p-id)
+           task             (:task chopped-tree)
+           t-id             (:id task)
+           category         (:category chopped-tree)
+           c-id             (:id category)
+           _period          (:period chopped-tree)
+           period-type      (:type _period)
+           type-coll        (case period-type
+                              :actual  :actual-periods
+                              :planned :planned-periods)
+           period           (dissoc _period :type)
+           other-periods    (->> (type-coll task)
+                                 (remove #(= p-id (:id %))))
+           other-tasks      (->> (:tasks category)
+                                 (remove #(= t-id (:id %))))
            other-categories (->> (:categories db)
                                  (remove #(= c-id (:id %))))
            period-length-ms (- (.valueOf (:stop period))
                                (.valueOf (:start period)))
 
-           new-start-ms (.max js/Math
-                              (- mid-point-time-ms (/ period-length-ms 2))
-                              0) ;; handles part of the tricky divisor
-           new-stop-ms (+ new-start-ms period-length-ms)
-           zero-day (utils/zero-in-day (:start period))
-           new-start (->> zero-day
-                          (.valueOf)
-                          (+ new-start-ms)
-                          (new js/Date))
-           new-stop (->> zero-day
-                         (.valueOf)
-                         (+ new-stop-ms)
-                         (new js/Date))
-           new-period (merge period
-                             {:start new-start :stop new-stop})
-           new-periods (cons new-period other-periods)
-           new-task (merge task {type-coll new-periods})
-           new-tasks (cons new-task other-tasks)
-           new-category (merge category {:tasks new-tasks})
-           new-categories (cons new-category other-categories)
+           new-start-ms          (.max js/Math
+                                       (- mid-point-time-ms (/ period-length-ms 2))
+                                       0) ;; handles part of the tricky divisor
+           new-stop-ms           (+ new-start-ms period-length-ms)
+           zero-day              (utils/zero-in-day (:start period))
+           new-start             (->> zero-day
+                                      (.valueOf)
+                                      (+ new-start-ms)
+                                      (new js/Date))
+           new-stop              (->> zero-day
+                                      (.valueOf)
+                                      (+ new-stop-ms)
+                                      (new js/Date))
+           new-period            (merge period
+                                        {:start new-start :stop new-stop})
+           new-periods           (cons new-period other-periods)
+           new-task              (merge task {type-coll new-periods})
+           new-tasks             (cons new-task other-tasks)
+           new-category          (merge category {:tasks new-tasks})
+           new-categories        (cons new-category other-categories)
            ]
 
        (if (>= (+ new-stop-ms) ;; handles other part of tricky divisor

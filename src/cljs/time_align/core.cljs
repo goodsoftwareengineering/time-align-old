@@ -115,21 +115,22 @@
         arc-length                (*
                                    (/ (- stop-angle start-angle) 360)
                                    (* 2 (.-PI js/Math) r))
-        start-ms (utils/angle-to-ms start-angle)
-        stop-ms (utils/angle-to-ms stop-angle)
-        hour-ms utils/hour-ms
-        width-stretch-ms (* 1.5 hour-ms)
-        gap-stretch-ms (* 0.25 hour-ms)
-        start-stretch-start-ms (- start-ms (+ width-stretch-ms gap-stretch-ms))
+
+        start-ms                  (utils/angle-to-ms start-angle)
+        stop-ms                   (utils/angle-to-ms stop-angle)
+        hour-ms                   utils/hour-ms
+        width-stretch-ms          (* 1.5 hour-ms)
+        gap-stretch-ms            (* 0.25 hour-ms)
+        start-stretch-start-ms    (- start-ms (+ width-stretch-ms gap-stretch-ms))
         start-stretch-start-angle (utils/ms-to-angle start-stretch-start-ms)
         start-stretch-stop-angle  (utils/ms-to-angle
                                    (+ start-stretch-start-ms
                                       width-stretch-ms))
-        stop-stretch-start-ms (+ stop-ms gap-stretch-ms)
+        stop-stretch-start-ms     (+ stop-ms gap-stretch-ms)
         stop-stretch-start-angle  (utils/ms-to-angle stop-stretch-start-ms)
-        stop-stretch-stop-angle  (utils/ms-to-angle
-                                  (+ stop-stretch-start-ms
-                                     width-stretch-ms)) 
+        stop-stretch-stop-angle   (utils/ms-to-angle
+                                   (+ stop-stretch-start-ms
+                                      width-stretch-ms)) 
 
         arc                 (describe-arc cx cy r start-angle stop-angle)
         touch-click-handler (if

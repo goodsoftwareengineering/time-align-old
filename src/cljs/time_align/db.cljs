@@ -33,17 +33,17 @@
                   ;; < 2 hrs
                   #(gen/fmap (fn [moment]
                                (let [queue-chance (> 0.5 (rand))
-                                     desc-chance (> 0.5 (rand))
-                                     start (.valueOf moment)
-                                     stop  (->> start
-                                                (+ (rand-int (* 2 utils/hour-ms))))
-                                     stamps (if queue-chance
-                                              {}
-                                              {:start (new js/Date start)
-                                               :stop (new js/Date stop)})
-                                     desc (if desc-chance
-                                            {:description (gen/generate (s/gen ::description))}
-                                            {})]
+                                     desc-chance  (> 0.5 (rand))
+                                     start        (.valueOf moment)
+                                     stop         (->> start
+                                                       (+ (rand-int (* 2 utils/hour-ms))))
+                                     stamps       (if queue-chance
+                                                    {}
+                                                    {:start (new js/Date start)
+                                                     :stop  (new js/Date stop)})
+                                     desc         (if desc-chance
+                                                    {:description (gen/generate (s/gen ::description))}
+                                                    {})]
 
                                  (merge stamps desc {:id (random-uuid)})))
                              (s/gen ::moment))))

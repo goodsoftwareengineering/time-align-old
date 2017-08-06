@@ -111,16 +111,16 @@
           day-d   (.getDate day)
           day-str (str day-y day-m day-d)
 
-          start   (:start period)
-          start-y (.getFullYear start)
-          start-m (.getMonth start)
-          start-d (.getDate start)
+          start     (:start period)
+          start-y   (.getFullYear start)
+          start-m   (.getMonth start)
+          start-d   (.getDate start)
           start-str (str start-y start-m start-d)
 
-          stop   (:stop period)
-          stop-y (.getFullYear stop)
-          stop-m (.getMonth stop)
-          stop-d (.getDate stop)
+          stop     (:stop period)
+          stop-y   (.getFullYear stop)
+          stop-m   (.getMonth stop)
+          stop-d   (.getDate stop)
           stop-str (str stop-y stop-m stop-d)]
 
       (or
@@ -162,9 +162,9 @@
                           (fn [period] (and (not (contains? period :start))
                                             (not (contains? period :stop)))))
                          (map
-                          (fn [period] (merge period {:task-id (:id task)
+                          (fn [period] (merge period {:task-id   (:id task)
                                                       :task-name (:name task)
-                                                      :color (:color task)}))))))
+                                                      :color     (:color task)}))))))
              (flatten))]
     periods))
 
@@ -174,9 +174,9 @@
   (->> tasks
        (map
         (fn [task]
-          (let [id (:id task)
+          (let [id      (:id task)
                 periods (type task)
-                color (:color task)]
+                color   (:color task)]
             (->> periods
                  (map #(assoc % :task-id id :color color))))))
        (flatten))
@@ -185,20 +185,20 @@
 (defn filter-periods-for-day
   "Takes a day and a list of tasks and returns a list of modified periods."
   [day tasks]
-  (let [new-tasks (filter-periods-with-stamps tasks)
-        actual-periods (modify-and-pull-periods :actual-periods new-tasks)
-        actual-filtered (->> actual-periods
-                             (filter (partial period-in-day day)))
-        planned-periods (modify-and-pull-periods :planned-periods new-tasks)
+  (let [new-tasks        (filter-periods-with-stamps tasks)
+        actual-periods   (modify-and-pull-periods :actual-periods new-tasks)
+        actual-filtered  (->> actual-periods
+                              (filter (partial period-in-day day)))
+        planned-periods  (modify-and-pull-periods :planned-periods new-tasks)
         planned-filtered (->> planned-periods
                               (filter (partial period-in-day day)))]
 
-    {:actual-periods actual-filtered
+    {:actual-periods  actual-filtered
      :planned-periods planned-filtered}))
 
 (defn client-to-view-box [id evt type]
-  (let [pt (-> (.getElementById js/document id)
-               (.createSVGPoint))
+  (let [pt  (-> (.getElementById js/document id)
+                (.createSVGPoint))
         ctm (-> evt
                 (.-target)
                 (.getScreenCTM))]
@@ -235,21 +235,21 @@
   produces angle in degrees"
   [{:keys [x y]}]
 
-  (let [pi (.-PI js/Math)
-        xa (.abs js/Math x)
-        ya (.abs js/Math y)
-        quadrant (cond
-                   (and (> x 0) (> y 0)) 1
-                   (and (> x 0) (< y 0)) 2
-                   (and (< x 0) (< y 0)) 3
-                   (and (< x 0) (> y 0)) 4
-                   :else 0)
-        special (cond
-                  (and (= x 0) (> y 0)) 0
-                  (and (> x 0) (= y 0)) (-> pi (/ 2))
-                  (and (= x 0) (< y 0)) pi
-                  (and (< x 0) (= y 0)) (-> pi (/ 2) (* 3))
-                  :else nil)
+  (let [pi               (.-PI js/Math)
+        xa               (.abs js/Math x)
+        ya               (.abs js/Math y)
+        quadrant         (cond
+                           (and (> x 0) (> y 0)) 1
+                           (and (> x 0) (< y 0)) 2
+                           (and (< x 0) (< y 0)) 3
+                           (and (< x 0) (> y 0)) 4
+                           :else                 0)
+        special          (cond
+                           (and (= x 0) (> y 0)) 0
+                           (and (> x 0) (= y 0)) (-> pi (/ 2))
+                           (and (= x 0) (< y 0)) pi
+                           (and (< x 0) (= y 0)) (-> pi (/ 2) (* 3))
+                           :else                 nil)
         angle-in-radians (if (some? special)
                            special
                            (case quadrant
@@ -264,7 +264,7 @@
 (defn pull-tasks [db]
   (->> (:categories db)
        (map (fn [category]
-              (let [color (:color category)
+              (let [color       (:color category)
                     category-id (:id category)]
                 (->>
                  (:tasks category)
@@ -276,26 +276,26 @@
 (defn modify-periods [category-id task-id color type periods]
   (->> periods
    (map (fn [period]
-          (merge period {:color color
+          (merge period {:color       color
                          :category-id category-id
-                         :task-id task-id
-                         :type type})))))
+                         :task-id     task-id
+                         :type        type})))))
 
 (defn pull-periods [db]
   (->> (:categories db)
        (map (fn [category]
-              (let [color (:color category)
+              (let [color       (:color category)
                     category-id (:id category)]
                 (->>
                  (:tasks category)
                  (map (fn [task]
                         (let [task-id (:id task)
-                              actual (modify-periods
-                                      category-id
-                                      task-id
-                                      color
-                                      :actual
-                                      (:actual-periods task))
+                              actual  (modify-periods
+                                       category-id
+                                       task-id
+                                       color
+                                       :actual
+                                       (:actual-periods task))
                               planned (modify-periods
                                        category-id
                                        task-id
