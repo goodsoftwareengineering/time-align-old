@@ -124,5 +124,8 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
 - [x] fix touchy touch handler
 - [x] add other stretch handle (rename circle to drag handle)
 - [x] place/implement zoom in buttons
-- [ ] change drag to move by mid-point
+- [x] change drag to move by mid-point
 - [ ] implement stretch handle
+  - [ ] changle stretch handle to be part of the drag button set
+    - [ ] make an svg icon that is basically `<-O->`
+    - [ ] place that `r` above `cx cy` then rotate by mid-point-angle (that will keep the handles _in line_)
