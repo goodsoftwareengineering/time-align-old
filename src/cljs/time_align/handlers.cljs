@@ -15,6 +15,11 @@
     (assoc-in db [:view :page] page)))
 
 (reg-event-db
+ :set-zoom
+ (fn [db [_ quadrant]]
+   (assoc-in db [:view :zoom] quadrant)))
+
+(reg-event-db
  :set-view-range-day
  (fn [db [_ _]]
    (assoc-in db [:view :range]

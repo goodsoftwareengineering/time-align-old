@@ -106,7 +106,9 @@
                          boolean?
                          #(gen/return false)))
 (s/def ::continous-action (s/keys :req-un [::moving-period]))
-(s/def ::zoom #{:q1 :q2 :q3 :q4})
+(s/def ::zoom (s/with-gen (s/or :zoomed-in #{:q1 :q2 :q3 :q4}
+                                :zoomed-out nil?)
+                #(gen/return nil)))
 (s/def ::view (s/and (s/keys :req-un [::page
                                       ::selected
                                       ::continous-action

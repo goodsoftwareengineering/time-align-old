@@ -211,13 +211,10 @@
     (println (str "moved " type))
     (rf/dispatch [:move-selected-period new-start-time-ms])))
 
-(.cos js/Math (* (.-PI js/Math) (/ 3 4)))
-(str "M " -2.433 " " 3 " " "L ")
-
 (defn x-svg [{:keys [cx cy r fill stroke shadow click] }]
   (let [pi (.-PI js/Math)
         cx-int (js/parseInt cx)
-        cy-int (js/parseInt cx)
+        cy-int (js/parseInt cy)
         r-int (js/parseInt r)
         r-int-adj (* 0.70 r-int)
 
@@ -251,7 +248,7 @@
 (defn +-svg [{:keys [cx cy r fill stroke shadow click] }]
   (let [pi (.-PI js/Math)
         cx-int (js/parseInt cx)
-        cy-int (js/parseInt cx)
+        cy-int (js/parseInt cy)
         r-int (js/parseInt r)
         r-int-adj (* 0.70 r-int)
 
@@ -284,7 +281,7 @@
 (defn --svg [{:keys [cx cy r fill stroke shadow click] }]
   (let [pi (.-PI js/Math)
         cx-int (js/parseInt cx)
-        cy-int (js/parseInt cx)
+        cy-int (js/parseInt cy)
         r-int (js/parseInt r)
         r-int-adj (* 0.70 r-int)
 
@@ -307,8 +304,59 @@
                  {:d (str "M " x3 " " y3 " " "L " x4 " " y4 " ")})]
    ]))
 
+(defn zoom-in-buttons []
+  (let [basics {:fill "#b5b5b5"
+                :stroke "#c2c2c2"
+                :shadow false
+                :r 5
+                }]
+    [:g
+     (+-svg (merge basics
+                   {:cx 10 :cy 10
+                    :click (fn [e]
+                             (rf/dispatch [:set-zoom :q1]))}))
+     (+-svg (merge basics
+                   {:cx 90 :cy 10
+                    :click (fn [e]
+                             (rf/dispatch [:set-zoom :q2]))}))
+     (+-svg (merge basics
+                   {:cx 10 :cy 90
+                    :click (fn [e]
+                             (rf/dispatch [:set-zoom :q3]))}))
+     (+-svg (merge basics
+                   {:cx 90 :cy 90
+                    :click (fn [e]
+                             (rf/dispatch [:set-zoom :q4]))}))
+     ]))
+
+(defn zoom-out-buttons []
+  (let [basics {:fill "#d4d4d4"
+                :stroke "#efefef"
+                :shadow true
+                :r 5
+                }]
+    [:g
+     (--svg (merge basics
+                   {:cx 10 :cy 10
+                    :click (fn [e]
+                             (rf/dispatch [:set-zoom nil]))}))
+     (--svg (merge basics
+                   {:cx 90 :cy 10
+                    :click (fn [e]
+                             (rf/dispatch [:set-zoom nil]))}))
+     (--svg (merge basics
+                   {:cx 10 :cy 90
+                    :click (fn [e]
+                             (rf/dispatch [:set-zoom nil]))}))
+     (--svg (merge basics
+                   {:cx 90 :cy 90
+                    :click (fn [e]
+                             (rf/dispatch [:set-zoom nil]))}))
+     ]))
+
 (defn day [tasks selected day]
   (let [date-str (subs (.toISOString day) 0 10)
+        zoom @(rf/subscribe [:zoom])
         filtered-periods (utils/filter-periods-for-day day tasks)
         selected-period (if (= :period
                                (get-in
@@ -347,8 +395,18 @@
                                  (partial handle-period-move
                                           date-str :mouse))
                   }
-                 (select-keys svg-consts [:viewBox]))
+                 (case zoom
+                   :q1 {:viewBox "0 0 50 50"}
+                   :q2 {:viewBox "50 0 50 50"}
+                   :q3 {:viewBox "0 50 50 50"}
+                   :q4 {:viewBox "50 50 50 50"}
+                   (select-keys svg-consts [:viewBox])
+                   ))
      shadow-filter
+     (if (nil? zoom)
+       (zoom-in-buttons)
+       (zoom-out-buttons)
+       )
      [:circle (merge {:fill "#e8e8e8" :filter "url(#shadow-2dp)"}
                      (select-keys svg-consts [:cx :cy :r]))]
      [:circle (merge {:fill "#f1f1f1" :r (:inner-r svg-consts)}

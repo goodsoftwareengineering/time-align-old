@@ -25,6 +25,11 @@
    (get-in db [:view :continous-action :moving-period])))
 
 (reg-sub
+ :zoom
+ (fn [db _]
+   (get-in db [:view :zoom])))
+
+(reg-sub
  :visible-days
  (fn [db _]
    (let [start-inst (get-in db [:view :range :start])
