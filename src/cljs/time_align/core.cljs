@@ -22,6 +22,7 @@
                  ;; :width "90" :height "90" :x "5" :y "5"
                  :cx "50" :cy "50" :r "40"
                  :inner-r "30"
+                 :center-r "5"
                  :period-width "10"})
 
 (def shadow-filter
@@ -114,12 +115,25 @@
         arc-length (*
                     (/ (- stop-angle start-angle) 360)
                     (* 2 (.-PI js/Math) r))
+        start-stretch-start-angle (- start-angle
+                                  (/ (- mid-point-angle
+                                        start-angle) 3))
+        start-stretch-stop-angle (+ start-stretch-start-angle
+                                    (/ (- mid-point-angle
+                                          start-angle) 2.9))
+        stop-stretch-start-angle (+ stop-angle
+                                     (/ (- mid-point-angle
+                                           start-angle) 3))
+        stop-stretch-stop-angle (- stop-stretch-start-angle
+                                    (/ (- mid-point-angle
+                                          start-angle) 2.9))
 
         arc (describe-arc cx cy r start-angle stop-angle)
         touch-click-handler (if
                               (not is-period-selected)
                               (fn [e]
                                 (.stopPropagation e)
+                                (.preventDefault e)
                                 (rf/dispatch
                                  [:set-selected-period id])))
         movement-handler (fn [e]
@@ -138,11 +152,31 @@
           }]
      (if (and is-period-selected
               (= selected-period id))
-       [:circle {:cx (:x mid-point) :cy (:y mid-point)
-                 :r (/ arc-length 5)
-                 :fill "white"
-                 :onTouchStart movement-handler
-                 :onMouseDown movement-handler}])]
+       [:g
+        [:circle {:cx (:x mid-point) :cy (:y mid-point)
+                  :r (/ arc-length 5)
+                  :fill "black"
+                  :onTouchStart movement-handler
+                  :onMouseDown movement-handler}]
+        [:path
+         {:d (describe-arc
+              cx cy r
+              start-stretch-start-angle
+              start-stretch-stop-angle)
+          :stroke "black"
+          :fill "transparent"
+          :stroke-width period-width}]
+        [:path
+         {:d (describe-arc
+              cx cy r
+              stop-stretch-start-angle
+              stop-stretch-stop-angle)
+          :stroke "black"
+          :fill "transparent"
+          :stroke-width period-width}]
+        ]
+       )
+     ]
     ))
 
 (defn periods [periods selected is-moving-period]
@@ -177,6 +211,102 @@
     (println (str "moved " type))
     (rf/dispatch [:move-selected-period new-start-time-ms])))
 
+(.cos js/Math (* (.-PI js/Math) (/ 3 4)))
+(str "M " -2.433 " " 3 " " "L ")
+
+(defn x-svg [{:keys [cx cy r fill stroke shadow click] }]
+  (let [pi (.-PI js/Math)
+        cx-int (js/parseInt cx)
+        cy-int (js/parseInt cx)
+        r-int (js/parseInt r)
+        r-int-adj (* 0.70 r-int)
+
+        x1 (+ cx-int (* r-int-adj (.cos js/Math (* pi (/ 3 4)))))
+        y1 (+ cy-int (* r-int-adj (.sin js/Math (* pi (/ 3 4)))))
+        x2 (+ cx-int (* r-int-adj (.cos js/Math (* pi (/ 7 4)))))
+        y2 (+ cy-int (* r-int-adj (.sin js/Math (* pi (/ 7 4)))))
+
+        x3 (+ cx-int (* r-int-adj (.cos js/Math (* pi (/ 1 4)))))
+        y3 (+ cy-int (* r-int-adj (.sin js/Math (* pi (/ 1 4)))))
+        x4 (+ cx-int (* r-int-adj (.cos js/Math (* pi (/ 5 4)))))
+        y4 (+ cy-int (* r-int-adj (.sin js/Math (* pi (/ 5 4)))))
+
+        generic {:fill "transparent"
+                 :stroke stroke
+                 :stroke-width "1"
+                 :stroke-linecap "round"}]
+
+  [:g {:onClick click}
+   [:circle (merge {:fill fill :cx cx :cy cy :r r}
+                   (if shadow
+                     {:filter "url(#shadow-2dp)"}
+                     {}))]
+
+   [:path (merge generic
+                 {:d (str "M " x1 " " y1 " " "L " x2 " " y2 " ")})]
+   [:path (merge generic
+                 {:d (str "M " x3 " " y3 " " "L " x4 " " y4 " ")})]
+   ]))
+
+(defn +-svg [{:keys [cx cy r fill stroke shadow click] }]
+  (let [pi (.-PI js/Math)
+        cx-int (js/parseInt cx)
+        cy-int (js/parseInt cx)
+        r-int (js/parseInt r)
+        r-int-adj (* 0.70 r-int)
+
+        x1 (+ cx-int (* r-int-adj (.cos js/Math (* pi (/ 1 2)))))
+        y1 (+ cy-int (* r-int-adj (.sin js/Math (* pi (/ 1 2)))))
+        x2 (+ cx-int (* r-int-adj (.cos js/Math (* pi (/ 3 2)))))
+        y2 (+ cy-int (* r-int-adj (.sin js/Math (* pi (/ 3 2)))))
+
+        x3 (+ cx-int (* r-int-adj (.cos js/Math pi)))
+        y3 (+ cy-int (* r-int-adj (.sin js/Math pi)))
+        x4 (+ cx-int (* r-int-adj (.cos js/Math (* pi 2))))
+        y4 (+ cy-int (* r-int-adj (.sin js/Math (* pi 2))))
+
+        generic {:fill "transparent"
+                 :stroke stroke
+                 :stroke-width "1"
+                 :stroke-linecap "round"}]
+
+  [:g {:onClick click}
+   [:circle (merge {:fill fill :cx cx :cy cy :r r}
+                   (if shadow
+                     {:filter "url(#shadow-2dp)"}
+                     {}))]
+   [:path (merge generic
+                 {:d (str "M " x1 " " y1 " " "L " x2 " " y2 " ")})]
+   [:path (merge generic
+                 {:d (str "M " x3 " " y3 " " "L " x4 " " y4 " ")})]
+   ]))
+
+(defn --svg [{:keys [cx cy r fill stroke shadow click] }]
+  (let [pi (.-PI js/Math)
+        cx-int (js/parseInt cx)
+        cy-int (js/parseInt cx)
+        r-int (js/parseInt r)
+        r-int-adj (* 0.70 r-int)
+
+        x3 (+ cx-int (* r-int-adj (.cos js/Math pi)))
+        y3 (+ cy-int (* r-int-adj (.sin js/Math pi)))
+        x4 (+ cx-int (* r-int-adj (.cos js/Math (* pi 2))))
+        y4 (+ cy-int (* r-int-adj (.sin js/Math (* pi 2))))
+
+        generic {:fill "transparent"
+                 :stroke stroke
+                 :stroke-width "1"
+                 :stroke-linecap "round"}]
+
+  [:g {:onClick click}
+   [:circle (merge {:fill fill :cx cx :cy cy :r r}
+                   (if shadow
+                     {:filter "url(#shadow-2dp)"}
+                     {}))]
+   [:path (merge generic
+                 {:d (str "M " x3 " " y3 " " "L " x4 " " y4 " ")})]
+   ]))
+
 (defn day [tasks selected day]
   (let [date-str (subs (.toISOString day) 0 10)
         filtered-periods (utils/filter-periods-for-day day tasks)
@@ -190,11 +320,12 @@
         is-moving-period @(rf/subscribe [:is-moving-period])
         stop-touch-click-handler (if is-moving-period
                                    (fn [e]
+                                     (.preventDefault e)
                                      (rf/dispatch
-                                      [:set-moving-period false]
-                                      )))
+                                      [:set-moving-period false])))
         on-touch-click-handler (if selected-period
                                  (fn [e]
+                                   (.preventDefault e)
                                    (rf/dispatch
                                     [:set-selected-period nil])))]
 
@@ -203,7 +334,7 @@
                   :style {:display "inline-box"
                           :touch-action "pinch-zoom"
                           ;; this stops scrolling
-                          ;; when moving period
+                          ;; for moving period
                           }
                   :width "100%"
                   :height "100%"
@@ -215,8 +346,6 @@
                   :onMouseMove (if is-moving-period
                                  (partial handle-period-move
                                           date-str :mouse))
-                  :onTouchStart on-touch-click-handler
-                  :onMouseDown on-touch-click-handler
                   }
                  (select-keys svg-consts [:viewBox]))
      shadow-filter
@@ -224,6 +353,15 @@
                      (select-keys svg-consts [:cx :cy :r]))]
      [:circle (merge {:fill "#f1f1f1" :r (:inner-r svg-consts)}
                      (select-keys svg-consts [:cx :cy]))]
+     (if selected-period
+       (x-svg (merge
+               (select-keys svg-consts [:cx :cy])
+               {:r (:center-r svg-consts)
+                :fill "white"
+                :stroke "black"
+                :shadow true
+                :click on-touch-click-handler
+                })))
      (periods filtered-periods selected is-moving-period)]))
 
 (defn days [days tasks selected-period]

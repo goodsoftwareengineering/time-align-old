@@ -106,10 +106,12 @@
                          boolean?
                          #(gen/return false)))
 (s/def ::continous-action (s/keys :req-un [::moving-period]))
+(s/def ::zoom #{:q1 :q2 :q3 :q4})
 (s/def ::view (s/and (s/keys :req-un [::page
                                       ::selected
                                       ::continous-action
-                                      ::main-drawer])
+                                      ::main-drawer
+                                      ::zoom])
                      (fn [view]
                        (if (get-in
                             view
