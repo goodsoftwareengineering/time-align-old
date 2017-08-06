@@ -61,6 +61,30 @@
    ))
 
 (reg-event-db
+ :action-buttons-expand
+ (fn [db [_ _]]
+   (let [selection (get-in db [:selected :current-selection])
+         s-type    (:type-or-nil selection)
+         ab-state
+         (cond
+           (nil? s-type)      :no-selection
+           (= :period s-type) :period
+           (= :queue s-type)  :queue
+           :else              :no-selection)]
+   (assoc-in db [:view :action-buttons] ab-state))))
+
+(reg-event-db
+ :action-buttons-back
+ (fn [db [_ _]]
+   (let [cur-state (get-in db [:view :action-buttons])
+         new-state
+         (cond
+           (= cur-state :no-selection) :collapsed
+           :else :collapsed)]
+     (assoc-in db [:view :action-buttons] new-state)
+     )))
+
+(reg-event-db
  :set-moving-period
  (fn [db [_ is-moving-bool]]
    (assoc-in db [:view :continous-action :moving-period]

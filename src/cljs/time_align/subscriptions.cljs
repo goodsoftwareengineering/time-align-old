@@ -30,6 +30,11 @@
    (get-in db [:view :zoom])))
 
 (reg-sub
+ :action-buttons
+ (fn [db _]
+   (get-in db [:view :action-buttons])))
+
+(reg-sub
  :visible-days
  (fn [db _]
    (let [start-inst (get-in db [:view :range :start])

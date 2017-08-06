@@ -107,42 +107,6 @@
                          (js/parseInt )
                          (- (/ period-width 2)))
 
-        mid-point-angle           (+ start-angle
-                                     (/ (- stop-angle start-angle) 2))
-        mid-point                 (utils/polar-to-cartesian
-                                   cx cy r
-                                   mid-point-angle)
-        arc-length                (*
-                                   (/ (- stop-angle start-angle) 360)
-                                   (* 2 (.-PI js/Math) r))
-
-        start-ms                  (utils/angle-to-ms start-angle)
-        stop-ms                   (utils/angle-to-ms stop-angle)
-        hour-ms                   utils/hour-ms
-        width-stretch-ms          (* 0.5 hour-ms)
-        gap-stretch-ms            (* 0.25 hour-ms)
-
-        start-stretch-start-ms    (- start-ms (+ width-stretch-ms gap-stretch-ms))
-        start-stretch-start-angle (utils/ms-to-angle start-stretch-start-ms)
-        start-stretch-stop-angle  (utils/ms-to-angle
-                                   (+ start-stretch-start-ms
-                                      width-stretch-ms))
-        start-stretch-point (utils/polar-to-cartesian
-                             cx cy r
-                             start-stretch-start-angle)
-        start-stretch-back-bottom-point (utils/polar-to-cartesian
-                                         cx cy (- r (/ period-width 2))
-                                         start-stretch-stop-angle)
-        start-stretch-back-top-point (utils/polar-to-cartesian
-                                         cx cy (+ r (/ period-width 2))
-                                         start-stretch-stop-angle)
-
-        stop-stretch-start-ms     (+ stop-ms gap-stretch-ms)
-        stop-stretch-start-angle  (utils/ms-to-angle stop-stretch-start-ms)
-        stop-stretch-stop-angle   (utils/ms-to-angle
-                                   (+ stop-stretch-start-ms
-                                      width-stretch-ms)) 
-
         arc                 (describe-arc cx cy r start-angle stop-angle)
         touch-click-handler (if
                                 (not is-period-selected)
@@ -162,41 +126,16 @@
        :opacity      "0.6"
        :stroke-width period-width
        :fill         "transparent"
-       :onTouchStart touch-click-handler
-       :onMouseDown  touch-click-handler
+       :onTouchStart (if (and is-period-selected
+                              (= selected-period id))
+                       movement-handler
+                       touch-click-handler)
+       :onMouseDown  (if (and is-period-selected
+                              (= selected-period id))
+                       movement-handler
+                       touch-click-handler
+                       )
        }]
-     (if (and is-period-selected
-              (= selected-period id))
-       [:g
-        [:circle {:cx           (:x mid-point) :cy (:y mid-point)
-                  :r            (* 0.7 (/ period-width 2))
-                  :fill         "transparent"
-                  :stroke       "black"
-                  :stroke-width "1"
-                  :onTouchStart movement-handler
-                  :onMouseDown  movement-handler}]
-        [:polyline {:fill "transparent"
-                    :stroke "black"
-                    :stroke-width "1"
-                    :stroke-linecap "round"
-                    :points (str
-                             (:x start-stretch-point) ","
-                             (:y start-stretch-point) " "
-                             (:x start-stretch-back-bottom-point) ","
-                             (:y start-stretch-back-bottom-point) " "
-                             )}]
-        [:polyline {:fill "transparent"
-                    :stroke "black"
-                    :stroke-width "1"
-                    :stroke-linecap "round"
-                    :points (str
-                             (:x start-stretch-point) ","
-                             (:y start-stretch-point) " "
-                             (:x start-stretch-back-top-point) ","
-                             (:y start-stretch-back-top-point) " "
-                             )}]
-        ]
-       )
      ]
     ))
 
@@ -326,8 +265,8 @@
    ]))
 
 (defn zoom-in-buttons []
-  (let [basics {:fill   "#b5b5b5"
-                :stroke "#c2c2c2"
+  (let [basics {:fill   "#c2c2c2"
+                :stroke "#b2b2b2"
                 :shadow false
                 :r      5
                 }]
@@ -351,8 +290,8 @@
      ]))
 
 (defn zoom-out-buttons []
-  (let [basics {:fill   "#d4d4d4"
-                :stroke "#efefef"
+  (let [basics {:fill   "#d2d2d2"
+                :stroke "#a2a2a2"
                 :shadow true
                 :r      5
                 }]
@@ -391,12 +330,7 @@
                                    (fn [e]
                                      (.preventDefault e)
                                      (rf/dispatch
-                                      [:set-moving-period false])))
-        on-touch-click-handler   (if selected-period
-                                   (fn [e]
-                                     (.preventDefault e)
-                                     (rf/dispatch
-                                      [:set-selected-period nil])))]
+                                      [:set-moving-period false])))]
 
     [:svg (merge {:key         date-str
                   :id          date-str
@@ -424,23 +358,10 @@
                    (select-keys svg-consts [:viewBox])
                    ))
      shadow-filter
-     (if (nil? zoom)
-       (zoom-in-buttons)
-       (zoom-out-buttons)
-       )
      [:circle (merge {:fill "#e8e8e8" :filter "url(#shadow-2dp)"}
                      (select-keys svg-consts [:cx :cy :r]))]
      [:circle (merge {:fill "#f1f1f1" :r (:inner-r svg-consts)}
                      (select-keys svg-consts [:cx :cy]))]
-     (if selected-period
-       (x-svg (merge
-               (select-keys svg-consts [:cx :cy])
-               {:r      (:center-r svg-consts)
-                :fill   "white"
-                :stroke "black"
-                :shadow true
-                :click  on-touch-click-handler
-                })))
      (periods filtered-periods selected is-moving-period)]))
 
 (defn days [days tasks selected-period]
@@ -488,6 +409,69 @@
                                      ;; (rf/dispatch
                                      ;;    [:set-selected-task (:task-id period)])
                                      )}])))]))
+
+(def basic-button {:style {:marginRight "20px"}})
+(def basic-ic {:style {:marginTop "7.5px"}
+               :color "white"})
+
+(defn svg-mui-three-dots []
+  [ui/svg-icon
+   {:viewBox "0 0 24 24"}
+   [:g
+    [:circle {:cx "6" :cy "12" :r "2"}]
+    [:circle {:cx "12" :cy "12" :r "2"}]
+    [:circle {:cx "18" :cy "12" :r "2"}]
+    ]]
+  )
+
+(defn back-button []
+  [ui/floating-action-button (merge
+                              basic-button
+                              {:onTouchTap
+                               (fn [e]
+                                 (rf/dispatch
+                                  [:action-buttons-back]))})
+   [ic/hardware-keyboard-backspace basic-ic]])
+
+(defn action-buttons-options []
+  [ui/floating-action-button
+   (merge
+    basic-button
+    {:onTouchTap
+     (fn [e]
+       (rf/dispatch
+        [:action-buttons-expand]))})
+   (svg-mui-three-dots)])
+
+(defn action-buttons-no-selection []
+  (let [zoom @(rf/subscribe [:zoom])]
+    [:div {:style {:display "flex"
+                   :justiy-content "space-between"}}
+     [ui/floating-action-button basic-button 
+      [ic/content-add basic-ic]]
+
+     (if (some? zoom)
+       [ui/floating-action-button basic-button
+        [ic/action-zoom-out basic-ic]]
+
+       [ui/floating-action-button basic-button
+        [ic/action-zoom-in basic-ic]])
+
+     (back-button)
+     ]
+    )
+  )
+
+(defn action-buttons []
+  (let [state @(rf/subscribe [:action-buttons])]
+    (case state
+      :collapsed
+      (action-buttons-options)
+      :no-selection
+      (action-buttons-no-selection)
+      [:div "no buttons!"]
+      )
+    ))
 
 (defn home-page []
   (let [main-drawer-state @(rf/subscribe [:main-drawer-state])
@@ -542,10 +526,8 @@
                :flex       "1 0 100%"
                :max-height "60%"
                ;; :border "red solid 0.1em"
-               :box-sizing "border-box"}
-       }
-      (day tasks selected (new js/Date))
-      ]
+               :box-sizing "border-box"}}
+      (day tasks selected (new js/Date))]
 
      [:div.queue-container
       {:style {:display    "flex"
@@ -565,12 +547,7 @@
                :bottom     "0"
                ;; :border "green solid 0.1em"
                :box-sizing "border-box"}}
-      [ui/floating-action-button
-       [ic/content-add {:color "white"}]]
-      ]
-
-
-     ]))
+      (action-buttons)]]))
 
 (def pages
   {:home #'home-page})
