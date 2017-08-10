@@ -396,13 +396,14 @@
         [:line {:fill "transparent"
                 :stroke-width "2"
                 :stroke "white"
-                :stroke-linecap "round"
                 :filter "url(#shadow-2dp)"
                 :x1 (:cx svg-consts)
                 :y1 (:cy svg-consts)
                 :x2 (:x ticker-pos)
                 :y2 (:y ticker-pos)}]
-        [:circle (merge {:fill "white" :r (:ticker-r svg-consts)}
+        [:circle (merge {:fill "white"
+                         :filter "url(#shadow-2dp)"
+                         :r (:ticker-r svg-consts)}
                         (select-keys svg-consts [:cx :cy]))]
         ]
        )
