@@ -75,3 +75,7 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
   - svg-(mui-)-[icon-name]
 - enforced rule for subs/handlers
   - only give back individual values or lists never chunks of structure?
+- all subscriptions in render code at top most levels and fed down --- Maybe not...
+  - will make testing easier
+  - seems too _complex_ to have individual components subscribe to things
+  - then would too many components be unessentially injecting subs they dont' care about for their children?
