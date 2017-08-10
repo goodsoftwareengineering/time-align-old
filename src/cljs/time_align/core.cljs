@@ -314,8 +314,23 @@
                              (rf/dispatch [:set-zoom nil]))}))
      ]))
 
+(def clock-state (r/atom {:time (new js/Date)}))
+
+(defn clock-tick []
+  (swap! clock-state assoc :time (new js/Date)))
+
 (defn day [tasks selected day]
   (let [date-str                 (subs (.toISOString day) 0 10)
+        curr-time                (:time @clock-state)
+        display-ticker           (= (.valueOf (utils/zero-in-day day))
+                                    (.valueOf (utils/zero-in-day curr-time)))
+        ticker-ms                (utils/get-ms curr-time)
+        ticker-angle             (utils/ms-to-angle ticker-ms)
+        ticker-pos               (utils/polar-to-cartesian
+                                  (:cx svg-consts)
+                                  (:cy svg-consts)
+                                  (:r svg-consts)
+                                  ticker-angle)
         zoom                     @(rf/subscribe [:zoom])
         filtered-periods         (utils/filter-periods-for-day day tasks)
         selected-period          (if (= :period
@@ -332,6 +347,7 @@
                                      (rf/dispatch
                                       [:set-moving-period false])))]
 
+    (js/setTimeout clock-tick 1000)
     [:svg (merge {:key         date-str
                   :id          date-str
                   :style       {:display      "inline-box"
@@ -362,7 +378,19 @@
                      (select-keys svg-consts [:cx :cy :r]))]
      [:circle (merge {:fill "#f1f1f1" :r (:inner-r svg-consts)}
                      (select-keys svg-consts [:cx :cy]))]
-     (periods filtered-periods selected is-moving-period)]))
+     (periods filtered-periods selected is-moving-period)
+
+     (if display-ticker
+       [:line {:fill "transparent"
+               :stroke-width "2"
+               :stroke "black"
+               :stroke-linecap "round"
+               :x1 (:cx svg-consts)
+               :y1 (:cy svg-consts)
+               :x2 (:x ticker-pos)
+               :y2 (:y ticker-pos)}]
+       )
+     ]))
 
 (defn days [days tasks selected-period]
   (->> days
