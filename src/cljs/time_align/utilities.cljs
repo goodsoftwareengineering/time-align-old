@@ -71,15 +71,18 @@
     (new js/Date (date-string (new js/Date d)))))
 
 (defn polar-to-cartesian [cx cy r angle]
-  (let [angle-in-radians (-> angle
+  (let [cx-float (js/parseFloat cx)
+        cy-float (js/parseFloat cy)
+        r-float (js/parseFloat r)
+        angle-in-radians (-> angle
                              (- 90)
                              (* (/ (.-PI js/Math) 180)))]
 
-    {:x (+ cx (* r (.cos js/Math angle-in-radians)))
-     :y (+ cy (* r (.sin js/Math angle-in-radians)))}))
+    {:x (+ cx-float (* r-float(.cos js/Math angle-in-radians)))
+     :y (+ cy-float (* r-float(.sin js/Math angle-in-radians)))}))
 
 (defn ms-to-angle
-  ;; takes milliseconds and returns angle in degrees
+  "takes milliseconds and returns angle in degrees"
   [ms]
   (* (/ 360 ms-in-day) ms))
 
@@ -88,7 +91,9 @@
   [angle]
   (* (/ ms-in-day 360) angle))
 
-(defn get-ms [date]
+(defn get-ms
+  "takes a js/date and returns milliseconds since 00:00 that day"
+  [date]
   (let [h  (.getHours date)
         m  (.getMinutes date)
         s  (.getSeconds date)
