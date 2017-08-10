@@ -22,7 +22,8 @@
                  ;; :width "90" :height "90" :x "5" :y "5"
                  :cx           "50" :cy "50" :r "40"
                  :inner-r      "30"
-                 :center-r     "5"
+                 :ticker-r      "5"
+                 :center-r     "5" ;; TODO might not be used
                  :period-width "10"})
 
 (def shadow-filter
@@ -66,7 +67,7 @@
     (string/join " " ["M" (:x p-start) (:y p-start)
                       "A" r r 0 large-arc-flag 1 (:x p-stop) (:y p-stop)])))
 
-(defn period [selected is-moving-period type period]
+(defn period [selected curr-time is-moving-period type period]
   (let [id          (:id period)
         start-date  (:start period)
         start-ms    (utils/get-ms start-date)
@@ -75,6 +76,13 @@
         stop-date  (:stop period)
         stop-ms    (utils/get-ms stop-date)
         stop-angle (utils/ms-to-angle stop-ms)
+
+        curr-time-ms (.valueOf curr-time)
+        start-abs-ms (.valueOf start-date)
+        stop-abs-ms (.valueOf stop-date)
+        opacity (cond
+                  (> curr-time-ms stop-abs-ms) "0.4"
+                  :else "0.8")
 
         is-period-selected (= :period
                               (get-in
@@ -123,7 +131,7 @@
      [:path
       {:d            arc
        :stroke       color
-       :opacity      "0.6"
+       :opacity      opacity
        :stroke-width period-width
        :fill         "transparent"
        :onTouchStart (if (and is-period-selected
@@ -139,7 +147,7 @@
      ]
     ))
 
-(defn periods [periods selected is-moving-period]
+(defn periods [periods selected is-moving-period curr-time]
   (let [actual  (:actual-periods periods)
         planned (:planned-periods periods)]
     [:g
@@ -147,6 +155,7 @@
       (if (some? actual)
         (->> actual
              (map (fn [actual-period] (period selected
+                                              curr-time
                                               is-moving-period
                                               :actual
                                               actual-period)))))]
@@ -154,6 +163,7 @@
       (if (some? planned)
         (->> planned
              (map (fn [planned-period] (period selected
+                                               curr-time
                                                is-moving-period
                                                :planned
                                                planned-period))))
@@ -378,17 +388,23 @@
                      (select-keys svg-consts [:cx :cy :r]))]
      [:circle (merge {:fill "#f1f1f1" :r (:inner-r svg-consts)}
                      (select-keys svg-consts [:cx :cy]))]
-     (periods filtered-periods selected is-moving-period)
+
+     (periods filtered-periods selected is-moving-period curr-time)
 
      (if display-ticker
-       [:line {:fill "transparent"
-               :stroke-width "2"
-               :stroke "black"
-               :stroke-linecap "round"
-               :x1 (:cx svg-consts)
-               :y1 (:cy svg-consts)
-               :x2 (:x ticker-pos)
-               :y2 (:y ticker-pos)}]
+       [:g
+        [:line {:fill "transparent"
+                :stroke-width "2"
+                :stroke "white"
+                :stroke-linecap "round"
+                :filter "url(#shadow-2dp)"
+                :x1 (:cx svg-consts)
+                :y1 (:cy svg-consts)
+                :x2 (:x ticker-pos)
+                :y2 (:y ticker-pos)}]
+        [:circle (merge {:fill "white" :r (:ticker-r svg-consts)}
+                        (select-keys svg-consts [:cx :cy]))]
+        ]
        )
      ]))
 
