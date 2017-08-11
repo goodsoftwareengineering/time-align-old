@@ -67,6 +67,9 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
 ???
 
 ## work space
+The action section is getting tricky. I've figured out how to transition between sets of actions depending on app state. Basically I have a list of possible states in the app-db, and whenever a back action or button that leads to a new state is triggered one of two handlers figures out what the next state is. Keeps all the logic out of the views and the app-db is still clean.  
+
+The only problem is that multiple floating action buttons look like bad. How do I put together up to 6 actions in a reachable space on mobile? There doesn't seem to be a readily accessible solution in MUI.
 
 ## long term cleanup
 - all handlers have non-anon functions
