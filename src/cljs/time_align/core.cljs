@@ -464,6 +464,10 @@
                                            }})
 (def basic-ic {:style {:marginTop "7.5px"}
                :color "white"})
+(def expanded-buttons-style {:style {:display        "flex"
+                                     :flex-direction "column"
+                                     :align-items    "center"
+                                     }})
 
 (defn svg-mui-three-dots []
   [ui/svg-icon
@@ -523,10 +527,7 @@
 
 (defn action-buttons-no-selection []
   (let [zoom @(rf/subscribe [:zoom])]
-    [:div {:style {:display        "flex"
-                   :flex-direction "column"
-                   :align-items    "center"
-                   }}
+    [:div expanded-buttons-style
 
      [ui/floating-action-button basic-mini-button
       [ic/content-add basic-ic]]
@@ -543,12 +544,22 @@
     )
   )
 
+(defn action-buttons-period-selection []
+  [:div expanded-buttons-style
+   [ui/floating-action-button basic-mini-button
+    [ic/editor-mode-edit basic-ic]]
+
+  (back-button)]
+  )
+
 (defn action-buttons [state]
   (case @state
     :collapsed
     (action-buttons-options)
     :no-selection
     (action-buttons-no-selection)
+    :period
+    (action-buttons-period-selection)
     [:div "no buttons!"]
     ))
 

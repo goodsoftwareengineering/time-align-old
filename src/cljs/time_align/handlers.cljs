@@ -63,7 +63,7 @@
 (reg-event-db
  :action-buttons-expand
  (fn [db [_ _]]
-   (let [selection (get-in db [:selected :current-selection])
+   (let [selection (get-in db [:view :selected :current-selection])
          s-type    (:type-or-nil selection)
          ab-state
          (cond
@@ -71,7 +71,7 @@
            (= :period s-type) :period
            (= :queue s-type)  :queue
            :else              :no-selection)]
-   (assoc-in db [:view :action-buttons] ab-state))))
+     (assoc-in db [:view :action-buttons] ab-state))))
 
 (reg-event-db
  :action-buttons-back
