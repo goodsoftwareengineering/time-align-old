@@ -464,8 +464,7 @@
 (def basic-button {:style {}})
 (def basic-mini-button {:mini             true
                         :background-color "grey"
-                        :style            {:marginBottom "20px"
-                                           }})
+                        :style            {:marginBottom "20px"}})
 (def basic-ic {:style {:marginTop "7.5px"}
                :color "white"})
 (def expanded-buttons-style {:style {:display        "flex"
@@ -493,6 +492,7 @@
                                   [:action-buttons-back]))})
    [ic/navigation-close basic-ic]])
 
+;; TODO can with-let be used to put this back in the component?
 (defonce action-buttons-collapsed-click (r/atom false))
 
 (defn action-buttons-collapsed []
@@ -520,23 +520,22 @@
        (element 0.80)
        175
        (element 0.95)
-       200
+       176
        (fn []
          (rf/dispatch [:action-buttons-expand])
-         (reset! action-buttons-collapsed-click false))
-       225]
+         (reset! action-buttons-collapsed-click false))]
+
       [ui/floating-action-button
        (merge
         basic-button
         {:onTouchTap
          (fn [e]
-           (println "clicked")
+           (.stopPropagation e)
            (reset! action-buttons-collapsed-click true))
          })
        (svg-mui-three-dots)]
       )
     )
-  
   )
 
 (defn svg-mui-entity [{:keys [type color style]}]
@@ -566,17 +565,36 @@
     ]])
 
 (defn action-buttons-no-selection []
-  (let [zoom @(rf/subscribe [:zoom])]
+  (let [zoom @(rf/subscribe [:zoom])
+        margin (r/atom -20)
+        interval (.setInterval js/window
+                               (fn [] (swap! margin #(+ 5 %)))
+                               100)
+        ]
+
+    (.setTimeout js/window
+                 (fn [] (.clearInterval js/window interval))
+                 3000)
+
     [:div expanded-buttons-style
 
-     [ui/floating-action-button basic-mini-button
+     [ui/floating-action-button
+      (merge basic-mini-button
+             {:style (merge (:style basic-mini-button)
+                            {:marginBottom (str @margin "px")})})
       [ic/content-add basic-ic]]
 
      (if (some? zoom)
-       [ui/floating-action-button basic-mini-button
+       [ui/floating-action-button
+        (merge basic-mini-button
+               {:style (merge (:style basic-mini-button)
+                              {:marginBottom (str @margin "px")})})
         [ic/action-zoom-out basic-ic]]
 
-       [ui/floating-action-button basic-mini-button
+       [ui/floating-action-button
+        (merge basic-mini-button
+               {:style (merge (:style basic-mini-button)
+                              {:marginBottom (str @margin "px")})})
         [ic/action-zoom-in basic-ic]])
 
      (back-button)
