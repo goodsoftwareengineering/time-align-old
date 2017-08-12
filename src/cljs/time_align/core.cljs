@@ -535,7 +535,7 @@
   )
 
 (defn action-buttons [state]
-  (case state
+  (case @state
     :collapsed
     (action-buttons-options)
     :no-selection
@@ -547,12 +547,8 @@
   (let [main-drawer-state @(rf/subscribe [:main-drawer-state])
         tasks             @(rf/subscribe [:tasks])
         selected          @(rf/subscribe [:selected])
-        action-button-state @(rf/subscribe [:action-buttons])
-        action-buttons-floating (some?
-                                 ;; add states that should be
-                                 ;; floating to set
-                                 (some #{:collapsed}
-                                       [action-button-state]))]
+        action-button-state (rf/subscribe [:action-buttons])
+       ]
 
     [:div.app-container
      {:style {:display         "flex"
@@ -612,16 +608,13 @@
       ]
 
      [:div.action-container
-      {:style (if action-buttons-floating
-                {:position   "fixed"
-                 :right      "0"
-                 :z-index    "99"
-                 :padding    "0.75em"
-                 :bottom     "0"
-                 ;; :border "green solid 0.1em"
-                 :box-sizing "border-box"}
-                {:box-sizing "border-box"}
-                )}
+      {:style {:position   "fixed"
+               :right      "0"
+               :bottom     "0"
+               :z-index    "99"
+               :padding    "0.75em"
+               ;; :border "green solid 0.1em"
+               :box-sizing "border-box"}}
       (action-buttons action-button-state)]]))
 
 (def pages
