@@ -1,5 +1,6 @@
-(ns time-align.utilities)
-
+(ns time-align.utilities
+  (:require
+   [clojure.string :as string]))
 
 (def week-ms
   (->> 1
@@ -317,3 +318,49 @@
        (remove nil?)
        )
   )
+
+(defn pad-one-b-16
+  "given a base 10 number it will convert to a base 16 string and pad one zero if necessary"
+  [number]
+  (as-> number n
+    (.toString n 16)
+    (#(if (= 1 (count n))
+        (str "0" n)
+        n))))
+
+(defn color-gradient
+  "given two hex string (\"#ffaabb\") colors and a percent as decimal (0.25), will return a hex string color that is at percent along a color gradient."
+  [from to percent]
+  (let [value-from (string/join (rest from))
+        value-to (string/join (rest to))
+
+        r-f (js/parseInt (subs value-from 0 2) 16)
+        g-f (js/parseInt (subs value-from 2 4) 16)
+        b-f (js/parseInt (subs value-from 4 6) 16)
+
+        r-t (js/parseInt (subs value-to 0 2) 16)
+        g-t (js/parseInt (subs value-to 2 4) 16)
+        b-t (js/parseInt (subs value-to 4 6) 16)
+
+        r-step (->> (- r-f r-t)
+                    (.abs js/Math)
+                    (* percent)
+                    (.ceil js/Math))
+        g-step (->> (- g-f g-t)
+                    (.abs js/Math)
+                    (* percent)
+                    (.ceil js/Math))
+        b-step (->> (- b-f b-t)
+                    (.abs js/Math)
+                    (* percent)
+                    (.ceil js/Math))
+
+        r-n (if (> r-f r-t) (- r-f r-step) (+ r-f r-step))
+        g-n (if (> g-f g-t) (- g-f g-step) (+ g-f g-step))
+        b-n (if (> b-f b-t) (- b-f b-step) (+ b-f b-step))
+        ]
+    (string/join "" ["#"
+                     (pad-one-b-16 r-n)
+                     (pad-one-b-16 g-n)
+                     (pad-one-b-16 b-n)
+                    ])))
