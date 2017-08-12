@@ -5,6 +5,7 @@
             [cljs-react-material-ui.reagent :as ui]
             [cljs-react-material-ui.icons :as ic]
             [re-frame.core :as rf]
+            [reanimated.core :as anim]
             [secretary.core :as secretary]
             [goog.events :as events]
             [goog.history.EventType :as HistoryEventType]
@@ -320,7 +321,7 @@
                              (rf/dispatch [:set-zoom nil]))}))
      ]))
 
-(def clock-state (r/atom {:time (new js/Date)}))
+(defonce clock-state (r/atom {:time (new js/Date)}))
 
 (defn clock-tick []
   (swap! clock-state assoc :time (new js/Date)))
@@ -489,15 +490,35 @@
                                   [:action-buttons-back]))})
    [ic/navigation-close basic-ic]])
 
-(defn action-buttons-options []
-  [ui/floating-action-button
-   (merge
-    basic-button
-    {:onTouchTap
-     (fn [e]
-       (rf/dispatch
-        [:action-buttons-expand]))})
-   (svg-mui-three-dots)])
+(defonce action-buttons-collapsed-click (r/atom false))
+
+(defn action-buttons-collapsed []
+  (if @action-buttons-collapsed-click
+    [anim/timeline
+     [:p "transitioning 100"]
+     100
+     [:p "transitioning 200"]
+     200
+     [:p "transitioning 300"]
+     300
+     [:p "transitioning 400"]
+     400
+     (fn []
+       (rf/dispatch [:action-buttons-expand])
+       (reset! action-buttons-collapsed-click false))
+     500
+     ]
+    [ui/floating-action-button
+     (merge
+      basic-button
+      {:onTouchTap
+       (fn [e]
+         (println "clicked")
+         (reset! action-buttons-collapsed-click true))
+       })
+     (svg-mui-three-dots)]
+    )
+  )
 
 (defn svg-mui-entity [{:keys [type color style]}]
   [ui/svg-icon
@@ -555,7 +576,7 @@
 (defn action-buttons [state]
   (case @state
     :collapsed
-    (action-buttons-options)
+    (action-buttons-collapsed)
     :no-selection
     (action-buttons-no-selection)
     :period
