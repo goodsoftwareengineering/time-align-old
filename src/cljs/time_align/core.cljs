@@ -661,8 +661,16 @@
 (def pages
   {:home #'home-page})
 
+(def app-theme {:primary (color :blue-grey-600)
+                :secondary (color :red-500)})
+
 (defn page []
   [ui/mui-theme-provider
+   {:mui-theme (get-mui-theme
+                {:palette
+                 {:primary1-color (:primary app-theme)
+                  :accent1-color (:secondary app-theme)}
+                 })}
    [:div
     [(pages @(rf/subscribe [:page]))]]
    ]
