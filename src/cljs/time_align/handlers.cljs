@@ -51,6 +51,7 @@
 (reg-event-db
  :set-selected-period
  (fn [db [_ period-id]]
+   ;; TODO might need to set action-button state on nil to auto collapse
    (let [type (if (nil? period-id) nil :period)
          prev (get-in db [:view :selected :current-selection])
          curr {:type-or-nil type :id-or-nil period-id}]
