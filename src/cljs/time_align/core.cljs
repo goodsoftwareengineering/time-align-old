@@ -116,17 +116,19 @@
                          (- (/ period-width 2)))
 
         arc                 (describe-arc cx cy r start-angle stop-angle)
-        touch-click-handler (if
-                                (not is-period-selected)
+        touch-click-handler (if (not is-period-selected)
                               (fn [e]
                                 (.stopPropagation e)
                                 (.preventDefault e)
                                 (rf/dispatch
                                  [:set-selected-period id])))
-        movement-handler    (fn [e]
-                              (.stopPropagation e)
-                              (rf/dispatch
-                               [:set-moving-period true]))]
+        movement-trigger-handler    (if (and is-period-selected
+                                             (= selected-period id))
+                                      (fn [e]
+                                        (.stopPropagation e)
+                                        (rf/dispatch
+                                         [:set-moving-period true]))
+                                      )]
     [:g {:key (str id)}
      [:path
       {:d            arc
@@ -134,15 +136,9 @@
        :opacity      opacity
        :stroke-width period-width
        :fill         "transparent"
-       :onTouchStart (if (and is-period-selected
-                              (= selected-period id))
-                       movement-handler
-                       touch-click-handler)
-       :onMouseDown  (if (and is-period-selected
-                              (= selected-period id))
-                       movement-handler
-                       touch-click-handler
-                       )
+       :onClick touch-click-handler
+       :onTouchStart movement-trigger-handler
+       :onMouseDown movement-trigger-handler
        }]
      ]
     ))
@@ -355,7 +351,12 @@
                                    (fn [e]
                                      (.preventDefault e)
                                      (rf/dispatch
-                                      [:set-moving-period false])))]
+                                      [:set-moving-period false])))
+        deselect (if (not is-moving-period)
+                   (fn [e]
+                     (.preventDefault e)
+                     (rf/dispatch
+                      [:set-selected-period nil])))]
 
     (js/setTimeout clock-tick 1000)
     [:svg (merge {:key         date-str
@@ -375,6 +376,7 @@
                   :onMouseMove (if is-moving-period
                                  (partial handle-period-move
                                           date-str :mouse))
+                  :onClick deselect
                   }
                  (case zoom
                    :q1 {:viewBox "0 0 60 60"}
