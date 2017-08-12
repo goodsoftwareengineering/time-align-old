@@ -19,6 +19,9 @@
             [cljs.pprint :refer [pprint]])
   (:import goog.History))
 
+(def app-theme {:primary (color :blue-grey-600)
+                :secondary (color :red-500)})
+
 (def svg-consts {:viewBox      "0 0 100 100"
                  ;; :width "90" :height "90" :x "5" :y "5"
                  :cx           "50" :cy "50" :r "40"
@@ -495,18 +498,37 @@
 (defn action-buttons-collapsed []
   (if @action-buttons-collapsed-click
     [anim/timeline
-     [:p "transitioning 100"]
+     [ui/floating-action-button basic-button
+      (svg-mui-three-dots)]
+     1
+     [ui/floating-action-button
+      (merge basic-button
+             {:backgroundColor (utils/color-gradient
+                                (:primary app-theme)
+                                (:secondary app-theme)
+                                0.25)})
+      (svg-mui-three-dots)]
+     50
+     [ui/floating-action-button
+      (merge basic-button
+             {:backgroundColor (utils/color-gradient
+                                (:primary app-theme)
+                                (:secondary app-theme)
+                                0.50)})
+      (svg-mui-three-dots)]
      100
-     [:p "transitioning 200"]
-     200
-     [:p "transitioning 300"]
-     300
-     [:p "transitioning 400"]
-     400
+     [ui/floating-action-button
+      (merge basic-button
+             {:backgroundColor (utils/color-gradient
+                                (:primary app-theme)
+                                (:secondary app-theme)
+                                0.75)})
+      (svg-mui-three-dots)]
+     125
      (fn []
        (rf/dispatch [:action-buttons-expand])
        (reset! action-buttons-collapsed-click false))
-     500
+     150
      ]
     [ui/floating-action-button
      (merge
@@ -660,9 +682,6 @@
 
 (def pages
   {:home #'home-page})
-
-(def app-theme {:primary (color :blue-grey-600)
-                :secondary (color :red-500)})
 
 (defn page []
   [ui/mui-theme-provider
