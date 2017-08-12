@@ -34,6 +34,7 @@
                  [ring-webjars "0.1.1"]
                  [ring/ring-core "1.6.0-RC3"]
                  [ring/ring-defaults "0.2.3"]
+                 [reanimated "0.5.1"]
                  [secretary "1.2.3"]
                  [selmer "1.10.7"]
                  ]
