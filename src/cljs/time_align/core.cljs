@@ -81,8 +81,8 @@
         start-abs-ms (.valueOf start-date)
         stop-abs-ms  (.valueOf stop-date)
         opacity      (cond
-                       (> curr-time-ms stop-abs-ms) "0.4"
-                       :else                        "0.8")
+                       (> curr-time-ms stop-abs-ms) "0.3"
+                       :else                        "0.6")
 
         is-period-selected (= :period
                               (get-in
@@ -391,12 +391,10 @@
      [:circle (merge {:fill "#f1f1f1" :r (:inner-r svg-consts)}
                      (select-keys svg-consts [:cx :cy]))]
 
-     (periods filtered-periods selected is-moving-period curr-time)
-
      (if display-ticker
        [:g
         [:line {:fill         "transparent"
-                :stroke-width "2"
+                :stroke-width "1"
                 :stroke       "white"
                 :filter       "url(#shadow-2dp)"
                 :x1           (:cx svg-consts)
@@ -409,6 +407,8 @@
                         (select-keys svg-consts [:cx :cy]))]
         ]
        )
+
+     (periods filtered-periods selected is-moving-period curr-time)
      ]))
 
 (defn days [days tasks selected-period]
