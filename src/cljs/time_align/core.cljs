@@ -496,50 +496,47 @@
 (defonce action-buttons-collapsed-click (r/atom false))
 
 (defn action-buttons-collapsed []
-  (if @action-buttons-collapsed-click
-    [anim/timeline
-     [ui/floating-action-button basic-button
-      (svg-mui-three-dots)]
-     1
-     [ui/floating-action-button
-      (merge basic-button
-             {:backgroundColor (utils/color-gradient
-                                (:primary app-theme)
-                                (:secondary app-theme)
-                                0.25)})
-      (svg-mui-three-dots)]
-     50
-     [ui/floating-action-button
-      (merge basic-button
-             {:backgroundColor (utils/color-gradient
-                                (:primary app-theme)
-                                (:secondary app-theme)
-                                0.50)})
-      (svg-mui-three-dots)]
-     100
-     [ui/floating-action-button
-      (merge basic-button
-             {:backgroundColor (utils/color-gradient
-                                (:primary app-theme)
-                                (:secondary app-theme)
-                                0.75)})
-      (svg-mui-three-dots)]
-     125
-     (fn []
-       (rf/dispatch [:action-buttons-expand])
-       (reset! action-buttons-collapsed-click false))
-     150
-     ]
-    [ui/floating-action-button
-     (merge
-      basic-button
-      {:onTouchTap
-       (fn [e]
-         (println "clicked")
-         (reset! action-buttons-collapsed-click true))
-       })
-     (svg-mui-three-dots)]
+  (let [element (fn [percent]
+                  [ui/floating-action-button
+                   (merge basic-button
+                          {:backgroundColor (utils/color-gradient
+                                             (:primary app-theme)
+                                             (:secondary app-theme)
+                                             percent)})
+                   (svg-mui-three-dots)])]
+
+    (if @action-buttons-collapsed-click
+      [anim/timeline
+       (element 0)
+       50
+       (element 0.15)
+       75
+       (element 0.30)
+       100
+       (element 0.45)
+       125
+       (element 0.65)
+       150
+       (element 0.80)
+       175
+       (element 0.95)
+       200
+       (fn []
+         (rf/dispatch [:action-buttons-expand])
+         (reset! action-buttons-collapsed-click false))
+       225]
+      [ui/floating-action-button
+       (merge
+        basic-button
+        {:onTouchTap
+         (fn [e]
+           (println "clicked")
+           (reset! action-buttons-collapsed-click true))
+         })
+       (svg-mui-three-dots)]
+      )
     )
+  
   )
 
 (defn svg-mui-entity [{:keys [type color style]}]
