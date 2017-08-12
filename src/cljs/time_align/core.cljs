@@ -22,8 +22,8 @@
                  ;; :width "90" :height "90" :x "5" :y "5"
                  :cx           "50" :cy "50" :r "40"
                  :inner-r      "30"
-                 :ticker-r      "5"
-                 :center-r     "5" ;; TODO might not be used
+                 :ticker-r     "5"
+                 :center-r     "5"  ;; TODO might not be used
                  :period-width "10"})
 
 (def shadow-filter
@@ -79,10 +79,10 @@
 
         curr-time-ms (.valueOf curr-time)
         start-abs-ms (.valueOf start-date)
-        stop-abs-ms (.valueOf stop-date)
-        opacity (cond
-                  (> curr-time-ms stop-abs-ms) "0.4"
-                  :else "0.8")
+        stop-abs-ms  (.valueOf stop-date)
+        opacity      (cond
+                       (> curr-time-ms stop-abs-ms) "0.4"
+                       :else                        "0.8")
 
         is-period-selected (= :period
                               (get-in
@@ -115,20 +115,20 @@
                          (js/parseInt )
                          (- (/ period-width 2)))
 
-        arc                 (describe-arc cx cy r start-angle stop-angle)
-        touch-click-handler (if (not is-period-selected)
-                              (fn [e]
-                                (.stopPropagation e)
-                                (.preventDefault e)
-                                (rf/dispatch
-                                 [:set-selected-period id])))
-        movement-trigger-handler    (if (and is-period-selected
-                                             (= selected-period id))
-                                      (fn [e]
-                                        (.stopPropagation e)
-                                        (rf/dispatch
-                                         [:set-moving-period true]))
-                                      )]
+        arc                      (describe-arc cx cy r start-angle stop-angle)
+        touch-click-handler      (if (not is-period-selected)
+                                   (fn [e]
+                                     (.stopPropagation e)
+                                     (.preventDefault e)
+                                     (rf/dispatch
+                                      [:set-selected-period id])))
+        movement-trigger-handler (if (and is-period-selected
+                                          (= selected-period id))
+                                   (fn [e]
+                                     (.stopPropagation e)
+                                     (rf/dispatch
+                                      [:set-moving-period true]))
+                                   )]
     [:g {:key (str id)}
      [:path
       {:d            arc
@@ -136,9 +136,9 @@
        :opacity      opacity
        :stroke-width period-width
        :fill         "transparent"
-       :onClick touch-click-handler
+       :onClick      touch-click-handler
        :onTouchStart movement-trigger-handler
-       :onMouseDown movement-trigger-handler
+       :onMouseDown  movement-trigger-handler
        }]
      ]
     ))
@@ -352,11 +352,11 @@
                                      (.preventDefault e)
                                      (rf/dispatch
                                       [:set-moving-period false])))
-        deselect (if (not is-moving-period)
-                   (fn [e]
-                     (.preventDefault e)
-                     (rf/dispatch
-                      [:set-selected-period nil])))]
+        deselect                 (if (not is-moving-period)
+                                   (fn [e]
+                                     (.preventDefault e)
+                                     (rf/dispatch
+                                      [:set-selected-period nil])))]
 
     (js/setTimeout clock-tick 1000)
     [:svg (merge {:key         date-str
@@ -376,7 +376,7 @@
                   :onMouseMove (if is-moving-period
                                  (partial handle-period-move
                                           date-str :mouse))
-                  :onClick deselect
+                  :onClick     deselect
                   }
                  (case zoom
                    :q1 {:viewBox "0 0 60 60"}
@@ -395,17 +395,17 @@
 
      (if display-ticker
        [:g
-        [:line {:fill "transparent"
+        [:line {:fill         "transparent"
                 :stroke-width "2"
-                :stroke "white"
-                :filter "url(#shadow-2dp)"
-                :x1 (:cx svg-consts)
-                :y1 (:cy svg-consts)
-                :x2 (:x ticker-pos)
-                :y2 (:y ticker-pos)}]
-        [:circle (merge {:fill "white"
+                :stroke       "white"
+                :filter       "url(#shadow-2dp)"
+                :x1           (:cx svg-consts)
+                :y1           (:cy svg-consts)
+                :x2           (:x ticker-pos)
+                :y2           (:y ticker-pos)}]
+        [:circle (merge {:fill   "white"
                          :filter "url(#shadow-2dp)"
-                         :r (:ticker-r svg-consts)}
+                         :r      (:ticker-r svg-consts)}
                         (select-keys svg-consts [:cx :cy]))]
         ]
        )
@@ -458,10 +458,10 @@
                                      )}])))]))
 
 (def basic-button {:style {}})
-(def basic-mini-button {:mini true
+(def basic-mini-button {:mini             true
                         :background-color "grey"
-                        :style {:marginBottom "20px"
-                                }})
+                        :style            {:marginBottom "20px"
+                                           }})
 (def basic-ic {:style {:marginTop "7.5px"}
                :color "white"})
 
@@ -499,33 +499,33 @@
   [ui/svg-icon
    (merge {:style style} {:viewBox "0 0 24 24"})
    [:g
-    [:rect {:x "2" :y "2" :width "4" :height "4"
-            :fill (if (= type :category) color "transparent")
-            :stroke color
+    [:rect {:x            "2" :y "2" :width "4" :height "4"
+            :fill         (if (= type :category) color "transparent")
+            :stroke       color
             :stroke-width "2"}]
-    [:path {:d "M 4 6 V 12 H 10"
-            :stroke color
-            :fill "transparent"
+    [:path {:d            "M 4 6 V 12 H 10"
+            :stroke       color
+            :fill         "transparent"
             :stroke-width "2"}]
-    [:rect {:x "10" :y "10" :width "4" :height "4"
-            :fill (if (= type :task) color "transparent")
-            :stroke color
+    [:rect {:x            "10" :y "10" :width "4" :height "4"
+            :fill         (if (= type :task) color "transparent")
+            :stroke       color
             :stroke-width "2"}]
-    [:path {:d "M 12 14 V 20 H 18"
-            :stroke color
-            :fill "transparent"
+    [:path {:d            "M 12 14 V 20 H 18"
+            :stroke       color
+            :fill         "transparent"
             :stroke-width "2"}]
-    [:rect {:x "18" :y "18" :width "4" :height "4"
-            :fill (if (= type :period) color "transparent")
-            :stroke color
+    [:rect {:x            "18" :y "18" :width "4" :height "4"
+            :fill         (if (= type :period) color "transparent")
+            :stroke       color
             :stroke-width "2"}]
     ]])
 
 (defn action-buttons-no-selection []
   (let [zoom @(rf/subscribe [:zoom])]
-    [:div {:style {:display "flex"
+    [:div {:style {:display        "flex"
                    :flex-direction "column"
-                   :align-items "center"
+                   :align-items    "center"
                    }}
 
      [ui/floating-action-button basic-mini-button
@@ -553,11 +553,11 @@
     ))
 
 (defn home-page []
-  (let [main-drawer-state @(rf/subscribe [:main-drawer-state])
-        tasks             @(rf/subscribe [:tasks])
-        selected          @(rf/subscribe [:selected])
+  (let [main-drawer-state   @(rf/subscribe [:main-drawer-state])
+        tasks               @(rf/subscribe [:tasks])
+        selected            @(rf/subscribe [:selected])
         action-button-state (rf/subscribe [:action-buttons])
-       ]
+        ]
 
     [:div.app-container
      {:style {:display         "flex"
