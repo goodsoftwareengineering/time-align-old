@@ -455,7 +455,11 @@
                                      ;;    [:set-selected-task (:task-id period)])
                                      )}])))]))
 
-(def basic-button {:style {:marginRight "20px"}})
+(def basic-button {:style {}})
+(def basic-mini-button {:mini true
+                        :background-color "grey"
+                        :style {:marginBottom "20px"
+                                }})
 (def basic-ic {:style {:marginTop "7.5px"}
                :color "white"})
 
@@ -472,11 +476,12 @@
 (defn back-button []
   [ui/floating-action-button (merge
                               basic-button
-                              {:onTouchTap
+                              {:secondary true
+                               :onTouchTap
                                (fn [e]
                                  (rf/dispatch
                                   [:action-buttons-back]))})
-   [ic/hardware-keyboard-backspace basic-ic]])
+   [ic/navigation-close basic-ic]])
 
 (defn action-buttons-options []
   [ui/floating-action-button
@@ -517,16 +522,18 @@
 (defn action-buttons-no-selection []
   (let [zoom @(rf/subscribe [:zoom])]
     [:div {:style {:display "flex"
-                   :justiy-content "space-between"}}
+                   :flex-direction "column"
+                   :align-items "center"
+                   }}
 
-     [ui/floating-action-button basic-button
+     [ui/floating-action-button basic-mini-button
       [ic/content-add basic-ic]]
 
      (if (some? zoom)
-       [ui/floating-action-button basic-button
+       [ui/floating-action-button basic-mini-button
         [ic/action-zoom-out basic-ic]]
 
-       [ui/floating-action-button basic-button
+       [ui/floating-action-button basic-mini-button
         [ic/action-zoom-in basic-ic]])
 
      (back-button)
