@@ -61,8 +61,8 @@
      [:feMergeNode {:in "shC"}]
      [:feMergeNode {:in "SourceGraphic"}]]]])
 
-(defonce m (r/atom -20))
-(defonce m-spring (anim/interpolate-to m))
+(defonce margin-action-expanded (r/atom -20))
+(defonce mae-spring (anim/interpolate-to margin-action-expanded))
 
 (defn describe-arc [cx cy r start stop]
   (let [
@@ -491,7 +491,7 @@
                               {:secondary true
                                :onTouchTap
                                (fn [e]
-                                 (reset! m -20)
+                                 (reset! margin-action-expanded -20)
                                  (rf/dispatch
                                   [:action-buttons-back]))})
    [ic/navigation-close basic-ic]])
@@ -571,27 +571,27 @@
 
     (if @action-buttons-collapsed-click
       (do (reset! action-buttons-collapsed-click false)
-          (reset! m 20) ))
+          (reset! margin-action-expanded 20) ))
 
     [:div expanded-buttons-style
 
      [ui/floating-action-button
       (merge basic-mini-button
              {:style (merge (:style basic-mini-button)
-                            {:marginBottom @m-spring})})
+                            {:marginBottom @mae-spring})})
       [ic/content-add basic-ic]]
 
      (if (some? zoom)
        [ui/floating-action-button
         (merge basic-mini-button
                {:style (merge (:style basic-mini-button)
-                              {:marginBottom @m-spring})})
+                              {:marginBottom @mae-spring})})
         [ic/action-zoom-out basic-ic]]
 
        [ui/floating-action-button
         (merge basic-mini-button
                {:style (merge (:style basic-mini-button)
-                              {:marginBottom @m-spring})})
+                              {:marginBottom @mae-spring})})
         [ic/action-zoom-in basic-ic]])
 
      (back-button)
