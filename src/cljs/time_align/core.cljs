@@ -513,13 +513,13 @@
     (if @action-buttons-collapsed-click
       [anim/timeline
        (element 0)
-       10
-       (element 0.40)
-       10
-       (element 0.80)
-       10
-       (element 0.90)
-       10
+       50
+       (element 0.33)
+       50
+       (element 0.66)
+       50
+       (element 0.99)
+       50
        (fn []
          (println "dispatching")
          ;; (reset! action-buttons-collapsed-click false)
@@ -532,6 +532,7 @@
         {:onTouchTap
          (fn [e]
            (.stopPropagation e)
+           (.preventDefault e)
            (reset! action-buttons-collapsed-click true))
          })
        (svg-mui-three-dots)]
