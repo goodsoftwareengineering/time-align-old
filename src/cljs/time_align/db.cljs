@@ -80,7 +80,7 @@
 (s/def ::category (s/keys :req-un [::id ::name ::color ::tasks]))
 (s/def ::categories (s/coll-of ::category :gen-max 2 :min-count 1))
 (s/def ::page  #{:home})
-(s/def ::type #{:category :task :period})
+(s/def ::type #{:category :task :period :queue})
 (s/def ::type-or-nil (s/with-gen
                        (s/or :is-type ::type
                              :is-nil nil?)

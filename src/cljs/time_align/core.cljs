@@ -444,12 +444,17 @@
 
 (defn queue [tasks selected]
   (let [periods-no-stamps (utils/filter-periods-no-stamps tasks)
+        sel (:current-selection selected)
         ]
     [ui/list {:style {:width "100%"}}
         (->> periods-no-stamps
              (map (fn [period]
                     [ui/list-item
-                     {:style       {:width "100%"}
+                     {:style       (merge {:width "100%"}
+                                          (if (and (= :queue (:type-or-nil sel))
+                                                   (= (:id period) (:id-or-nil sel)))
+                                            {:backgroundColor (color :grey-300)}
+                                            {}))
                       :key         (:id period)
                       :leftIcon    (r/as-element
                                     [ui/svg-icon {:viewBox "0 0 1000 1000" :style {:margin-left "0.5em"}}
@@ -463,9 +468,8 @@
                                                       :color           "grey"}}
                                        "No period description ..."]))
                       :onTouchTap  (fn [e]
-                                     (println "touched me")
-                                     ;; (rf/dispatch
-                                     ;;    [:set-selected-task (:task-id period)])
+                                     (rf/dispatch
+                                        [:set-selected-queue (:id period)])
                                      )}])))]))
 
 (def basic-button {:style {}})
@@ -660,6 +664,31 @@
    ]
   )
 
+(defn action-buttons-queue-selection []
+  (if @action-buttons-collapsed-click
+    (do (reset! action-buttons-collapsed-click false)
+        (reset! margin-action-expanded 20) ))
+
+  [:div expanded-buttons-style
+
+   ;; TODO this switches with pause depending on play state
+   ;; shouldn't be too bad, the ticker makes the
+   [ui/floating-action-button
+    (merge basic-mini-button
+           {:style (merge (:style basic-mini-button)
+                          {:marginBottom @mae-spring})})
+    [ic/av-play-arrow basic-ic]]
+
+   [ui/floating-action-button
+    (merge basic-mini-button
+           {:style (merge (:style basic-mini-button)
+                          {:marginBottom @mae-spring})})
+    [ic/editor-mode-edit basic-ic]]
+
+   (back-button)
+   ]
+  )
+
 (defn action-buttons [state]
   (let [forceable @forcer]
     (case state
@@ -670,7 +699,7 @@
       :period
       (action-buttons-period-selection)
       :queue
-      [:div "action-buttons-queue-selection"]
+      (action-buttons-queue-selection)
       [:div "no buttons!"]
       )
     )

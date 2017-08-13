@@ -62,6 +62,19 @@
    ))
 
 (reg-event-db
+ :set-selected-queue
+ (fn [db [_ period-id]]
+   ;; TODO might need to set action-button state on nil to auto collapse
+   (let [type (if (nil? period-id) nil :queue)
+         prev (get-in db [:view :selected :current-selection])
+         curr {:type-or-nil type :id-or-nil period-id}]
+     (assoc-in db [:view :selected]
+               {:current-selection  curr
+                :previous-selection prev})
+     )
+   ))
+
+(reg-event-db
  :action-buttons-expand
  (fn [db [_ _]]
    (let [selection (get-in db [:view :selected :current-selection])
