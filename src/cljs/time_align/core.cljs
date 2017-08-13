@@ -330,7 +330,10 @@
 (defonce clock-state (r/atom {:time (new js/Date)}))
 
 (defn clock-tick []
-  (swap! clock-state assoc :time (new js/Date)))
+  (swap! clock-state assoc :time (new js/Date))
+  ;; TODO think about putting clock state in db
+  ;; have handler that ticks the clock + resets any "playing" period
+  )
 
 (defn day [tasks selected day]
   (let [date-str                 (subs (.toISOString day) 0 10)
@@ -366,6 +369,7 @@
                                       [:set-selected-period nil])))]
 
     (js/setTimeout clock-tick 1000)
+
     [:svg (merge {:key         date-str
                   :id          date-str
                   :style       {:display      "inline-box"
@@ -485,6 +489,25 @@
     ]]
   )
 
+(defn svg-mui-stretch []
+  [ui/svg-icon
+   {:viewBox "0 0 24 24"}
+   [:g
+    [:polyline {:points "7,2 2,12 7,22"}]
+    [:polyline {:points "11,2 13,2 13,22 11,22"}]
+    [:polyline {:points "17,2 22,12 17,22"}]
+    ]])
+
+(defn svg-mui-shrink []
+  [ui/svg-icon
+   {:viewBox "0 0 24 24"}
+   [:g
+    [:polyline {:points "2,2 7,12 2,22"}]
+    [:polyline {:points "11,2 13,2 13,22 11,22"}]
+    [:polyline {:points "22,2 17,12 22,22"}]
+    ]]
+  )
+
 (defn back-button []
   [ui/floating-action-button (merge
                               basic-button
@@ -601,11 +624,40 @@
   )
 
 (defn action-buttons-period-selection []
+  (if @action-buttons-collapsed-click
+    (do (reset! action-buttons-collapsed-click false)
+        (reset! margin-action-expanded 20) ))
+
   [:div expanded-buttons-style
-   [ui/floating-action-button basic-mini-button
+
+   ;; TODO this switches with pause depending on play state
+   ;; shouldn't be too bad, the ticker makes the
+   [ui/floating-action-button
+    (merge basic-mini-button
+           {:style (merge (:style basic-mini-button)
+                          {:marginBottom @mae-spring})})
+    [ic/av-play-arrow basic-ic]]
+
+   [ui/floating-action-button
+    (merge basic-mini-button
+           {:style (merge (:style basic-mini-button)
+                          {:marginBottom @mae-spring})})
+    (svg-mui-stretch)]
+
+   [ui/floating-action-button
+    (merge basic-mini-button
+           {:style (merge (:style basic-mini-button)
+                          {:marginBottom @mae-spring})})
+    (svg-mui-shrink)]
+
+   [ui/floating-action-button
+    (merge basic-mini-button
+           {:style (merge (:style basic-mini-button)
+                          {:marginBottom @mae-spring})})
     [ic/editor-mode-edit basic-ic]]
 
-  (back-button)]
+   (back-button)
+   ]
   )
 
 (defn action-buttons [state]
@@ -617,6 +669,8 @@
       (action-buttons-no-selection)
       :period
       (action-buttons-period-selection)
+      :queue
+      [:div "action-buttons-queue-selection"]
       [:div "no buttons!"]
       )
     )
