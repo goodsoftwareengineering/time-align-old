@@ -62,7 +62,7 @@
      [:feMergeNode {:in "SourceGraphic"}]]]])
 
 (defonce m (r/atom -20))
-(defonce m-spring (anim/spring m))
+(defonce m-spring (anim/interpolate-to m))
 
 (defn describe-arc [cx cy r start stop]
   (let [
@@ -513,18 +513,12 @@
     (if @action-buttons-collapsed-click
       [anim/timeline
        (element 0)
-       25
-       (element 0.15)
-       25
-       (element 0.30)
-       25
-       (element 0.45)
-       25
-       (element 0.65)
-       25
+       10
+       (element 0.40)
+       10
        (element 0.80)
-       25
-       (element 0.10)
+       10
+       (element 0.90)
        10
        (fn []
          (println "dispatching")
