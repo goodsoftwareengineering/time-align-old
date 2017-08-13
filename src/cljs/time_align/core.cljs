@@ -523,7 +523,6 @@
                                   [:action-buttons-back]))})
    [ic/navigation-close basic-ic]])
 
-;; TODO can with-let be used to put this back in the component?
 (defonce action-buttons-collapsed-click (r/atom false))
 (defonce forcer (r/atom 0))
 
@@ -593,7 +592,6 @@
             :stroke-width "2"}]
     ]])
 
-
 (defn action-buttons-no-selection []
   (let [zoom @(rf/subscribe [:zoom])]
 
@@ -606,7 +604,8 @@
      [ui/floating-action-button
       (merge basic-mini-button
              {:style (merge (:style basic-mini-button)
-                            {:marginBottom @mae-spring})})
+                            {:marginBottom @mae-spring})
+              :onTouchTap (fn [] (rf/dispatch [:set-active-page :entity-choose]))})
       [ic/content-add basic-ic]]
 
      (if (some? zoom)
@@ -779,8 +778,13 @@
                :box-sizing "border-box"}}
       (action-buttons action-button-state)]]))
 
+(defn entity-choose []
+  [:div "this is where you choose an entity"])
+
 (def pages
-  {:home #'home-page})
+  {:home #'home-page
+   :entity-choose #'entity-choose}
+  )
 
 (defn page []
   [ui/mui-theme-provider
