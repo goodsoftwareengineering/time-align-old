@@ -61,6 +61,9 @@
      [:feMergeNode {:in "shC"}]
      [:feMergeNode {:in "SourceGraphic"}]]]])
 
+(defonce m (r/atom -20))
+(defonce m-spring (anim/spring m))
+
 (defn describe-arc [cx cy r start stop]
   (let [
         p-start (utils/polar-to-cartesian cx cy r start)
@@ -488,12 +491,14 @@
                               {:secondary true
                                :onTouchTap
                                (fn [e]
+                                 (reset! m -20)
                                  (rf/dispatch
                                   [:action-buttons-back]))})
    [ic/navigation-close basic-ic]])
 
 ;; TODO can with-let be used to put this back in the component?
 (defonce action-buttons-collapsed-click (r/atom false))
+(defonce forcer (r/atom 0))
 
 (defn action-buttons-collapsed []
   (let [element (fn [percent]
@@ -508,22 +513,24 @@
     (if @action-buttons-collapsed-click
       [anim/timeline
        (element 0)
-       50
+       25
        (element 0.15)
-       75
+       25
        (element 0.30)
-       100
+       25
        (element 0.45)
-       125
+       25
        (element 0.65)
-       150
+       25
        (element 0.80)
-       175
-       (element 0.95)
-       176
+       25
+       (element 0.10)
+       10
        (fn []
+         (println "dispatching")
+         ;; (reset! action-buttons-collapsed-click false)
          (rf/dispatch [:action-buttons-expand])
-         (reset! action-buttons-collapsed-click false))]
+         )]
 
       [ui/floating-action-button
        (merge
@@ -564,37 +571,33 @@
             :stroke-width "2"}]
     ]])
 
-(defn action-buttons-no-selection []
-  (let [zoom @(rf/subscribe [:zoom])
-        margin (r/atom -20)
-        interval (.setInterval js/window
-                               (fn [] (swap! margin #(+ 5 %)))
-                               100)
-        ]
 
-    (.setTimeout js/window
-                 (fn [] (.clearInterval js/window interval))
-                 3000)
+(defn action-buttons-no-selection []
+  (let [zoom @(rf/subscribe [:zoom])]
+
+    (if @action-buttons-collapsed-click
+      (do (reset! action-buttons-collapsed-click false)
+          (reset! m 20) ))
 
     [:div expanded-buttons-style
 
      [ui/floating-action-button
       (merge basic-mini-button
              {:style (merge (:style basic-mini-button)
-                            {:marginBottom (str @margin "px")})})
+                            {:marginBottom @m-spring})})
       [ic/content-add basic-ic]]
 
      (if (some? zoom)
        [ui/floating-action-button
         (merge basic-mini-button
                {:style (merge (:style basic-mini-button)
-                              {:marginBottom (str @margin "px")})})
+                              {:marginBottom @m-spring})})
         [ic/action-zoom-out basic-ic]]
 
        [ui/floating-action-button
         (merge basic-mini-button
                {:style (merge (:style basic-mini-button)
-                              {:marginBottom (str @margin "px")})})
+                              {:marginBottom @m-spring})})
         [ic/action-zoom-in basic-ic]])
 
      (back-button)
@@ -611,21 +614,24 @@
   )
 
 (defn action-buttons [state]
-  (case @state
-    :collapsed
-    (action-buttons-collapsed)
-    :no-selection
-    (action-buttons-no-selection)
-    :period
-    (action-buttons-period-selection)
-    [:div "no buttons!"]
-    ))
+  (let [forceable @forcer]
+    (case state
+      :collapsed
+      (action-buttons-collapsed)
+      :no-selection
+      (action-buttons-no-selection)
+      :period
+      (action-buttons-period-selection)
+      [:div "no buttons!"]
+      )
+    )
+  )
 
 (defn home-page []
   (let [main-drawer-state   @(rf/subscribe [:main-drawer-state])
         tasks               @(rf/subscribe [:tasks])
         selected            @(rf/subscribe [:selected])
-        action-button-state (rf/subscribe [:action-buttons])
+        action-button-state @(rf/subscribe [:action-buttons])
         ]
 
     [:div.app-container
