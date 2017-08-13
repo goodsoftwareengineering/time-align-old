@@ -67,7 +67,7 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
 ???
 
 ## work space
-- [ ] finish working out stubs for all action button set state
+- [x] finish working out stubs for all action button set state
 - [ ] add page entity chooser
 - [ ] forms
   - [ ] leaving id blank generates new in handler
