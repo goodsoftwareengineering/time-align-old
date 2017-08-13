@@ -84,6 +84,8 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
   - [ ] set top of the wheel time
 
 ## long term cleanup
+- pull out all state from core and put it in view
+- merge selectio handlers into an entity selection handler
 - all handlers have non-anon functions
 - all subscriptions have non-anon functions
 - custom svg defn's have name format
