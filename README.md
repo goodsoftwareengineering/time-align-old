@@ -67,11 +67,21 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
 ???
 
 ## work space
-The action section is getting tricky. I've figured out how to transition between sets of actions depending on app state. Basically I have a list of possible states in the app-db, and whenever a back action or button that leads to a new state is triggered one of two handlers figures out what the next state is. Keeps all the logic out of the views and the app-db is still clean.  
-
-The only problem is that multiple floating action buttons look like bad. How do I put together up to 6 actions in a reachable space on mobile? There doesn't seem to be a readily accessible solution in MUI.  
-
-Maybe The floating action button can be used when there is onl one option (expand options). When the action area is in any other state the buttons should be flat and an action button area should appear at the bottom of the screen, not fixed position.
+- [ ] finish working out stubs for all action button set state
+- [ ] add page entity chooser
+- [ ] forms
+  - [ ] leaving id blank generates new in handler
+  - [ ] category
+  - [ ] task
+  - [ ] period
+- [ ] link drawer options to entity list pages
+- [ ] lists
+  - [ ] categories
+  - [ ] tasks
+  - [ ] periods
+- [ ] account page
+- [ ] settings page
+  - [ ] set top of the wheel time
 
 ## long term cleanup
 - all handlers have non-anon functions
