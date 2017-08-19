@@ -55,3 +55,7 @@
    (get-in db [:view :selected])))
 
 
+(reg-sub
+ :category-form-color
+ (fn [db _]
+   (get-in db [:view :category-form-color])))

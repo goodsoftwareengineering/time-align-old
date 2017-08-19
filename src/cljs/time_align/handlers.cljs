@@ -11,8 +11,25 @@
 
 (reg-event-db
   :set-active-page
-  (fn [db [_ page]]
-    (assoc-in db [:view :page] page)))
+  (fn [db [_ params]]
+    (let [page (:page-id params)
+          type (:type params)
+          id (:id params)]
+      (case page
+        :home (assoc-in db [:view :page] {:page-id page
+                                          :type-or-nil nil
+                                          :id-or-nil nil})
+        :entity-forms (assoc-in db [:view :page]
+                                {:page-id page
+                                 :type-or-nil type
+                                 :id-or-nil id})
+        ;; default
+        (assoc-in db [:view :page] {:page-id page
+                                    :type-or-nil nil
+                                    :id-or-nil nil})
+        )
+            )
+    ))
 
 (reg-event-db
  :set-zoom
@@ -188,4 +205,12 @@
      (do (.log js/console "no period selected")
          db)
      )
+   ))
+
+(reg-event-db
+ :set-category-form-color
+ (fn [db [_ color]]
+   (assoc-in db [:view :category-form-color]
+             (merge (get-in db [:view :category-form-color])
+                    color))
    ))

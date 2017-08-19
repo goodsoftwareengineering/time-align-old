@@ -779,24 +779,71 @@
                :box-sizing "border-box"}}
       (action-buttons action-button-state)]]))
 
-(defn entity-choose []
-  [:div "this is where you choose an entity"])
+(defn category-form [id]
+  (let [color @(rf/subscribe [:category-form-color])]
+    [:div.category-form {:style {:padding "0.5em"
+                                 :backgroundColor "white"}}
+     [ui/text-field {:floating-label-text "Name"}]
 
-(def pages
-  {:home #'home-page
-   :entity-choose #'entity-choose}
+     [ui/slider {:value (:red color)
+                 :min 0
+                 :max 255
+                 :onChange (fn [e v]
+                             (rf/dispatch [:set-category-form-color
+                                           {:red v}]))}]
+
+     [ui/slider {:value (:blue color)
+                 :min 0
+                 :max 255
+                 :onChange (fn [e v]
+                             (rf/dispatch [:set-category-form-color
+                                           {:blue v}]))}]
+     [ui/slider {:value (:green color)
+                 :min 0
+                 :max 255
+                 :onChange (fn [e v]
+                             (rf/dispatch [:set-category-form-color
+                                           {:green v}]))}]
+     color
+     ]
+    )
   )
 
+(defn entity-forms [page]
+  [ui/tabs {:value (if-let [type (:type-or-nil page)]
+                     type
+                     :category)}
+   [ui/tab {:icon (r/as-element (svg-mui-entity {:type :category :color "white"}))
+            :label "Category"
+            :value :category}
+    (category-form nil)]
+   [ui/tab {:icon (r/as-element (svg-mui-entity {:type :task :color "white"}))
+            :label "Task"
+            :value :task}
+    [:div "form for task"]]
+   [ui/tab {:icon (r/as-element (svg-mui-entity {:type :period :color "white"}))
+            :label "Period"
+            :value :period}
+    [:div "form for period"]]
+   ])
+
 (defn page []
-  [ui/mui-theme-provider
-   {:mui-theme (get-mui-theme
-                {:palette
-                 {:primary1-color (:primary app-theme)
-                  :accent1-color (:secondary app-theme)}
-                 })}
-   [:div
-    [(pages @(rf/subscribe [:page]))]]
-   ]
+  (let [this-page @(rf/subscribe [:page])
+        page-id (:page-id this-page)]
+    [ui/mui-theme-provider
+     {:mui-theme (get-mui-theme
+                  {:palette
+                   {:primary1-color (:primary app-theme)
+                    :accent1-color (:secondary app-theme)}
+                   })}
+     [:div
+      (case page-id
+        :home (home-page)
+        :entity-forms (entity-forms this-page)
+        ;; default
+        (home-page))]
+     ]
+    )
   )
 
 ;; -------------------------
@@ -804,7 +851,20 @@
 (secretary/set-config! :prefix "#")
 
 (secretary/defroute "/" []
-  (rf/dispatch [:set-active-page :home]))
+  (rf/dispatch [:set-active-page {:page-id :home}]))
+
+(secretary/defroute "/create" {:as params}
+  (rf/dispatch [:set-active-page {:page-id :entity-forms
+                                  :type :category}]))
+
+(secretary/defroute "/create/:type" {:as params}
+  (rf/dispatch [:set-active-page {:page-id :entity-forms
+                                  :type (:type params)}]))
+
+(secretary/defroute "/edit/:type/:id" {:as params}
+  (rf/dispatch [:set-active-page {:page-id :entity-forms
+                                  :type (:type params)
+                                  :id (:id params)}]))
 
 ;; -------------------------
 ;; History

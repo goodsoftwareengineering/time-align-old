@@ -79,7 +79,6 @@
 (s/def ::user (s/keys :req-un [::name ::id ::email]))
 (s/def ::category (s/keys :req-un [::id ::name ::color ::tasks]))
 (s/def ::categories (s/coll-of ::category :gen-max 2 :min-count 1))
-(s/def ::page  #{:home})
 (s/def ::type #{:category :task :period :queue})
 (s/def ::type-or-nil (s/with-gen
                        (s/or :is-type ::type
@@ -89,6 +88,10 @@
                        (s/or :is-id ::id
                              :is-nil nil?)
                        #(gen/return nil)))
+(s/def ::page-id #{:home :entity-forms})
+(s/def ::page  (s/keys :req-un [::page-id
+                                ::type-or-nil
+                                ::id-or-nil]))
 (s/def ::current-selection (s/and (s/keys :req-un [::type-or-nil ::id-or-nil])
                                   (fn [sel] (if (some? (:type-or-nil sel))
                                               (some? (:id-or-nil sel))
@@ -118,12 +121,23 @@
                             :add
                             }
                           #(gen/return :collapsed)))
+(s/def ::color-255 (s/with-gen (s/and int?
+                                      (fn [i]
+                                        (and (> 256 i)
+                                             (<= 0 i) )))
+                     #(gen/return 0)))
+(s/def ::red ::color-255)
+(s/def ::blue ::color-255)
+(s/def ::green ::color-255)
+(s/def ::category-form-color (s/keys :req-un [::red ::blue ::green]))
 (s/def ::view (s/and (s/keys :req-un [::page
                                       ::selected
                                       ::continous-action
                                       ::main-drawer
                                       ::zoom
-                                      ::action-buttons])
+                                      ::action-buttons
+                                      ::category-form-color
+                                      ])
                      (fn [view]
                        (if (get-in
                             view
