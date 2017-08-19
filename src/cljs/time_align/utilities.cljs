@@ -364,3 +364,22 @@
                      (pad-one-b-16 g-n)
                      (pad-one-b-16 b-n)
                     ])))
+
+(defn color-255->hex [{:keys [red blue green]}]
+  (let [red-hx (pad-one-b-16 red)
+        blue-hx (pad-one-b-16 blue)
+        green-hx (pad-one-b-16 green)]
+    (str "#" red-hx green-hx blue-hx)
+    )
+  )
+
+(defn color-hex->255 [hex-str]
+  (let [value (string/join (rest hex-str))
+
+        r (js/parseInt (subs value 0 2) 16)
+        g (js/parseInt (subs value 2 4) 16)
+        b (js/parseInt (subs value 4 6) 16)
+        ]
+
+    {:red r :green g :blue b }
+    ))

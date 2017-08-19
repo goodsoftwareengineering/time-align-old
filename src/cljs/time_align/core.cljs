@@ -19,6 +19,7 @@
             [cljs.pprint :refer [pprint]])
   (:import goog.History))
 
+
 (def app-theme {:primary (color :blue-grey-600)
                 :secondary (color :red-500)})
 
@@ -779,32 +780,79 @@
                :box-sizing "border-box"}}
       (action-buttons action-button-state)]]))
 
+(def standard-colors (->> (aget js/MaterialUIStyles "colors")
+                          (js->clj)
+                          (keys)
+                          (filter (fn [c] (some? (re-find #"500" c))))
+                          (map (fn [c] (color (keyword c))))
+                          ))
+
+(defn standard-color-picker []
+  [:div.colors {:style {:display "flex"
+                        :flex-wrap "wrap"}}
+   (->> standard-colors
+        (map (fn [c]
+               [:div.color {:key c
+                            :style {:width "2em"
+                                    :height "2em"
+                                    :backgroundColor c}
+                            :onClick (fn [e]
+                                       (rf/dispatch [:set-category-form-color
+                                                     (utils/color-hex->255 c)]))}]))
+        )
+   ])
+
+(defn color-slider [color]
+  [:div.slider
+   [ui/slider {:value (:red color)
+               :min 0
+               :max 255
+               :onChange (fn [e v]
+                           (rf/dispatch [:set-category-form-color
+                                         {:red (.ceil js/Math v)}]))}]
+   [ui/slider {:value (:green color)
+               :min 0
+               :max 255
+               :onChange (fn [e v]
+                           (rf/dispatch [:set-category-form-color
+                                         {:green (.ceil js/Math v)}]))}]
+   [ui/slider {:value (:blue color)
+               :min 0
+               :max 255
+               :onChange (fn [e v]
+                           (rf/dispatch [:set-category-form-color
+                                         {:blue (.ceil js/Math v)}]))}]
+   ]
+   )
+
 (defn category-form [id]
   (let [color @(rf/subscribe [:category-form-color])]
     [:div.category-form {:style {:padding "0.5em"
                                  :backgroundColor "white"}}
      [ui/text-field {:floating-label-text "Name"}]
 
-     [ui/slider {:value (:red color)
-                 :min 0
-                 :max 255
-                 :onChange (fn [e v]
-                             (rf/dispatch [:set-category-form-color
-                                           {:red v}]))}]
+     [ui/divider {:style {:margin-top "1em"
+                          :margin-bottom "1em"}}]
 
-     [ui/slider {:value (:blue color)
-                 :min 0
-                 :max 255
-                 :onChange (fn [e v]
-                             (rf/dispatch [:set-category-form-color
-                                           {:blue v}]))}]
-     [ui/slider {:value (:green color)
-                 :min 0
-                 :max 255
-                 :onChange (fn [e v]
-                             (rf/dispatch [:set-category-form-color
-                                           {:green v}]))}]
-     color
+     [:div.colorHeader {:style {:display "flex"
+                                :flexWrap "nowrap"
+                                :align-items "center"
+                                :justify-content "space-around"}}
+      [ui/svg-icon {:viewBox "0 0 1000 1000" :style {:margin-left "0.5em"}}
+       [:circle {:cx "500" :cy "500" :r "500" :fill (utils/color-255->hex color)}]]
+      [ui/subheader "Color"]
+      ]
+
+     [ui/tabs {:tabItemContainerStyle {:backgroundColor "white"}
+               :inkBarStyle {:backgroundColor (:primary app-theme)}}
+      [ui/tab {:label "picker" :style {:color (:primary app-theme)}}
+       (standard-color-picker)]
+      [ui/tab {:label "slider" :style {:color (:primary app-theme)}}
+       (color-slider color)]
+      ]
+
+     [ui/divider {:style {:margin-top "1em"
+                          :margin-bottom "1em"}}]
      ]
     )
   )
