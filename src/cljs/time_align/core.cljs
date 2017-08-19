@@ -593,7 +593,8 @@
     ]])
 
 (defn action-buttons-no-selection []
-  (let [zoom @(rf/subscribe [:zoom])]
+  (let [zoom @(rf/subscribe [:zoom])
+        spring @mae-spring]
 
     (if @action-buttons-collapsed-click
       (do (reset! action-buttons-collapsed-click false)
@@ -604,21 +605,21 @@
      [ui/floating-action-button
       (merge basic-mini-button
              {:style (merge (:style basic-mini-button)
-                            {:marginBottom @mae-spring})
-              :onTouchTap (fn [] (rf/dispatch [:set-active-page :entity-choose]))})
+                            {:marginBottom spring})
+              :href "/#/create"})
       [ic/content-add basic-ic]]
 
      (if (some? zoom)
        [ui/floating-action-button
         (merge basic-mini-button
                {:style (merge (:style basic-mini-button)
-                              {:marginBottom @mae-spring})})
+                              {:marginBottom spring})})
         [ic/action-zoom-out basic-ic]]
 
        [ui/floating-action-button
         (merge basic-mini-button
                {:style (merge (:style basic-mini-button)
-                              {:marginBottom @mae-spring})})
+                              {:marginBottom spring})})
         [ic/action-zoom-in basic-ic]])
 
      (back-button)
