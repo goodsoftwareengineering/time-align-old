@@ -130,6 +130,9 @@
 (s/def ::blue ::color-255)
 (s/def ::green ::color-255)
 (s/def ::category-form-color (s/keys :req-un [::red ::blue ::green]))
+(s/def ::category-form-name (s/with-gen string?
+                              #(gen/return "")))
+(s/def ::category-form-id ::id-or-nil)
 (s/def ::view (s/and (s/keys :req-un [::page
                                       ::selected
                                       ::continous-action
@@ -137,6 +140,7 @@
                                       ::zoom
                                       ::action-buttons
                                       ::category-form-color
+                                      ::category-form-name
                                       ])
                      (fn [view]
                        (if (get-in

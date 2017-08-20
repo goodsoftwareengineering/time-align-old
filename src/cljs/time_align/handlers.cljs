@@ -214,3 +214,21 @@
              (merge (get-in db [:view :category-form-color])
                     color))
    ))
+
+(reg-event-db
+ :save-category-form
+ (fn [db [_ _]]
+   (let [name (get-in db [:view :category-form-name])
+         id (if-let [id (get-in db [:view :category-form-id])]
+              id
+              (random-uuid))
+         color (utils/color-255->hex (get-in db [:view :category-form-color]))
+         categories (:categories db)]
+     (assoc db :categories (conj categories {:id id :name name :color color
+                                             :tasks []}))
+     )))
+
+(reg-event-db
+ :set-category-form-name
+ (fn [db [_ name]]
+   (assoc-in db [:view :category-form-name] name)))

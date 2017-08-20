@@ -789,7 +789,9 @@
 
 (defn standard-color-picker []
   [:div.colors {:style {:display "flex"
-                        :flex-wrap "wrap"}}
+                        :flex-wrap "wrap"
+                        :justify-content "center"
+                        :marginTop "1em"}}
    (->> standard-colors
         (map (fn [c]
                [:div.color {:key c
@@ -826,10 +828,15 @@
    )
 
 (defn category-form [id]
-  (let [color @(rf/subscribe [:category-form-color])]
+  (let [color @(rf/subscribe [:category-form-color])
+        name @(rf/subscribe [:category-form-name])]
+
     [:div.category-form {:style {:padding "0.5em"
                                  :backgroundColor "white"}}
-     [ui/text-field {:floating-label-text "Name"}]
+     [ui/text-field {:floating-label-text "Name"
+                     :value name
+                     :onChange (fn [e v]
+                                 (rf/dispatch [:set-category-form-name v]))}]
 
      [ui/divider {:style {:margin-top "1em"
                           :margin-bottom "1em"}}]
@@ -853,6 +860,12 @@
 
      [ui/divider {:style {:margin-top "1em"
                           :margin-bottom "1em"}}]
+
+     [:div.save-button
+      [ui/flat-button {:icon (r/as-element [ic/content-save basic-ic])
+                       :backgroundColor (:primary app-theme)
+                       :onTouchTap (fn [e] (rf/dispatch [:save-category-form]))}]
+      ]
      ]
     )
   )
@@ -860,7 +873,9 @@
 (defn entity-forms [page]
   [ui/tabs {:value (if-let [type (:type-or-nil page)]
                      type
-                     :category)}
+                     :category)
+            :onChange (fn [v] (secretary/dispatch! (str "#/create/" (name v))))}
+
    [ui/tab {:icon (r/as-element (svg-mui-entity {:type :category :color "white"}))
             :label "Category"
             :value :category}
