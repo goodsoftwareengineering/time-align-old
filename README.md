@@ -69,11 +69,13 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
 ## work space
 - [x] finish working out stubs for all action button set state
 - [ ] forms
-  - [ ] leaving id blank generates new in handler
+  - [x] leaving id blank generates new in handler
   - [ ] category
     - [x] color selector
-    - [ ] write entry to app-db
+    - [x] save new category form
     - [ ] remove tabs 
+    - [ ] clean up save form action (navigates away)
+    - [ ] work out how to get to edit version of form
   - [ ] task
   - [ ] period
 - [ ] link drawer options to entity list pages
