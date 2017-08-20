@@ -706,8 +706,66 @@
     )
   )
 
+(defn svg-mui-time-align [{:keys [color style]}]
+  [ui/svg-icon
+   (merge {:style style} {:viewBox "0 0 24 24"})
+   [:g
+    [:circle {:cx "12" :cy "12" :r "10"
+              :stroke-width "2"
+              :stroke color
+              :fill "transparent"}]
+    [:path {:d "M 12 12 L 9 18"
+            :stroke-width "2"
+            :stroke color
+            :fill "transparent"}]
+    ]
+   ]
+  )
+
+(defn app-bar []
+  (let [
+        main-drawer-state   @(rf/subscribe [:main-drawer-state])
+        ]
+    [:div.app-bar-container
+     {:style {:display    "flex"
+              :flex       "1 0 100%"
+              ;; :border "green solid 0.1em"
+              :box-sizing "border-box"}}
+     [ui/app-bar {:title                    "Time Align"
+                  :onLeftIconButtonTouchTap (fn [e] (rf/dispatch [:toggle-main-drawer]))}]
+     [ui/drawer {:docked          false :open main-drawer-state
+                 :onRequestChange (fn [new-state] (rf/dispatch [:set-main-drawer new-state]))}
+      [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
+                     :innerDivStyle {:display "flex" :align-items "center"}}
+       (svg-mui-entity {:type :category :color "black" :style {:marginRight "0.5em"}})
+       [:span "Categories"]]
+      [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
+                     :innerDivStyle {:display "flex" :align-items "center"}}
+       (svg-mui-entity {:type :task :color "black" :style {:marginRight "0.5em"}})
+       [:span "Tasks"]]
+      [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
+                     :innerDivStyle {:display "flex" :align-items "center"}}
+       (svg-mui-entity {:type :period :color "black" :style {:marginRight "0.5em"}})
+       [:span "Periods"]]
+      [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
+                     :innerDivStyle {:display "flex" :align-items "center"}}
+       [ic/social-person {:style {:marginRight "0.5em"}}]
+       [:span "Account"]]
+      [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
+                     :innerDivStyle {:display "flex" :align-items "center"}}
+       [ic/action-settings {:style {:marginRight "0.5em"}}]
+       [:span "Settings"]]
+      [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
+                     :innerDivStyle {:display "flex" :align-items "center"}}
+       (svg-mui-time-align {:color "black"
+                            :style {:marginRight "0.5em"}})
+       [:span "Home"]]
+      ]]
+    )
+  )
+
 (defn home-page []
-  (let [main-drawer-state   @(rf/subscribe [:main-drawer-state])
+  (let [
         tasks               @(rf/subscribe [:tasks])
         selected            @(rf/subscribe [:selected])
         action-button-state @(rf/subscribe [:action-buttons])
@@ -722,35 +780,7 @@
               ;; :border "yellow solid 0.1em"
               :box-sizing      "border-box"}}
 
-     [:div.app-bar-container
-      {:style {:display    "flex"
-               :flex       "1 0 100%"
-               ;; :border "green solid 0.1em"
-               :box-sizing "border-box"}}
-      [ui/app-bar {:title                    "Time Align"
-                   :onLeftIconButtonTouchTap (fn [e] (rf/dispatch [:toggle-main-drawer]))}]
-      [ui/drawer {:docked          false :open main-drawer-state
-                  :onRequestChange (fn [new-state] (rf/dispatch [:set-main-drawer new-state]))}
-       [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
-                      :innerDivStyle {:display "flex" :align-items "center"}}
-        (svg-mui-entity {:type :category :color "black" :style {:marginRight "0.5em"}})
-        [:span "Categories"]]
-       [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
-                      :innerDivStyle {:display "flex" :align-items "center"}}
-        (svg-mui-entity {:type :task :color "black" :style {:marginRight "0.5em"}})
-        [:span "Tasks"]]
-       [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
-                      :innerDivStyle {:display "flex" :align-items "center"}}
-        (svg-mui-entity {:type :period :color "black" :style {:marginRight "0.5em"}})
-        [:span "Periods"]]
-       [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
-                      :innerDivStyle {:display "flex" :align-items "center"}}
-        [ic/social-person {:style {:marginRight "0.5em"}}]
-        [:span "Account"]]
-       [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
-                      :innerDivStyle {:display "flex" :align-items "center"}}
-        [ic/action-settings {:style {:marginRight "0.5em"}}]
-        [:span "Settings"]]]]
+     (app-bar)
 
      [:div.day-container
       {:style {:display    "flex"
@@ -827,12 +857,29 @@
    ]
    )
 
+(defn entity-form-chooser [type]
+  [:div.entity-selection
+   [ui/flat-button {:label "Category"
+                    :disabled (= type :category)
+                    :href "/#/create/category"}]
+   [ui/flat-button {:label "Task"
+                    :disabled (= type :task)
+                    :href "/#/create/task"}]
+   [ui/flat-button {:label "Period"
+                    :disabled (= type :period)
+                    :href "/#/create/period"}]
+   ]
+  )
+
 (defn category-form [id]
   (let [color @(rf/subscribe [:category-form-color])
         name @(rf/subscribe [:category-form-name])]
 
     [:div.category-form {:style {:padding "0.5em"
                                  :backgroundColor "white"}}
+
+     (entity-form-chooser :category)
+
      [ui/text-field {:floating-label-text "Name"
                      :value name
                      :onChange (fn [e v]
@@ -847,16 +894,14 @@
                                 :justify-content "space-around"}}
       [ui/svg-icon {:viewBox "0 0 1000 1000" :style {:margin-left "0.5em"}}
        [:circle {:cx "500" :cy "500" :r "500" :fill (utils/color-255->hex color)}]]
-      [ui/subheader "Color"]
-      ]
+      [ui/subheader "Color"]]
 
      [ui/tabs {:tabItemContainerStyle {:backgroundColor "white"}
                :inkBarStyle {:backgroundColor (:primary app-theme)}}
       [ui/tab {:label "picker" :style {:color (:primary app-theme)}}
        (standard-color-picker)]
       [ui/tab {:label "slider" :style {:color (:primary app-theme)}}
-       (color-slider color)]
-      ]
+       (color-slider color)]]
 
      [ui/divider {:style {:margin-top "1em"
                           :margin-bottom "1em"}}]
@@ -870,25 +915,40 @@
     )
   )
 
-(defn entity-forms [page]
-  [ui/tabs {:value (if-let [type (:type-or-nil page)]
-                     type
-                     :category)
-            :onChange (fn [v] (secretary/dispatch! (str "#/create/" (name v))))}
+(defn task-form [id]
+  [:div.task-form {:style {:padding "0.5em"
+                               :backgroundColor "white"}}
 
-   [ui/tab {:icon (r/as-element (svg-mui-entity {:type :category :color "white"}))
-            :label "Category"
-            :value :category}
-    (category-form nil)]
-   [ui/tab {:icon (r/as-element (svg-mui-entity {:type :task :color "white"}))
-            :label "Task"
-            :value :task}
-    [:div "form for task"]]
-   [ui/tab {:icon (r/as-element (svg-mui-entity {:type :period :color "white"}))
-            :label "Period"
-            :value :period}
-    [:div "form for period"]]
-   ])
+   (entity-form-chooser :task)
+   ]
+)
+
+(defn period-form [id]
+  [:div.task-form {:style {:padding "0.5em"
+                           :backgroundColor "white"}}
+
+   (entity-form-chooser :period)
+   ]
+)
+
+(defn entity-forms [page]
+  (let [page-value (if-let [entity-type (:type-or-nil page)]
+                     entity-type
+                     :category)
+        entity-id (:id-or-nil page)
+        ]
+    [:div.entity-form-container
+     (app-bar)
+
+     (case page-value
+       :category (category-form entity-id)
+       :task (task-form entity-id)
+       :period (period-form entity-id)
+       [:div (str page-value " page value doesn't exist")]
+       )
+     ]
+    )
+  )
 
 (defn page []
   (let [this-page @(rf/subscribe [:page])
@@ -918,15 +978,17 @@
 
 (secretary/defroute "/create" {:as params}
   (rf/dispatch [:set-active-page {:page-id :entity-forms
-                                  :type :category}]))
+                                  :type :category
+                                  :id nil}]))
 
 (secretary/defroute "/create/:type" {:as params}
   (rf/dispatch [:set-active-page {:page-id :entity-forms
-                                  :type (:type params)}]))
+                                  :type (keyword (:type params))
+                                  :id nil}]))
 
 (secretary/defroute "/edit/:type/:id" {:as params}
   (rf/dispatch [:set-active-page {:page-id :entity-forms
-                                  :type (:type params)
+                                  :type (keyword (:type params))
                                   :id (:id params)}]))
 
 ;; -------------------------
