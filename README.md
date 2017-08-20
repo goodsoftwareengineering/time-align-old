@@ -73,9 +73,10 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
   - [ ] category
     - [x] color selector
     - [x] save new category form
-    - [ ] remove tabs 
+    - [x] remove tabs 
     - [ ] clean up save form action (navigates away)
     - [ ] work out how to get to edit version of form
+    - [ ] handle edit submission vs create
   - [ ] task
   - [ ] period
 - [ ] link drawer options to entity list pages
