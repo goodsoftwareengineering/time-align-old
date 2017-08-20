@@ -68,10 +68,12 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
 
 ## work space
 - [x] finish working out stubs for all action button set state
-- [ ] add page entity chooser
 - [ ] forms
   - [ ] leaving id blank generates new in handler
   - [ ] category
+    - [x] color selector
+    - [ ] write entry to app-db
+    - [ ] remove tabs 
   - [ ] task
   - [ ] period
 - [ ] link drawer options to entity list pages
