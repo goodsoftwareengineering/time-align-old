@@ -19,7 +19,7 @@
             [cljs.pprint :refer [pprint]])
   (:import goog.History))
 
-(def app-theme {:primary (color :blue-grey-600)
+(def app-theme {:primary   (color :blue-grey-600)
                 :secondary (color :red-500)})
 
 (def svg-consts {:viewBox      "0 0 100 100"
@@ -444,7 +444,7 @@
 
 (defn queue [tasks selected]
   (let [periods-no-stamps (utils/filter-periods-no-stamps tasks)
-        sel (:current-selection selected)
+        sel               (:current-selection selected)
         ]
     [ui/list {:style {:width "100%"}}
         (->> periods-no-stamps
@@ -469,7 +469,7 @@
                                        "No period description ..."]))
                       :onTouchTap  (fn [e]
                                      (rf/dispatch
-                                        [:set-selected-queue (:id period)])
+                                      [:set-selected-queue (:id period)])
                                      )}])))]))
 
 (def basic-button {:style {}})
@@ -593,7 +593,7 @@
     ]])
 
 (defn action-buttons-no-selection []
-  (let [zoom @(rf/subscribe [:zoom])
+  (let [zoom   @(rf/subscribe [:zoom])
         spring @mae-spring]
 
     (if @action-buttons-collapsed-click
@@ -604,13 +604,13 @@
 
      [ui/floating-action-button
       (merge basic-mini-button
-             {:style (merge (:style basic-mini-button)
-                            {:marginBottom spring})
+             {:style   (merge (:style basic-mini-button)
+                              {:marginBottom spring})
               :onClick (fn [e]
                          (rf/dispatch [:set-active-page
                                        {:page-id :entity-forms
-                                        :type :category
-                                        :id nil}]))})
+                                        :type    :category
+                                        :id      nil}]))})
 
       [ic/content-add basic-ic]]
 
@@ -714,21 +714,21 @@
   [ui/svg-icon
    (merge {:style style} {:viewBox "0 0 24 24"})
    [:g
-    [:circle {:cx "12" :cy "12" :r "10"
+    [:circle {:cx           "12" :cy "12" :r "10"
               :stroke-width "2"
-              :stroke color
-              :fill "transparent"}]
-    [:path {:d "M 12 12 L 9 18"
+              :stroke       color
+              :fill         "transparent"}]
+    [:path {:d            "M 12 12 L 9 18"
             :stroke-width "2"
-            :stroke color
-            :fill "transparent"}]
+            :stroke       color
+            :fill         "transparent"}]
     ]
    ]
   )
 
 (defn app-bar []
   (let [
-        main-drawer-state   @(rf/subscribe [:main-drawer-state])
+        main-drawer-state @(rf/subscribe [:main-drawer-state])
         ]
     [:div.app-bar-container
      {:style {:display    "flex"
@@ -737,10 +737,10 @@
               :box-sizing "border-box"}}
      [ui/app-bar {:title                    "Time Align"
                   :onLeftIconButtonTouchTap (fn [e] (rf/dispatch [:toggle-main-drawer]))}]
-     [ui/drawer {:docked false
-                 :open main-drawer-state
+     [ui/drawer {:docked             false
+                 :open               main-drawer-state
                  :disableSwipeToOpen true
-                 :onRequestChange (fn [new-state] (rf/dispatch [:set-main-drawer new-state]))}
+                 :onRequestChange    (fn [new-state] (rf/dispatch [:set-main-drawer new-state]))}
       [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
                      :innerDivStyle {:display "flex" :align-items "center"}}
        (svg-mui-entity {:type :category :color "black" :style {:marginRight "0.5em"}})
@@ -824,16 +824,16 @@
                           ))
 
 (defn standard-color-picker []
-  [:div.colors {:style {:display "flex"
-                        :flex-wrap "wrap"
+  [:div.colors {:style {:display         "flex"
+                        :flex-wrap       "wrap"
                         :justify-content "center"
-                        :marginTop "1em"}}
+                        :marginTop       "1em"}}
    (->> standard-colors
         (map (fn [c]
-               [:div.color {:key c
-                            :style {:width "2em"
-                                    :height "2em"
-                                    :backgroundColor c}
+               [:div.color {:key     c
+                            :style   {:width           "2em"
+                                      :height          "2em"
+                                      :backgroundColor c}
                             :onClick (fn [e]
                                        (rf/dispatch [:set-category-form-color
                                                      (utils/color-hex->255 c)]))}]))
@@ -842,21 +842,21 @@
 
 (defn color-slider [color]
   [:div.slider
-   [ui/slider {:value (:red color)
-               :min 0
-               :max 255
+   [ui/slider {:value    (:red color)
+               :min      0
+               :max      255
                :onChange (fn [e v]
                            (rf/dispatch [:set-category-form-color
                                          {:red (.ceil js/Math v)}]))}]
-   [ui/slider {:value (:green color)
-               :min 0
-               :max 255
+   [ui/slider {:value    (:green color)
+               :min      0
+               :max      255
                :onChange (fn [e v]
                            (rf/dispatch [:set-category-form-color
                                          {:green (.ceil js/Math v)}]))}]
-   [ui/slider {:value (:blue color)
-               :min 0
-               :max 255
+   [ui/slider {:value    (:blue color)
+               :min      0
+               :max      255
                :onChange (fn [e v]
                            (rf/dispatch [:set-category-form-color
                                          {:blue (.ceil js/Math v)}]))}]
@@ -865,89 +865,89 @@
 
 (defn entity-form-chooser [type]
   [:div.entity-selection
-   [ui/flat-button {:label "Category"
+   [ui/flat-button {:label    "Category"
                     :disabled (= type :category)
-                    :onClick (fn [e]
-                               (rf/dispatch
-                                [:set-active-page
-                                 {:page-id :entity-forms
-                                  :type :category
-                                  :id nil}]))}]
-   [ui/flat-button {:label "Task"
+                    :onClick  (fn [e]
+                                (rf/dispatch
+                                 [:set-active-page
+                                  {:page-id :entity-forms
+                                   :type    :category
+                                   :id      nil}]))}]
+   [ui/flat-button {:label    "Task"
                     :disabled (= type :task)
-                    :onClick (fn [e]
-                               (rf/dispatch
-                                [:set-active-page
-                                 {:page-id :entity-forms
-                                  :type :task
-                                  :id nil}]))}]
-   [ui/flat-button {:label "Period"
+                    :onClick  (fn [e]
+                                (rf/dispatch
+                                 [:set-active-page
+                                  {:page-id :entity-forms
+                                   :type    :task
+                                   :id      nil}]))}]
+   [ui/flat-button {:label    "Period"
                     :disabled (= type :period)
-                    :onClick (fn [e]
-                               (rf/dispatch
-                                [:set-active-page
-                                 {:page-id :entity-forms
-                                  :type :period
-                                  :id nil}]))}]
+                    :onClick  (fn [e]
+                                (rf/dispatch
+                                 [:set-active-page
+                                  {:page-id :entity-forms
+                                   :type    :period
+                                   :id      nil}]))}]
    ]
   )
 
 (defn category-form [id]
   (let [color @(rf/subscribe [:category-form-color])
-        name @(rf/subscribe [:category-form-name])]
+        name  @(rf/subscribe [:category-form-name])]
 
-    [:div.category-form {:style {:padding "0.5em"
+    [:div.category-form {:style {:padding         "0.5em"
                                  :backgroundColor "white"}}
 
      (entity-form-chooser :category)
 
      [ui/text-field {:floating-label-text "Name"
-                     :value name
-                     :onChange (fn [e v]
-                                 (rf/dispatch [:set-category-form-name v]))}]
+                     :value               name
+                     :onChange            (fn [e v]
+                                            (rf/dispatch [:set-category-form-name v]))}]
 
-     [ui/divider {:style {:margin-top "1em"
+     [ui/divider {:style {:margin-top    "1em"
                           :margin-bottom "1em"}}]
 
-     [:div.colorHeader {:style {:display "flex"
-                                :flexWrap "nowrap"
-                                :align-items "center"
+     [:div.colorHeader {:style {:display         "flex"
+                                :flexWrap        "nowrap"
+                                :align-items     "center"
                                 :justify-content "space-around"}}
       [ui/svg-icon {:viewBox "0 0 1000 1000" :style {:margin-left "0.5em"}}
        [:circle {:cx "500" :cy "500" :r "500" :fill (utils/color-255->hex color)}]]
       [ui/subheader "Color"]]
 
      [ui/tabs {:tabItemContainerStyle {:backgroundColor "white"}
-               :inkBarStyle {:backgroundColor (:primary app-theme)}}
+               :inkBarStyle           {:backgroundColor (:primary app-theme)}}
       [ui/tab {:label "picker" :style {:color (:primary app-theme)}}
        (standard-color-picker)]
       [ui/tab {:label "slider" :style {:color (:primary app-theme)}}
        (color-slider color)]]
 
-     [ui/divider {:style {:margin-top "1em"
+     [ui/divider {:style {:margin-top    "1em"
                           :margin-bottom "1em"}}]
 
      [:div.save-button
-      [ui/flat-button {:icon (r/as-element [ic/content-save basic-ic])
+      [ui/flat-button {:icon            (r/as-element [ic/content-save basic-ic])
                        :backgroundColor (:primary app-theme)
-                       :onTouchTap (fn [e]
-                                     (rf/dispatch [:save-category-form])
-                                     )}]
+                       :onTouchTap      (fn [e]
+                                          (rf/dispatch [:save-category-form])
+                                          )}]
       ]
      ]
     )
   )
 
 (defn task-form [id]
-  [:div.task-form {:style {:padding "0.5em"
-                               :backgroundColor "white"}}
+  [:div.task-form {:style {:padding         "0.5em"
+                           :backgroundColor "white"}}
 
    (entity-form-chooser :task)
    ]
 )
 
 (defn period-form [id]
-  [:div.task-form {:style {:padding "0.5em"
+  [:div.task-form {:style {:padding         "0.5em"
                            :backgroundColor "white"}}
 
    (entity-form-chooser :period)
@@ -958,15 +958,15 @@
   (let [page-value (if-let [entity-type (:type-or-nil page)]
                      entity-type
                      :category)
-        entity-id (:id-or-nil page)
+        entity-id  (:id-or-nil page)
         ]
     [:div.entity-form-container
      (app-bar)
 
      (case page-value
        :category (category-form entity-id)
-       :task (task-form entity-id)
-       :period (period-form entity-id)
+       :task     (task-form entity-id)
+       :period   (period-form entity-id)
        [:div (str page-value " page value doesn't exist")]
        )
      ]
@@ -975,16 +975,16 @@
 
 (defn page []
   (let [this-page @(rf/subscribe [:page])
-        page-id (:page-id this-page)]
+        page-id   (:page-id this-page)]
     [ui/mui-theme-provider
      {:mui-theme (get-mui-theme
                   {:palette
                    {:primary1-color (:primary app-theme)
-                    :accent1-color (:secondary app-theme)}
+                    :accent1-color  (:secondary app-theme)}
                    })}
      [:div
       (case page-id
-        :home (home-page)
+        :home         (home-page)
         :entity-forms (entity-forms this-page)
         ;; default
         (home-page))]
