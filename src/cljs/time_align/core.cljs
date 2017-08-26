@@ -733,7 +733,9 @@
               :box-sizing "border-box"}}
      [ui/app-bar {:title                    "Time Align"
                   :onLeftIconButtonTouchTap (fn [e] (rf/dispatch [:toggle-main-drawer]))}]
-     [ui/drawer {:docked          false :open main-drawer-state
+     [ui/drawer {:docked false
+                 :open main-drawer-state
+                 :disableSwipeToOpen true
                  :onRequestChange (fn [new-state] (rf/dispatch [:set-main-drawer new-state]))}
       [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
                      :innerDivStyle {:display "flex" :align-items "center"}}
