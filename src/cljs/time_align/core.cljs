@@ -101,7 +101,7 @@
 
         opacity      (cond
                        this-period-selected "0.9"
-                       (> curr-time-ms stop-abs-ms) "0.1"
+                       (> curr-time-ms stop-abs-ms) "0.2"
                        :else                        "0.7")
 
 
