@@ -87,9 +87,6 @@
         curr-time-ms (.valueOf curr-time)
         start-abs-ms (.valueOf start-date)
         stop-abs-ms  (.valueOf stop-date)
-        opacity      (cond
-                       (> curr-time-ms stop-abs-ms) "0.3"
-                       :else                        "0.6")
 
         is-period-selected (= :period
                               (get-in
@@ -100,6 +97,14 @@
                               selected
                               [:current-selection :id-or-nil])
                              nil)
+        this-period-selected (= selected-period id)
+
+        opacity      (cond
+                       this-period-selected "0.9"
+                       (> curr-time-ms stop-abs-ms) "0.1"
+                       :else                        "0.7")
+
+
 
         color        (cond
                        (or (nil? selected-period)
