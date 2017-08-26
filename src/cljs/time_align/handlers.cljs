@@ -1,6 +1,6 @@
 (ns time-align.handlers
   (:require [time-align.db :as db]
-            [re-frame.core :refer [dispatch reg-event-db]]
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
             [time-align.utilities :as utils]
             ))
 
@@ -215,17 +215,20 @@
                     color))
    ))
 
-(reg-event-db
+(reg-event-fx
  :save-category-form
- (fn [db [_ _]]
-   (let [name (get-in db [:view :category-form-name])
+ (fn [cofx [_ _]]
+   (let [db (:db cofx)
+         name (get-in db [:view :category-form-name])
          id (if-let [id (get-in db [:view :category-form-id])]
               id
               (random-uuid))
          color (utils/color-255->hex (get-in db [:view :category-form-color]))
          categories (:categories db)]
-     (assoc db :categories (conj categories {:id id :name name :color color
-                                             :tasks []}))
+
+     {:db (assoc db :categories (conj categories {:id id :name name :color color
+                                                  :tasks []}))
+      :dispatch [:set-active-page {:page-id :home :type nil :id nil}]}
      )))
 
 (reg-event-db
