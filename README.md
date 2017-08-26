@@ -69,25 +69,29 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
 ## work space
 - [x] finish working out stubs for all action button set state
 - [x] effects for selecting periods change appropriate action button state
-- [ ] forms
+- [ ] create forms
   - [x] leaving id blank generates new in handler
-  - [ ] category
+  - [x] category
     - [x] color selector
     - [x] save new category form
     - [x] remove tabs 
     - [x] clean up save form action (navigates away)
-    - [ ] work out how to get to edit version of form
-    - [ ] handle edit submission vs create
+    - [x] work out how to get to edit version of form
+    - [x] cancel button
   - [ ] task
   - [ ] period
-- [ ] link drawer options to entity list pages
 - [ ] lists
   - [ ] categories
+  - [ ] tasks
+  - [ ] periods
+- [ ] edit forms
+  - [ ] category
   - [ ] tasks
   - [ ] periods
 - [ ] account page
 - [ ] settings page
   - [ ] set top of the wheel time
+- [ ] drawer links
 
 ## long term cleanup
 - pull out all state from core and put it in view
