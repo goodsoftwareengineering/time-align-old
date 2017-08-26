@@ -19,7 +19,6 @@
             [cljs.pprint :refer [pprint]])
   (:import goog.History))
 
-
 (def app-theme {:primary (color :blue-grey-600)
                 :secondary (color :red-500)})
 
@@ -607,7 +606,12 @@
       (merge basic-mini-button
              {:style (merge (:style basic-mini-button)
                             {:marginBottom spring})
-              :href "/#/create"})
+              :onClick (fn [e]
+                         (rf/dispatch [:set-active-page
+                                       {:page-id :entity-forms
+                                        :type :category
+                                        :id nil}]))})
+
       [ic/content-add basic-ic]]
 
      (if (some? zoom)
@@ -863,13 +867,28 @@
   [:div.entity-selection
    [ui/flat-button {:label "Category"
                     :disabled (= type :category)
-                    :href "/#/create/category"}]
+                    :onClick (fn [e]
+                               (rf/dispatch
+                                [:set-active-page
+                                 {:page-id :entity-forms
+                                  :type :category
+                                  :id nil}]))}]
    [ui/flat-button {:label "Task"
                     :disabled (= type :task)
-                    :href "/#/create/task"}]
+                    :onClick (fn [e]
+                               (rf/dispatch
+                                [:set-active-page
+                                 {:page-id :entity-forms
+                                  :type :task
+                                  :id nil}]))}]
    [ui/flat-button {:label "Period"
                     :disabled (= type :period)
-                    :href "/#/create/period"}]
+                    :onClick (fn [e]
+                               (rf/dispatch
+                                [:set-active-page
+                                 {:page-id :entity-forms
+                                  :type :period
+                                  :id nil}]))}]
    ]
   )
 
@@ -911,7 +930,9 @@
      [:div.save-button
       [ui/flat-button {:icon (r/as-element [ic/content-save basic-ic])
                        :backgroundColor (:primary app-theme)
-                       :onTouchTap (fn [e] (rf/dispatch [:save-category-form]))}]
+                       :onTouchTap (fn [e]
+                                     (rf/dispatch [:save-category-form])
+                                     )}]
       ]
      ]
     )
@@ -977,21 +998,6 @@
 
 (secretary/defroute "/" []
   (rf/dispatch [:set-active-page {:page-id :home}]))
-
-(secretary/defroute "/create" {:as params}
-  (rf/dispatch [:set-active-page {:page-id :entity-forms
-                                  :type :category
-                                  :id nil}]))
-
-(secretary/defroute "/create/:type" {:as params}
-  (rf/dispatch [:set-active-page {:page-id :entity-forms
-                                  :type (keyword (:type params))
-                                  :id nil}]))
-
-(secretary/defroute "/edit/:type/:id" {:as params}
-  (rf/dispatch [:set-active-page {:page-id :entity-forms
-                                  :type (keyword (:type params))
-                                  :id (:id params)}]))
 
 ;; -------------------------
 ;; History
