@@ -117,8 +117,6 @@
                             :period
                             :queue
                             :no-selection ;; depends on zoom
-                            :zoom-in
-                            :add
                             }
                           #(gen/return :collapsed)))
 (s/def ::color-255 (s/with-gen (s/and int?
