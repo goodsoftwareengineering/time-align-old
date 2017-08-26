@@ -873,6 +873,14 @@
   [:div.entity-selection
    [ui/flat-button {:label    "Category"
                     :disabled (= type :category)
+                    :primary (not= type :category)
+                    ;; TODO get sizing right
+                    ;; TODO disable coloring on icon
+                    ;; :icon (r/as-element
+                    ;;        (svg-mui-entity
+                    ;;         {:type :category
+                    ;;          :color (:primary app-theme)
+                    ;;          :style {}}))
                     :onClick  (fn [e]
                                 (rf/dispatch
                                  [:set-active-page
@@ -881,6 +889,12 @@
                                    :id      nil}]))}]
    [ui/flat-button {:label    "Task"
                     :disabled (= type :task)
+                    :primary (not= type :task)
+                    ;; :icon (r/as-element
+                    ;;        (svg-mui-entity
+                    ;;         {:type :task
+                    ;;          :color (:primary app-theme)
+                    ;;          :style {}}))
                     :onClick  (fn [e]
                                 (rf/dispatch
                                  [:set-active-page
@@ -889,6 +903,12 @@
                                    :id      nil}]))}]
    [ui/flat-button {:label    "Period"
                     :disabled (= type :period)
+                    :primary (not= type :period)
+                    ;; :icon (r/as-element
+                    ;;        (svg-mui-entity
+                    ;;         {:type :period
+                    ;;          :color (:primary app-theme)
+                    ;;          :style {}}))
                     :onClick  (fn [e]
                                 (rf/dispatch
                                  [:set-active-page
