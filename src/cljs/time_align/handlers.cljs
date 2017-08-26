@@ -65,29 +65,51 @@
  (fn [db [_ new-state]]
    (assoc-in db [:view :main-drawer] new-state)))
 
-(reg-event-db
+(reg-event-fx
  :set-selected-period
- (fn [db [_ period-id]]
-   ;; TODO might need to set action-button state on nil to auto collapse
-   (let [type (if (nil? period-id) nil :period)
+ (fn [cofx [_ period-id]]
+   (let [
+         db (:db cofx)
+         type (if (nil? period-id) nil :period)
          prev (get-in db [:view :selected :current-selection])
-         curr {:type-or-nil type :id-or-nil period-id}]
-     (assoc-in db [:view :selected]
-               {:current-selection  curr
-                :previous-selection prev})
+         curr {:type-or-nil type :id-or-nil period-id}
+         ]
+
+     {:db (assoc-in db [:view :selected]
+                    {:current-selection  curr
+                     :previous-selection prev})
+      :dispatch [:action-buttons-back]}
      )
    ))
 
-(reg-event-db
+(reg-event-fx
  :set-selected-queue
- (fn [db [_ period-id]]
+ (fn [cofx [_ period-id]]
    ;; TODO might need to set action-button state on nil to auto collapse
-   (let [type (if (nil? period-id) nil :queue)
+   (let [
+         db (:db cofx)
+         type (if (nil? period-id) nil :queue)
          prev (get-in db [:view :selected :current-selection])
-         curr {:type-or-nil type :id-or-nil period-id}]
-     (assoc-in db [:view :selected]
-               {:current-selection  curr
-                :previous-selection prev})
+         curr {:type-or-nil type :id-or-nil period-id}
+         ]
+
+     {:db (assoc-in db [:view :selected]
+                    {:current-selection  curr
+                     :previous-selection prev})
+      :dispatch [:action-buttons-back]}
+     )
+   ))
+
+;; not using this yet VVV
+(reg-event-fx
+ :set-selected-task
+ (fn [cofx [_ task-id]]
+   (let [db (:db cofx)]
+
+     {:db (assoc-in db [:view :selected ]
+                    {:selected-type :task
+                     :id            task-id})
+      :dispatch [:action-buttons-back]}
      )
    ))
 
@@ -120,13 +142,6 @@
  (fn [db [_ is-moving-bool]]
    (assoc-in db [:view :continous-action :moving-period]
              is-moving-bool)))
-
-(reg-event-db
- :set-selected-task
- (fn [db [_ task-id]]
-   (assoc-in db [:view :selected ]
-             {:selected-type :task
-              :id            task-id})))
 
 (defn fell-tree-with-period-id [db p-id]
   (let [periods  (utils/pull-periods db)
