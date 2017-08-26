@@ -928,7 +928,17 @@
      [ui/divider {:style {:margin-top    "1em"
                           :margin-bottom "1em"}}]
 
-     [:div.save-button
+     [:div.buttons {:style {:display "flex"
+                            :justify-content "space-between"
+                            }}
+      [ui/flat-button {:icon            (r/as-element [ic/navigation-cancel basic-ic])
+                       :backgroundColor (:secondary app-theme)
+                       :onTouchTap      (fn [e]
+                                          (rf/dispatch [:set-active-page
+                                                        {:pageId :home
+                                                         :type nil
+                                                         :id nil}])
+                                          )}]
       [ui/flat-button {:icon            (r/as-element [ic/content-save basic-ic])
                        :backgroundColor (:primary app-theme)
                        :onTouchTap      (fn [e]
