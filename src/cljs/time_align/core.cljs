@@ -539,13 +539,13 @@
     (if @action-buttons-collapsed-click
       [anim/timeline
        (element 0)
-       50
-       (element 0.33)
-       50
-       (element 0.66)
-       50
-       (element 0.99)
-       50
+       ;; 50
+       ;; (element 0.33)
+       ;; 50
+       ;; (element 0.66)
+       ;; 50
+       ;; (element 0.99)
+       ;; 50
        (fn []
          (println "dispatching")
          ;; (reset! action-buttons-collapsed-click false)
@@ -594,7 +594,8 @@
 
 (defn action-buttons-no-selection []
   (let [zoom   @(rf/subscribe [:zoom])
-        spring @mae-spring]
+        ;; spring @mae-spring
+        ]
 
     (if @action-buttons-collapsed-click
       (do (reset! action-buttons-collapsed-click false)
@@ -605,7 +606,7 @@
      [ui/floating-action-button
       (merge basic-mini-button
              {:style   (merge (:style basic-mini-button)
-                              {:marginBottom spring})
+                              {:marginBottom "20"})
               :onClick (fn [e]
                          (rf/dispatch [:set-active-page
                                        {:page-id :entity-forms
@@ -618,13 +619,13 @@
        [ui/floating-action-button
         (merge basic-mini-button
                {:style (merge (:style basic-mini-button)
-                              {:marginBottom spring})})
+                              {:marginBottom "20"})})
         [ic/action-zoom-out basic-ic]]
 
        [ui/floating-action-button
         (merge basic-mini-button
                {:style (merge (:style basic-mini-button)
-                              {:marginBottom spring})})
+                              {:marginBottom "20"})})
         [ic/action-zoom-in basic-ic]])
 
      (back-button)
