@@ -68,8 +68,7 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
 
 ## work space
 - [x] finish working out stubs for all action button set state
-- [ ] selections
-  - [ ] effects for selecting something change appropriate action button state
+- [x] effects for selecting periods change appropriate action button state
 - [ ] forms
   - [x] leaving id blank generates new in handler
   - [ ] category
