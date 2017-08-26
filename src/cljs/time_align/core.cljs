@@ -645,25 +645,25 @@
    [ui/floating-action-button
     (merge basic-mini-button
            {:style (merge (:style basic-mini-button)
-                          {:marginBottom @mae-spring})})
+                          {:marginBottom "20"})})
     [ic/av-play-arrow basic-ic]]
 
    [ui/floating-action-button
     (merge basic-mini-button
            {:style (merge (:style basic-mini-button)
-                          {:marginBottom @mae-spring})})
+                          {:marginBottom "20"})})
     (svg-mui-stretch)]
 
    [ui/floating-action-button
     (merge basic-mini-button
            {:style (merge (:style basic-mini-button)
-                          {:marginBottom @mae-spring})})
+                          {:marginBottom "20"})})
     (svg-mui-shrink)]
 
    [ui/floating-action-button
     (merge basic-mini-button
            {:style (merge (:style basic-mini-button)
-                          {:marginBottom @mae-spring})})
+                          {:marginBottom "20"})})
     [ic/editor-mode-edit basic-ic]]
 
    (back-button)
@@ -682,13 +682,13 @@
    [ui/floating-action-button
     (merge basic-mini-button
            {:style (merge (:style basic-mini-button)
-                          {:marginBottom @mae-spring})})
+                          {:marginBottom "20"})})
     [ic/av-play-arrow basic-ic]]
 
    [ui/floating-action-button
     (merge basic-mini-button
            {:style (merge (:style basic-mini-button)
-                          {:marginBottom @mae-spring})})
+                          {:marginBottom "20"})})
     [ic/editor-mode-edit basic-ic]]
 
    (back-button)
