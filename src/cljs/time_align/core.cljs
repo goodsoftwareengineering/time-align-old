@@ -978,11 +978,6 @@
     )
   )
 
-(def tmp-name (r/atom ""))
-(def tmp-desc (r/atom ""))
-(def tmp-comp (r/atom true))
-(def tmp-sel (r/atom ""))
-
 (defn category-menu-item [category]
   (let [id (str (:id category))]
     [ui/menu-item
@@ -1016,6 +1011,7 @@
 
      [ui/text-field {:floating-label-text "Name"
                      :value               name
+                     :fullWidth true
                      :onChange
                      (fn [e v]
                        (rf/dispatch [:set-task-form-name v])
@@ -1023,19 +1019,13 @@
 
      [ui/text-field {:floating-label-text "Description"
                      :value               description
+                     :fullWidth true
                      :multiLine true
                      :rows 4
                      :onChange
                      (fn [e v]
                        (rf/dispatch [:set-task-form-description v])
                        )}]
-
-     [ui/checkbox {:label "complete"
-                   :labelStyle {:color (:primary app-theme)}
-                   :style {:marginTop "20"}
-                   :checked complete
-                   :onCheck (fn [e v]
-                              (rf/dispatch [:set-task-form-complete v]))}]
 
      [ui/select-field
       {:value category-id
@@ -1050,6 +1040,13 @@
        }
       (->> categories
            (map category-menu-item))]
+
+     [ui/checkbox {:label "complete"
+                   :labelStyle {:color (:primary app-theme)}
+                   :style {:marginTop "20"}
+                   :checked complete
+                   :onCheck (fn [e v]
+                              (rf/dispatch [:set-task-form-complete v]))}]
 
      [:div.buttons {:style {:display "flex"
                             :justify-content "space-between"
@@ -1081,12 +1078,78 @@
     )
   )
 
-(defn period-form [id]
-  [:div.task-form {:style {:padding         "0.5em"
-                           :backgroundColor "white"}}
+(def tmp-desc (r/atom ""))
+(def tmp-start (r/atom nil))
+(def tmp-stop (r/atom nil))
 
-   (entity-form-chooser :period)
-   ]
+(defn period-form [id]
+  (let [description @tmp-desc
+        start-d @tmp-start]
+
+    (println {:start start-d})
+
+    [:div.task-form {:style {:padding         "0.5em"
+                             :backgroundColor "white"}}
+
+     (entity-form-chooser :period)
+
+     [ui/subheader "Start"]
+
+     [ui/date-picker {:hintText "Start Date"
+                      :value start-d
+                      :onChange
+                      (fn [_ new-d]
+                        (swap!
+                         tmp-start
+                         (fn [o]
+                           (if (some? o)
+                             (let [old-d (new js/Date o)]
+                               (do
+                                 (.setFullYear old-d (.getFullYear new-d))
+                                 (.setDate old-d (.getDate new-d))
+                                 old-d))
+                             new-d))))}]
+
+     [ui/time-picker {:hintText "Start Time"
+                      :value start-d
+                      :onChange
+                      (fn [_ new-s]
+                        (swap!
+                         tmp-start
+                         (fn [o]
+                           (if (some? o)
+                             (let [old-s (new js/Date o)]
+                               (do
+                                 (.setHours old-s (.getHours new-s))
+                                 (.setMinutes old-s (.getMinutes new-s))
+                                 (.setSeconds old-s (.getSeconds new-s))
+                                 old-s
+                                 ))
+                               (do
+                                 (let [n (new js/Date)]
+                                   (.setFullYear new-s (.getFullYear n))
+                                   (.setDate new-s (.getDate n))
+                                   new-s
+                                   )
+                                 )
+                               ))))}]
+
+     [ui/subheader "Stop"]
+     [ui/date-picker {:hintText "Stop Date"}]
+     [ui/time-picker {:hintText "Stop Time"}]
+
+     [ui/text-field {:floating-label-text "Description"
+                     :value               description
+                     :fullWidth true
+                     :multiLine true
+                     :rows 4
+                     :onChange
+                     (fn [e v]
+                       ;; (rf/dispatch [:set-task-form-description v])
+                       (reset! tmp-desc v)
+                       )}]
+     ]
+    )
   )
 
 (defn entity-forms [page]
