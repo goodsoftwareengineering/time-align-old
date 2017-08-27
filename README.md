@@ -97,6 +97,31 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
 - [ ] settings page
   - [ ] set top of the wheel time
 - [ ] drawer links
+- [ ] logging
+  - [ ] secretary url params for referer logs in db as referrer
+  - [ ] set up a bare bones luminus server that logs to a sql lite db
+    - [ ] needs to decrypt with hard coded key
+    - [ ] authenticates with hard coded token
+  - [ ] send info
+    - [ ] initial db
+    - [ ] every action
+    - [ ] encrypt every send
+    - [ ] add token
+- [ ] market
+  - [ ] post to reddits (personalize each link with referrer `https://timealign.github.io/#/clojure`)
+    - [ ] gather stats on audience total size for each subredit
+    - [ ] clojure
+    - [ ] cljs
+    - [ ] data is beautiful
+    - [ ] time management
+  - [ ] use sql to answer questions
+    - [ ] how many unique ip visits from each referrer?
+    - [ ] how many sessions for each unique ip
+    - [ ] construct a sort of tree of each session action series overlaid
+```
+_arrived__clicked floating action ----
+          \____ clicked period______
+```
 
 ## long term cleanup
 - pull out all state from core and put it in view
