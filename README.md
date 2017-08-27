@@ -97,6 +97,8 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
 - [ ] settings page
   - [ ] set top of the wheel time
 - [ ] drawer links
+- [ ] for periods straddling date divide use old stop value instead of new one in handlers
+  - [ ] put the date in the viewers time zone to get the cut off right!!!
 - [ ] logging
   - [ ] secretary url params for referer logs in db as referrer
   - [ ] set up a bare bones luminus server that logs to a sql lite db
