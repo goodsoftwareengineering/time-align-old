@@ -60,6 +60,31 @@
    (get-in db [:view :category-form-color])))
 
 (reg-sub
+ :categories
+ (fn [db _]
+   (get-in db [:categories])))
+
+(reg-sub
  :category-form-name
  (fn [db _]
    (get-in db [:view :category-form-name])))
+
+(reg-sub
+ :task-form-name
+ (fn [db _]
+   (get-in db [:view :task-form :name])))
+
+(reg-sub
+ :task-form-description
+ (fn [db _]
+   (get-in db [:view :task-form :description])))
+
+(reg-sub
+ :task-form-complete
+ (fn [db _]
+   (get-in db [:view :task-form :complete])))
+
+(reg-sub
+ :task-form-category-id
+ (fn [db _]
+   (get-in db [:view :task-form :category-id])))

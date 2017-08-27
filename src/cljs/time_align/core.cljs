@@ -447,6 +447,11 @@
                 }
                ])))]]]])
 
+(defn svg-mui-circle [color]
+  [ui/svg-icon
+   {:viewBox "0 0 24 24" :style {:margin-left "0.5em"}}
+   [:circle {:cx "12" :cy "12" :r "11" :fill color}]])
+
 (defn queue [tasks selected]
   (let [periods-no-stamps (utils/filter-periods-no-stamps tasks)
         sel               (:current-selection selected)
@@ -462,8 +467,7 @@
                                             {}))
                       :key         (:id period)
                       :leftIcon    (r/as-element
-                                    [ui/svg-icon {:viewBox "0 0 1000 1000" :style {:margin-left "0.5em"}}
-                                     [:circle {:cx "500" :cy "500" :r "500" :fill (:color period)}]])
+                                    (svg-mui-circle (:color period)))
                       :primaryText (if (some? (:description period))
                                      (if (< 10 (count (:description period)))
                                        (str (string/join "" (take 10 (:description period))) " ...")
@@ -974,13 +978,108 @@
     )
   )
 
-(defn task-form [id]
-  [:div.task-form {:style {:padding         "0.5em"
-                           :backgroundColor "white"}}
+(def tmp-name (r/atom ""))
+(def tmp-desc (r/atom ""))
+(def tmp-comp (r/atom true))
+(def tmp-sel (r/atom ""))
 
-   (entity-form-chooser :task)
-   ]
-)
+(defn category-menu-item [category]
+  (let [id (str (:id category))]
+    [ui/menu-item
+     {:key id
+      :value id
+      :primaryText (:name category)
+      :leftIcon (r/as-element
+                 (svg-mui-circle (:color category)) )}]
+    )
+  )
+
+(defn category-selection-render [categories id]
+  (->> categories
+       (some #(if (= (:id %) (uuid id)) %))
+       (category-menu-item)
+       (r/as-element)
+       ))
+
+(defn task-form [id]
+  (let [name @(rf/subscribe [:task-form-name])
+        description @(rf/subscribe [:task-form-description])
+        complete @(rf/subscribe [:task-form-complete])
+        category-id @(rf/subscribe [:task-form-category-id])
+        categories @(rf/subscribe [:categories])
+        ]
+
+    [:div.task-form {:style {:padding         "0.5em"
+                             :backgroundColor "white"}}
+
+     (entity-form-chooser :task)
+
+     [ui/text-field {:floating-label-text "Name"
+                     :value               name
+                     :onChange
+                     (fn [e v]
+                       (rf/dispatch [:set-task-form-name v])
+                       )}]
+
+     [ui/text-field {:floating-label-text "Description"
+                     :value               description
+                     :multiLine true
+                     :rows 4
+                     :onChange
+                     (fn [e v]
+                       (rf/dispatch [:set-task-form-description v])
+                       )}]
+
+     [ui/checkbox {:label "complete"
+                   :labelStyle {:color (:primary app-theme)}
+                   :style {:marginTop "20"}
+                   :checked complete
+                   :onCheck (fn [e v]
+                              (rf/dispatch [:set-task-form-complete v]))}]
+
+     [ui/select-field
+      {:value category-id
+       :floatingLabelText "Category"
+       :autoWidth true
+       :fullWidth true
+       :selectionRenderer (partial
+                           category-selection-render
+                           categories)
+       :onChange (fn [e, i, v]
+                   (rf/dispatch [:set-task-form-category-id v]))
+       }
+      (->> categories
+           (map category-menu-item))]
+
+     [:div.buttons {:style {:display "flex"
+                            :justify-content "space-between"
+                            :marginTop "1em"
+                            }}
+      [ui/flat-button {:icon
+                       (r/as-element
+                        [ic/navigation-cancel basic-ic])
+                       :backgroundColor
+                       (:secondary app-theme)
+                       :onTouchTap
+                       (fn [e]
+                         (rf/dispatch [:set-active-page
+                                       {:pageId :home
+                                        :type nil
+                                        :id nil}])
+                         )}]
+      [ui/flat-button {:icon
+                       (r/as-element [ic/content-save basic-ic])
+                       :backgroundColor
+                       (:primary app-theme)
+                       :onTouchTap
+                       (fn [e]
+                         (rf/dispatch [:submit-task-form])
+                         )}]
+      ]
+
+     ]
+    )
+  )
 
 (defn period-form [id]
   [:div.task-form {:style {:padding         "0.5em"
@@ -988,7 +1087,7 @@
 
    (entity-form-chooser :period)
    ]
-)
+  )
 
 (defn entity-forms [page]
   (let [page-value (if-let [entity-type (:type-or-nil page)]

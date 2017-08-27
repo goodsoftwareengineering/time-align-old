@@ -250,3 +250,56 @@
  :set-category-form-name
  (fn [db [_ name]]
    (assoc-in db [:view :category-form-name] name)))
+
+(reg-event-db
+ :set-task-form-category-id
+ (fn [db [_ category-id]]
+   (assoc-in db [:view :task-form :category-id] category-id)))
+
+(reg-event-db
+ :set-task-form-name
+ (fn [db [_ name]]
+   (assoc-in db [:view :task-form :name] name)))
+
+(reg-event-db
+ :set-task-form-description
+ (fn [db [_ desc]]
+   (assoc-in db [:view :task-form :description] desc)))
+
+(reg-event-db
+ :set-task-form-complete
+ (fn [db [_ comp]]
+   (assoc-in db [:view :task-form :complete] comp)))
+
+(reg-event-fx
+ :submit-task-form
+ (fn [cofx [_ _]]
+   (let [db (:db cofx)
+         task-form (get-in db [:view :task-form])
+         task-id (if (some? (:id task-form))
+                            (:id task-form)
+                            (random-uuid))
+         category-id (uuid (:category-id task-form))
+         other-categories (->> db
+                             (:categories)
+                             (filter #(not= (:id %) category-id)))
+         this-category (some #(if (= (:id %) category-id) %)
+                             (:categories db))
+         other-tasks (:tasks this-category)
+         this-task {:id task-id
+                    :name (:name task-form)
+                    :description (:description task-form)
+                    :complete (:complete task-form)
+                    :actual-periods []
+                    :planned-periods []}
+         new-db (merge db
+                       {:categories
+                        (conj other-categories
+                              (merge this-category
+                                     {:tasks
+                                      (conj other-tasks this-task)}))})]
+
+     (if (some? category-id) ;; secondary, view should not dispatch when nil
+       {:db new-db :dispatch [:set-active-page {:page-id :home}]}
+       {:db db ;; TODO display some sort of error
+        }))))

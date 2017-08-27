@@ -78,7 +78,7 @@
 (s/def ::tasks (s/coll-of ::task :gen-max 2 :min-count 1))
 (s/def ::user (s/keys :req-un [::name ::id ::email]))
 (s/def ::category (s/keys :req-un [::id ::name ::color ::tasks]))
-(s/def ::categories (s/coll-of ::category :gen-max 2 :min-count 1))
+(s/def ::categories (s/coll-of ::category :gen-max 3 :min-count 1))
 (s/def ::type #{:category :task :period :queue})
 (s/def ::type-or-nil (s/with-gen
                        (s/or :is-type ::type
@@ -88,7 +88,8 @@
                        (s/or :is-id ::id
                              :is-nil nil?)
                        #(gen/return nil)))
-(s/def ::page-id #{:home :entity-forms})
+(s/def ::page-id (s/with-gen #{:home :entity-forms}
+                   #(gen/return :home)))
 (s/def ::page  (s/keys :req-un [::page-id
                                 ::type-or-nil
                                 ::id-or-nil]))
@@ -131,6 +132,17 @@
 (s/def ::category-form-name (s/with-gen string?
                               #(gen/return "")))
 (s/def ::category-form-id ::id-or-nil)
+(s/def ::category-id ::id-or-nil)
+(s/def ::task-form (s/with-gen
+                     (s/keys :req-un [::id-or-nil ::name ::description ::complete ::category-id])
+                     #(gen/return {:id-or-nil nil
+                                   :name ""
+                                   :description ""
+                                   :complete false
+                                   :category-id nil
+                                   ;; TODO figure out a better default for category-id
+                                   })
+                     ))
 (s/def ::view (s/and (s/keys :req-un [::page
                                       ::selected
                                       ::continous-action
@@ -139,6 +151,7 @@
                                       ::action-buttons
                                       ::category-form-color
                                       ::category-form-name
+                                      ::task-form
                                       ])
                      (fn [view]
                        (if (get-in
