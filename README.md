@@ -28,9 +28,9 @@ generated using Luminus version "2.9.11.46"
     - [ ] create new
     - [ ] read
       - [x] planned/actual wheel display
-      - [ ] queue (any without start/stop)
+      - [x] queue (any without start/stop)
     - [x] update
-      - [ ] slidding
+      - [x] slidding
       - [ ] stretching/shrinking
     - [ ] delete
   - [ ] categories
@@ -78,7 +78,7 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
     - [x] clean up save form action (navigates away)
     - [x] work out how to get to edit version of form
     - [x] cancel button
-  - [ ] task
+  - [x] task
   - [ ] period
 - [ ] lists
   - [ ] categories
@@ -86,8 +86,13 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
   - [ ] periods
 - [ ] edit forms
   - [ ] category
+    - [ ] delete button (change cancel to disabled color and delete to secondary)
   - [ ] tasks
+    - [ ] delete button
   - [ ] periods
+    - [ ] delete button
+- [ ] list item selection goes to edit form
+- [ ] action button edit goes to edit form
 - [ ] account page
 - [ ] settings page
   - [ ] set top of the wheel time
