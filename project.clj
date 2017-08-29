@@ -34,8 +34,10 @@
                  [ring-webjars "0.1.1"]
                  [ring/ring-core "1.6.0-RC3"]
                  [ring/ring-defaults "0.2.3"]
+                 [reanimated "0.5.1"]
                  [secretary "1.2.3"]
-                 [selmer "1.10.7"]]
+                 [selmer "1.10.7"]
+                 ]
 
   :min-lein-version "2.0.0"
 
@@ -93,7 +95,9 @@
                                  [com.cemerick/piggieback "0.2.2-SNAPSHOT"]
                                  [doo "0.1.7"]
                                  [figwheel-sidecar "0.5.10"]
-                                 [org.clojure/test.check "0.9.0"]]
+                                 [org.clojure/test.check "0.9.0"]
+                                 [re-frisk "0.4.5"]
+                                 ]
                   :plugins      [[com.jakemccrary/lein-test-refresh "0.19.0"]
                                  [lein-doo "0.1.7"]
                                  [lein-figwheel "0.5.10"]
