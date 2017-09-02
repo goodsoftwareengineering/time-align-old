@@ -103,3 +103,8 @@
  :period-form-description
  (fn [db _]
    (get-in db [:view :period-form :description])))
+
+(reg-sub
+ :period-form-task-id
+ (fn [db _]
+   (get-in db [:view :period-form :task-id])))

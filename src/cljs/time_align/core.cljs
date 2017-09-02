@@ -996,6 +996,25 @@
        (r/as-element)
        ))
 
+(defn task-menu-item [task]
+  (let [id (str (:id task))]
+    [ui/menu-item
+     {:key id
+      :value id
+      :primaryText (:name task)
+      :leftIcon (r/as-element
+                 (svg-mui-circle (:color task)) )}]
+    )
+  )
+
+(defn task-selection-render [tasks id]
+  (->> tasks
+       (some #(if (= (:id %) (uuid id)) %))
+       (task-menu-item)
+       (r/as-element)
+       )
+  )
+
 (defn task-form [id]
   (let [name @(rf/subscribe [:task-form-name])
         description @(rf/subscribe [:task-form-description])
@@ -1078,15 +1097,13 @@
     )
   )
 
-(def tmp-desc (r/atom ""))
-(def tmp-start (r/atom nil))
-(def tmp-stop (r/atom nil))
-
 (defn period-form [id]
   (let [desc @(rf/subscribe [:period-form-description])
         description (if (some? desc) desc "")
         start-d @(rf/subscribe [:period-form-start])
-        stop-d @(rf/subscribe [:period-form-stop])]
+        stop-d @(rf/subscribe [:period-form-stop])
+        task-id @(rf/subscribe [:period-form-task-id])
+        tasks @(rf/subscribe [:tasks])]
 
     (println {:start start-d})
 
@@ -1131,6 +1148,20 @@
                      (fn [e v]
                        (rf/dispatch [:set-period-form-description v])
                        )}]
+
+     [ui/select-field
+      {:value task-id
+       :floatingLabelText "Task"
+       :autoWidth true
+       :fullWidth true
+       :selectionRenderer (partial
+                           task-selection-render
+                           tasks)
+       :onChange (fn [e, i, v]
+                   (rf/dispatch [:set-period-form-task-id v]))
+       }
+      (->> tasks
+           (map task-menu-item))]
      ]
     )
   )

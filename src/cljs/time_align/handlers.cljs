@@ -348,4 +348,10 @@
  (fn [db [_ desc]]
    (assoc-in db [:view :period-form :description] desc)
    ))
+
+(reg-event-db
+ :set-period-form-task-id
+ (fn [db [_ task-id]]
+   (assoc-in db [:view :period-form :task-id] task-id))
+   )
 ;; TODO catch start stop error in submission of period form
