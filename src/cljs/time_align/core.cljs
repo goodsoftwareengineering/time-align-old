@@ -1083,8 +1083,10 @@
 (def tmp-stop (r/atom nil))
 
 (defn period-form [id]
-  (let [description @tmp-desc
-        start-d @(rf/subscribe [:period-form-start])]
+  (let [desc @(rf/subscribe [:period-form-description])
+        description (if (some? desc) desc "")
+        start-d @(rf/subscribe [:period-form-start])
+        stop-d @(rf/subscribe [:period-form-stop])]
 
     (println {:start start-d})
 
@@ -1099,19 +1101,26 @@
                       :value start-d
                       :onChange
                       (fn [_ new-d]
-                        (rf/dispatch [:set-period-form-date [new-d :start]])
-                        )}]
+                        (rf/dispatch [:set-period-form-date [new-d :start]]))}]
 
      [ui/time-picker {:hintText "Start Time"
                       :value start-d
                       :onChange
                       (fn [_ new-s]
-                        (rf/dispatch [:set-period-form-time [new-s :start]])
-                        )}]
+                        (rf/dispatch [:set-period-form-time [new-s :start]]))}]
 
      [ui/subheader "Stop"]
-     [ui/date-picker {:hintText "Stop Date"}]
-     [ui/time-picker {:hintText "Stop Time"}]
+     [ui/date-picker {:hintText "Stop Date"
+                      :value stop-d
+                      :onChange
+                      (fn [_ new-d]
+                        (rf/dispatch [:set-period-form-date [new-d :stop]]))}]
+
+     [ui/time-picker {:hintText "Stop Time"
+                      :value stop-d
+                      :onChange
+                      (fn [_ new-s]
+                        (rf/dispatch [:set-period-form-time [new-s :stop]]))}]
 
      [ui/text-field {:floating-label-text "Description"
                      :value               description
@@ -1120,8 +1129,7 @@
                      :rows 4
                      :onChange
                      (fn [e v]
-                       ;; (rf/dispatch [:set-task-form-description v])
-                       (reset! tmp-desc v)
+                       (rf/dispatch [:set-period-form-description v])
                        )}]
      ]
     )

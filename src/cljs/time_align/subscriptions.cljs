@@ -93,3 +93,13 @@
  :period-form-start
  (fn [db _]
    (get-in db [:view :period-form :start])))
+
+(reg-sub
+ :period-form-stop
+ (fn [db _]
+   (get-in db [:view :period-form :stop])))
+
+(reg-sub
+ :period-form-description
+ (fn [db _]
+   (get-in db [:view :period-form :description])))

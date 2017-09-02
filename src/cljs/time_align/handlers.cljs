@@ -342,3 +342,10 @@
        )
    )
  ))
+
+(reg-event-db
+ :set-period-form-description
+ (fn [db [_ desc]]
+   (assoc-in db [:view :period-form :description] desc)
+   ))
+;; TODO catch start stop error in submission of period form
