@@ -81,7 +81,8 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
     - [x] cancel button
   - [x] task
   - [ ] period
-    - [ ] move time picker state to app-db
+    - [x] move time picker state to app-db
+    - [x] description
     - [ ] task picker (do the quick thing and just display all the task sorted by category and then name)
 
 - [ ] edit forms
