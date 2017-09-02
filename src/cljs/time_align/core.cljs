@@ -996,6 +996,25 @@
        (r/as-element)
        ))
 
+(defn task-menu-item [task]
+  (let [id (str (:id task))]
+    [ui/menu-item
+     {:key id
+      :value id
+      :primaryText (:name task)
+      :leftIcon (r/as-element
+                 (svg-mui-circle (:color task)) )}]
+    )
+  )
+
+(defn task-selection-render [tasks id]
+  (->> tasks
+       (some #(if (= (:id %) (uuid id)) %))
+       (task-menu-item)
+       (r/as-element)
+       )
+  )
+
 (defn task-form [id]
   (let [name @(rf/subscribe [:task-form-name])
         description @(rf/subscribe [:task-form-description])
@@ -1078,13 +1097,13 @@
     )
   )
 
-(def tmp-desc (r/atom ""))
-(def tmp-start (r/atom nil))
-(def tmp-stop (r/atom nil))
-
 (defn period-form [id]
-  (let [description @tmp-desc
-        start-d @tmp-start]
+  (let [desc @(rf/subscribe [:period-form-description])
+        description (if (some? desc) desc "")
+        start-d @(rf/subscribe [:period-form-start])
+        stop-d @(rf/subscribe [:period-form-stop])
+        task-id @(rf/subscribe [:period-form-task-id])
+        tasks @(rf/subscribe [:tasks])]
 
     (println {:start start-d})
 
@@ -1099,44 +1118,26 @@
                       :value start-d
                       :onChange
                       (fn [_ new-d]
-                        (swap!
-                         tmp-start
-                         (fn [o]
-                           (if (some? o)
-                             (let [old-d (new js/Date o)]
-                               (do
-                                 (.setFullYear old-d (.getFullYear new-d))
-                                 (.setDate old-d (.getDate new-d))
-                                 old-d))
-                             new-d))))}]
+                        (rf/dispatch [:set-period-form-date [new-d :start]]))}]
 
      [ui/time-picker {:hintText "Start Time"
                       :value start-d
                       :onChange
                       (fn [_ new-s]
-                        (swap!
-                         tmp-start
-                         (fn [o]
-                           (if (some? o)
-                             (let [old-s (new js/Date o)]
-                               (do
-                                 (.setHours old-s (.getHours new-s))
-                                 (.setMinutes old-s (.getMinutes new-s))
-                                 (.setSeconds old-s (.getSeconds new-s))
-                                 old-s
-                                 ))
-                               (do
-                                 (let [n (new js/Date)]
-                                   (.setFullYear new-s (.getFullYear n))
-                                   (.setDate new-s (.getDate n))
-                                   new-s
-                                   )
-                                 )
-                               ))))}]
+                        (rf/dispatch [:set-period-form-time [new-s :start]]))}]
 
      [ui/subheader "Stop"]
-     [ui/date-picker {:hintText "Stop Date"}]
-     [ui/time-picker {:hintText "Stop Time"}]
+     [ui/date-picker {:hintText "Stop Date"
+                      :value stop-d
+                      :onChange
+                      (fn [_ new-d]
+                        (rf/dispatch [:set-period-form-date [new-d :stop]]))}]
+
+     [ui/time-picker {:hintText "Stop Time"
+                      :value stop-d
+                      :onChange
+                      (fn [_ new-s]
+                        (rf/dispatch [:set-period-form-time [new-s :stop]]))}]
 
      [ui/text-field {:floating-label-text "Description"
                      :value               description
@@ -1145,9 +1146,22 @@
                      :rows 4
                      :onChange
                      (fn [e v]
-                       ;; (rf/dispatch [:set-task-form-description v])
-                       (reset! tmp-desc v)
+                       (rf/dispatch [:set-period-form-description v])
                        )}]
+
+     [ui/select-field
+      {:value task-id
+       :floatingLabelText "Task"
+       :autoWidth true
+       :fullWidth true
+       :selectionRenderer (partial
+                           task-selection-render
+                           tasks)
+       :onChange (fn [e, i, v]
+                   (rf/dispatch [:set-period-form-task-id v]))
+       }
+      (->> tasks
+           (map task-menu-item))]
      ]
     )
   )

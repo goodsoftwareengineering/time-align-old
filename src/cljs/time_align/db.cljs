@@ -143,6 +143,13 @@
                                    ;; TODO figure out a better default for category-id
                                    })
                      ))
+(s/def ::task-id ::id-or-nil)
+(s/def ::period-form (s/with-gen
+                       (s/keys :req-un [::id-or-nil ::task-id]
+                               :opt-un [::start ::stop ::description])
+                       #(gen/return {:id-or-nil nil
+                                     :task-id nil})
+                       ))
 (s/def ::view (s/and (s/keys :req-un [::page
                                       ::selected
                                       ::continous-action
@@ -152,6 +159,7 @@
                                       ::category-form-color
                                       ::category-form-name
                                       ::task-form
+                                      ::period-form
                                       ])
                      (fn [view]
                        (if (get-in

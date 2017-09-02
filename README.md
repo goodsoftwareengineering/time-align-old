@@ -69,6 +69,7 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
 ## work space
 - [x] finish working out stubs for all action button set state
 - [x] effects for selecting periods change appropriate action button state
+
 - [ ] create forms
   - [x] leaving id blank generates new in handler
   - [x] category
@@ -80,10 +81,10 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
     - [x] cancel button
   - [x] task
   - [ ] period
-- [ ] lists
-  - [ ] categories
-  - [ ] tasks
-  - [ ] periods
+    - [x] move time picker state to app-db
+    - [x] description
+    - [ ] task picker (do the quick thing and just display all the task sorted by category and then name)
+
 - [ ] edit forms
   - [ ] category
     - [ ] delete button (change cancel to disabled color and delete to secondary)
@@ -91,14 +92,20 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
     - [ ] delete button
   - [ ] periods
     - [ ] delete button
+
+- [ ] list (nested list component Categories->tasks->periods)
 - [ ] list item selection goes to edit form
 - [ ] action button edit goes to edit form
 - [ ] account page
 - [ ] settings page
-  - [ ] set top of the wheel time
+- [ ] set top of the wheel time
 - [ ] drawer links
+
 - [ ] for periods straddling date divide use old stop value instead of new one in handlers
   - [ ] put the date in the viewers time zone to get the cut off right!!!
+  
+- [ ] use spec on app-db to validate every action
+
 - [ ] logging
   - [ ] secretary url params for referer logs in db as referrer
   - [ ] set up a bare bones luminus server that logs to a sql lite db
@@ -109,6 +116,11 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
     - [ ] every action
     - [ ] encrypt every send
     - [ ] add token
+    
+- [ ] automatic demo
+  - [ ] set up the app to run a series of actions at specific ~~time intervals~~ to demo the app
+  - [ ] configure a snack bar with `next` and `close` buttons
+
 - [ ] market
   - [ ] post to reddits (personalize each link with referrer `https://timealign.github.io/#/clojure`)
     - [ ] gather stats on audience total size for each subredit
@@ -116,14 +128,25 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
     - [ ] cljs
     - [ ] data is beautiful
     - [ ] time management
-  - [ ] use sql to answer questions
+
+- [ ] analytics processing 
+  - [ ] answer questions
     - [ ] how many unique ip visits from each referrer?
-    - [ ] how many sessions for each unique ip
-    - [ ] construct a sort of tree of each session action series overlaid
+    - [ ] how many sessions for each unique ip?
+    - [ ] time spent in app
+  - [ ] construct a sort of tree of each session action series overlaid (example below)
+
 ```
-_arrived__clicked floating action ----
-          \____ clicked period______
+_ arrived __ clicked floating action _____ ??? 
+          \____ clicked period ______ ??? _____
+                                      \_____
 ```
+
+## techincal challenges
+- animations
+- responsive design
+  - https://github.com/Jarzka/stylefy
+- routing and pretty urls
 
 ## long term cleanup
 - pull out all state from core and put it in view
