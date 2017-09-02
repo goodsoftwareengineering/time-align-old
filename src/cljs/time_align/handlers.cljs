@@ -303,3 +303,42 @@
        {:db new-db :dispatch [:set-active-page {:page-id :home}]}
        {:db db ;; TODO display some sort of error
         }))))
+
+(reg-event-db
+ :set-period-form-date
+ (fn [db [_ [new-d start-or-stop]]]
+   (let [o (get-in db [:view :period-form start-or-stop])]
+     (if (some? o)
+
+       (let [old-d (new js/Date o)]
+         (do
+           (.setFullYear old-d (.getFullYear new-d))
+           (.setDate old-d (.getDate new-d))
+           (assoc-in db [:view :period-form start-or-stop] old-d)))
+
+       (assoc-in db [:view :period-form start-or-stop] new-d))
+     )
+   ))
+
+(reg-event-db
+ :set-period-form-time
+ (fn [db [_ [new-s start-or-stop]]]
+   (let [o (get-in db [:view :period-form start-or-stop])]
+     (if (some? o)
+       (let [old-s (new js/Date o)]
+         (do
+           (.setHours old-s (.getHours new-s))
+           (.setMinutes old-s (.getMinutes new-s))
+           (.setSeconds old-s (.getSeconds new-s))
+           (assoc-in db [:view :period-form start-or-stop] old-s)
+           ))
+       (do
+         (let [n (new js/Date)]
+           (.setFullYear new-s (.getFullYear n))
+           (.setDate new-s (.getDate n))
+           (assoc-in db [:view :period-form start-or-stop] new-s)
+           )
+         )
+       )
+   )
+ ))

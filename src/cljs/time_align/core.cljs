@@ -1084,7 +1084,7 @@
 
 (defn period-form [id]
   (let [description @tmp-desc
-        start-d @tmp-start]
+        start-d @(rf/subscribe [:period-form-start])]
 
     (println {:start start-d})
 
@@ -1099,40 +1099,15 @@
                       :value start-d
                       :onChange
                       (fn [_ new-d]
-                        (swap!
-                         tmp-start
-                         (fn [o]
-                           (if (some? o)
-                             (let [old-d (new js/Date o)]
-                               (do
-                                 (.setFullYear old-d (.getFullYear new-d))
-                                 (.setDate old-d (.getDate new-d))
-                                 old-d))
-                             new-d))))}]
+                        (rf/dispatch [:set-period-form-date [new-d :start]])
+                        )}]
 
      [ui/time-picker {:hintText "Start Time"
                       :value start-d
                       :onChange
                       (fn [_ new-s]
-                        (swap!
-                         tmp-start
-                         (fn [o]
-                           (if (some? o)
-                             (let [old-s (new js/Date o)]
-                               (do
-                                 (.setHours old-s (.getHours new-s))
-                                 (.setMinutes old-s (.getMinutes new-s))
-                                 (.setSeconds old-s (.getSeconds new-s))
-                                 old-s
-                                 ))
-                               (do
-                                 (let [n (new js/Date)]
-                                   (.setFullYear new-s (.getFullYear n))
-                                   (.setDate new-s (.getDate n))
-                                   new-s
-                                   )
-                                 )
-                               ))))}]
+                        (rf/dispatch [:set-period-form-time [new-s :start]])
+                        )}]
 
      [ui/subheader "Stop"]
      [ui/date-picker {:hintText "Stop Date"}]

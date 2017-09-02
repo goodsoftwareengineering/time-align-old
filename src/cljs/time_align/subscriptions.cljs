@@ -88,3 +88,8 @@
  :task-form-category-id
  (fn [db _]
    (get-in db [:view :task-form :category-id])))
+
+(reg-sub
+ :period-form-start
+ (fn [db _]
+   (get-in db [:view :period-form :start])))
