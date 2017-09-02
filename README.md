@@ -80,10 +80,9 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
     - [x] cancel button
   - [x] task
   - [ ] period
-- [ ] lists
-  - [ ] categories
-  - [ ] tasks
-  - [ ] periods
+    - [ ] move time picker state to app-db
+    - [ ] task picker (do the quick thing and just display all the task sorted by category and then name)
+- [ ] list (nested list component Categories->tasks->periods)
 - [ ] edit forms
   - [ ] category
     - [ ] delete button (change cancel to disabled color and delete to secondary)
@@ -124,6 +123,11 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
 _arrived__clicked floating action ----
           \____ clicked period______
 ```
+
+## techincal challenges
+- animations
+- responsive design
+- routing and pretty urls
 
 ## long term cleanup
 - pull out all state from core and put it in view
