@@ -1,26 +1,85 @@
-# time-align
+# time align
 
-Life is about how time is spent. Use this tool to create a goal for how to spend time, and record how time is actually spent. Work towards aligning those two tracks.  
+Life is how you spend time. Use this tool to make goals about spending time and track how you actually spend time. Work towards aligning those.  
 
-generated using Luminus version "2.9.11.46"
+## time line
+- finish working skeleton
+- refactor skeleton to be readable and maintainable without changing any functionality
+- add [extras needed to launch proof of concept](#extras-needed-to-launch-proof-of-concept)
+- starting adding things
+  - functionality / ux changes to spa
+  - back end api and database structure
+- launch paid for beta (full app front & back)
+- ???
+- profit
 
-## Prerequisites
+## prerequisites to dev
 - [Vagrant][1]
 - [VirtualBox][2]
 
 [1]: https://www.vagrantup.com/
 [2]: https://www.virtualbox.org/wiki/VirtualBox
 
-## Running
-
+## running
 - clone repo
 - run `vagrant up`
-- run `bash start.sh` (will open an ssh connection to vm)
+- run `bash start.sh` or `start.bat` (will open an ssh connection to vm)
 - run `./cider-deps-repl` (in vm, will start an nrepl)
-- connect to nrepl using cider at port 7000
+- connect to nrepl at port 7000
 - run `(start)` (launches the server)
 - run `(start-fw)` (transpiles cljs and starts figwheel server)
+- run `(cljs)` (starts a clojurescript repl in your browser that will connect automagically when you open localhost:3000)
 
+## working skeleton
+- [x] finish working out stubs for all action button set state
+- [x] effects for selecting periods change appropriate action button state
+
+- [ ] create forms
+  - [x] leaving id blank generates new in handler
+  - [x] category
+    - [x] color selector
+    - [x] save new category form
+    - [x] remove tabs 
+    - [x] clean up save form action (navigates away)
+    - [x] work out how to get to edit version of form
+    - [x] cancel button
+  - [x] task
+  - [x] period
+    - [x] move time picker state to app-db
+    - [x] description
+    - [x] task picker (do the quick thing and just display all the task sorted by category and then name)
+    - [x] add some ad-hoc error display
+
+- [ ] edit forms
+  - [x] alter page handler
+    - [x] fx
+    - [x] if id is not nil dispatch a load entity to form
+  - [ ] category
+    - [ ] delete button (change cancel to disabled color and delete to secondary)
+  - [ ] tasks
+    - [ ] delete button
+  - [x] periods
+    - [x] delete button
+    - [x] dispatch fx change page
+    - [x] dispatch fx set selected nil
+    
+- [ ] list (nested list component Categories->tasks->periods)
+  - [ ] figure out nested list ui component
+  - [ ] remove entities from drawer replace with list option
+- [ ] list items have actionable button edits
+- [ ] action button edit goes to edit form
+- [ ] account page
+  - [ ] name
+  - [ ] email
+- [ ] settings page
+  - [ ] set top of the wheel time
+- [ ] drawer links
+
+- [ ] for periods straddling date divide 
+  - [ ] use end of day const to render (maybe add indicator that period continues?)
+  - [ ] use old stop value instead of new one in handlers ??
+  - [ ] put the date in the viewers time zone to get the cut off right!!!
+  
 ## checklist for Proof Of Concept
 - [ ] full crud interface for time-align
   - [x] structure in db.clj
@@ -59,54 +118,25 @@ generated using Luminus version "2.9.11.46"
       - [ ] edit all data (can't delete unless no periods)
     - [ ] delete
 
-## misc
-### css solution garden
-https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life-after-sass-bdf5bc80a24f
 
-## License
-???
 
-## work space
-- [x] finish working out stubs for all action button set state
-- [x] effects for selecting periods change appropriate action button state
-
-- [ ] create forms
-  - [x] leaving id blank generates new in handler
-  - [x] category
-    - [x] color selector
-    - [x] save new category form
-    - [x] remove tabs 
-    - [x] clean up save form action (navigates away)
-    - [x] work out how to get to edit version of form
-    - [x] cancel button
-  - [x] task
-  - [ ] period
-    - [x] move time picker state to app-db
-    - [x] description
-    - [ ] task picker (do the quick thing and just display all the task sorted by category and then name)
-
-- [ ] edit forms
-  - [ ] category
-    - [ ] delete button (change cancel to disabled color and delete to secondary)
-  - [ ] tasks
-    - [ ] delete button
-  - [ ] periods
-    - [ ] delete button
-
-- [ ] list (nested list component Categories->tasks->periods)
-- [ ] list item selection goes to edit form
-- [ ] action button edit goes to edit form
-- [ ] account page
-- [ ] settings page
-- [ ] set top of the wheel time
-- [ ] drawer links
-
-- [ ] for periods straddling date divide use old stop value instead of new one in handlers
-  - [ ] put the date in the viewers time zone to get the cut off right!!!
-  
-- [ ] use spec on app-db to validate every action
-
-- [ ] logging
+## first great refactor
+- use spec on app-db to validate every action
+- pull out all state from core and put it in view
+- merge selectio handlers into an entity selection handler
+- all handlers have non-anon functions
+- all subscriptions have non-anon functions
+- custom svg defn's have name format
+  - svg-(mui-)-[icon-name]
+- enforced rule for subs/handlers
+  - only give back individual values or lists never chunks of structure?
+- all subscriptions in render code at top most levels and fed down --- Maybe not...
+  - will make testing easier
+  - seems too _complex_ to have individual components subscribe to things
+  - then would too many components be unessentially injecting subs they dont' care about for their children?
+ 
+## extras needed to launch proof of concept
+- [ ] analytics
   - [ ] secretary url params for referer logs in db as referrer
   - [ ] set up a bare bones luminus server that logs to a sql lite db
     - [ ] needs to decrypt with hard coded key
@@ -128,6 +158,7 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
     - [ ] cljs
     - [ ] data is beautiful
     - [ ] time management
+    - [ ] productivity
 
 - [ ] analytics processing 
   - [ ] answer questions
@@ -142,22 +173,24 @@ _ arrived __ clicked floating action _____ ???
                                       \_____
 ```
 
-## techincal challenges
+## bugs to fix later
+- firefox moving periods
+- 11:59 ticker really thin
+
+## techincal challenges to address in beta
 - animations
 - responsive design
   - https://github.com/Jarzka/stylefy
 - routing and pretty urls
 
-## long term cleanup
-- pull out all state from core and put it in view
-- merge selectio handlers into an entity selection handler
-- all handlers have non-anon functions
-- all subscriptions have non-anon functions
-- custom svg defn's have name format
-  - svg-(mui-)-[icon-name]
-- enforced rule for subs/handlers
-  - only give back individual values or lists never chunks of structure?
-- all subscriptions in render code at top most levels and fed down --- Maybe not...
-  - will make testing easier
-  - seems too _complex_ to have individual components subscribe to things
-  - then would too many components be unessentially injecting subs they dont' care about for their children?
+ 
+## ux changes
+- queue needs two options (tabs)
+  - queue of tasks with no stamps
+  - queue of upcoming planned tasks
+
+
+
+## license
+generated using Luminus version "2.9.11.46"
+???

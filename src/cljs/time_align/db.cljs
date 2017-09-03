@@ -144,11 +144,17 @@
                                    })
                      ))
 (s/def ::task-id ::id-or-nil)
+(s/def ::error #{:time-mismatch})
+(s/def ::error-or-nil (s/with-gen
+                        (s/or :is-error ::error
+                              :no-error nil?)
+                        #(gen/return nil)))
 (s/def ::period-form (s/with-gen
-                       (s/keys :req-un [::id-or-nil ::task-id]
+                       (s/keys :req-un [::id-or-nil ::task-id ::error-or-nil]
                                :opt-un [::start ::stop ::description])
                        #(gen/return {:id-or-nil nil
-                                     :task-id nil})
+                                     :task-id nil
+                                     :error-or-nil nil})
                        ))
 (s/def ::view (s/and (s/keys :req-un [::page
                                       ::selected

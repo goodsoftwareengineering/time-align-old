@@ -642,7 +642,7 @@
     )
   )
 
-(defn action-buttons-period-selection []
+(defn action-buttons-period-selection [selected]
   (if @action-buttons-collapsed-click
     (do (reset! action-buttons-collapsed-click false)
         (reset! margin-action-expanded 20) ))
@@ -672,14 +672,24 @@
    [ui/floating-action-button
     (merge basic-mini-button
            {:style (merge (:style basic-mini-button)
-                          {:marginBottom "20"})})
+                          {:marginBottom "20"})
+            :onTouchTap (fn [e]
+                          (rf/dispatch
+                           [:set-active-page
+                            {:page-id :entity-forms
+                             :type :period
+                             :id (get-in
+                                  selected
+                                  [:current-selection
+                                   :id-or-nil])}]))})
+
     [ic/editor-mode-edit basic-ic]]
 
    (back-button)
    ]
   )
 
-(defn action-buttons-queue-selection []
+(defn action-buttons-queue-selection [selected]
   (if @action-buttons-collapsed-click
     (do (reset! action-buttons-collapsed-click false)
         (reset! margin-action-expanded 20) ))
@@ -697,14 +707,23 @@
    [ui/floating-action-button
     (merge basic-mini-button
            {:style (merge (:style basic-mini-button)
-                          {:marginBottom "20"})})
+                          {:marginBottom "20"})
+            :onTouchTap (fn [e]
+                          (rf/dispatch
+                           [:set-active-page
+                            {:page-id :entity-forms
+                             :type :period
+                             :id (get-in
+                                  selected
+                                  [:current-selection
+                                   :id-or-nil])}]))})
     [ic/editor-mode-edit basic-ic]]
 
    (back-button)
    ]
   )
 
-(defn action-buttons [state]
+(defn action-buttons [state selected]
   (let [forceable @forcer]
     (case state
       :collapsed
@@ -712,9 +731,9 @@
       :no-selection
       (action-buttons-no-selection)
       :period
-      (action-buttons-period-selection)
+      (action-buttons-period-selection selected)
       :queue
-      (action-buttons-queue-selection)
+      (action-buttons-queue-selection selected)
       [:div "no buttons!"]
       )
     )
@@ -824,7 +843,7 @@
                :padding    "0.75em"
                ;; :border "green solid 0.1em"
                :box-sizing "border-box"}}
-      (action-buttons action-button-state)]]))
+      (action-buttons action-button-state selected)]]))
 
 (def standard-colors (->> (aget js/MaterialUIStyles "colors")
                           (js->clj)
@@ -922,6 +941,33 @@
    ]
   )
 
+(defn entity-form-buttons [back-page-id save-dispatch-vec delete-dispatch-vec]
+  [:div.buttons {:style {:display "flex"
+                         :justify-content "space-between"
+                         :margin-top "1em"
+                         }}
+
+   [ui/flat-button {:icon            (r/as-element [ic/action-delete-forever basic-ic])
+                    :backgroundColor (:secondary app-theme)
+                    :onTouchTap      (fn [e]
+                                       (rf/dispatch delete-dispatch-vec)
+                                       )}]
+
+   [ui/flat-button {:icon            (r/as-element [ic/navigation-cancel basic-ic])
+                    :backgroundColor "grey"
+                    :onTouchTap      (fn [e]
+                                       (rf/dispatch [:set-active-page
+                                                     {:pageId back-page-id
+                                                      :type nil
+                                                      :id nil}])
+                                       )}]
+   [ui/flat-button {:icon            (r/as-element [ic/content-save basic-ic])
+                    :backgroundColor (:primary app-theme)
+                    :onTouchTap      (fn [e]
+                                       (rf/dispatch save-dispatch-vec)
+                                       )}]
+   ])
+
 (defn category-form [id]
   (let [color @(rf/subscribe [:category-form-color])
         name  @(rf/subscribe [:category-form-name])]
@@ -957,23 +1003,7 @@
      [ui/divider {:style {:margin-top    "1em"
                           :margin-bottom "1em"}}]
 
-     [:div.buttons {:style {:display "flex"
-                            :justify-content "space-between"
-                            }}
-      [ui/flat-button {:icon            (r/as-element [ic/navigation-cancel basic-ic])
-                       :backgroundColor (:secondary app-theme)
-                       :onTouchTap      (fn [e]
-                                          (rf/dispatch [:set-active-page
-                                                        {:pageId :home
-                                                         :type nil
-                                                         :id nil}])
-                                          )}]
-      [ui/flat-button {:icon            (r/as-element [ic/content-save basic-ic])
-                       :backgroundColor (:primary app-theme)
-                       :onTouchTap      (fn [e]
-                                          (rf/dispatch [:save-category-form])
-                                          )}]
-      ]
+     (entity-form-buttons :home [:save-category-form] [:delete-category-form-entity])
      ]
     )
   )
@@ -999,8 +1029,8 @@
 (defn task-menu-item [task]
   (let [id (str (:id task))]
     [ui/menu-item
-     {:key id
-      :value id
+     {:key (str id)
+      :value (str id)
       :primaryText (:name task)
       :leftIcon (r/as-element
                  (svg-mui-circle (:color task)) )}]
@@ -1067,31 +1097,7 @@
                    :onCheck (fn [e v]
                               (rf/dispatch [:set-task-form-complete v]))}]
 
-     [:div.buttons {:style {:display "flex"
-                            :justify-content "space-between"
-                            :marginTop "1em"
-                            }}
-      [ui/flat-button {:icon
-                       (r/as-element
-                        [ic/navigation-cancel basic-ic])
-                       :backgroundColor
-                       (:secondary app-theme)
-                       :onTouchTap
-                       (fn [e]
-                         (rf/dispatch [:set-active-page
-                                       {:pageId :home
-                                        :type nil
-                                        :id nil}])
-                         )}]
-      [ui/flat-button {:icon
-                       (r/as-element [ic/content-save basic-ic])
-                       :backgroundColor
-                       (:primary app-theme)
-                       :onTouchTap
-                       (fn [e]
-                         (rf/dispatch [:submit-task-form])
-                         )}]
-      ]
+     (entity-form-buttons :home [:submit-task-form] [:delete-task-form-entity])
 
      ]
     )
@@ -1099,13 +1105,12 @@
 
 (defn period-form [id]
   (let [desc @(rf/subscribe [:period-form-description])
+        error @(rf/subscribe [:period-form-error])
         description (if (some? desc) desc "")
         start-d @(rf/subscribe [:period-form-start])
         stop-d @(rf/subscribe [:period-form-stop])
         task-id @(rf/subscribe [:period-form-task-id])
         tasks @(rf/subscribe [:tasks])]
-
-    (println {:start start-d})
 
     [:div.task-form {:style {:padding         "0.5em"
                              :backgroundColor "white"}}
@@ -1113,6 +1118,10 @@
      (entity-form-chooser :period)
 
      [ui/subheader "Start"]
+
+     (if (= :time-mismatch error)
+       [ui/subheader {:style {:color "red"}}
+        "Start must come before Stop"])
 
      [ui/date-picker {:hintText "Start Date"
                       :value start-d
@@ -1127,6 +1136,11 @@
                         (rf/dispatch [:set-period-form-time [new-s :start]]))}]
 
      [ui/subheader "Stop"]
+
+     (if (= :time-mismatch error)
+       [ui/subheader {:style {:color "red"}}
+        "Start must come before Stop"])
+
      [ui/date-picker {:hintText "Stop Date"
                       :value stop-d
                       :onChange
@@ -1150,18 +1164,21 @@
                        )}]
 
      [ui/select-field
-      {:value task-id
+      {:value (str task-id)
        :floatingLabelText "Task"
        :autoWidth true
        :fullWidth true
+       :errorText (if (= :no-task error) "Must Select Task")
        :selectionRenderer (partial
                            task-selection-render
                            tasks)
        :onChange (fn [e, i, v]
-                   (rf/dispatch [:set-period-form-task-id v]))
+                   (rf/dispatch [:set-period-form-task-id (uuid v)]))
        }
       (->> tasks
            (map task-menu-item))]
+
+     (entity-form-buttons :home [:save-period-form] [:delete-period-form-entity])
      ]
     )
   )
