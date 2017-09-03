@@ -642,7 +642,7 @@
     )
   )
 
-(defn action-buttons-period-selection []
+(defn action-buttons-period-selection [selected]
   (if @action-buttons-collapsed-click
     (do (reset! action-buttons-collapsed-click false)
         (reset! margin-action-expanded 20) ))
@@ -672,14 +672,24 @@
    [ui/floating-action-button
     (merge basic-mini-button
            {:style (merge (:style basic-mini-button)
-                          {:marginBottom "20"})})
+                          {:marginBottom "20"})
+            :onTouchTap (fn [e]
+                          (rf/dispatch
+                           [:set-active-page
+                            {:page-id :entity-forms
+                             :type :period
+                             :id (get-in
+                                  selected
+                                  [:current-selection
+                                   :id-or-nil])}]))})
+
     [ic/editor-mode-edit basic-ic]]
 
    (back-button)
    ]
   )
 
-(defn action-buttons-queue-selection []
+(defn action-buttons-queue-selection [selected]
   (if @action-buttons-collapsed-click
     (do (reset! action-buttons-collapsed-click false)
         (reset! margin-action-expanded 20) ))
@@ -697,14 +707,23 @@
    [ui/floating-action-button
     (merge basic-mini-button
            {:style (merge (:style basic-mini-button)
-                          {:marginBottom "20"})})
+                          {:marginBottom "20"})
+            :onTouchTap (fn [e]
+                          (rf/dispatch
+                           [:set-active-page
+                            {:page-id :entity-forms
+                             :type :period
+                             :id (get-in
+                                  selected
+                                  [:current-selection
+                                   :id-or-nil])}]))})
     [ic/editor-mode-edit basic-ic]]
 
    (back-button)
    ]
   )
 
-(defn action-buttons [state]
+(defn action-buttons [state selected]
   (let [forceable @forcer]
     (case state
       :collapsed
@@ -712,9 +731,9 @@
       :no-selection
       (action-buttons-no-selection)
       :period
-      (action-buttons-period-selection)
+      (action-buttons-period-selection selected)
       :queue
-      (action-buttons-queue-selection)
+      (action-buttons-queue-selection selected)
       [:div "no buttons!"]
       )
     )
@@ -824,7 +843,7 @@
                :padding    "0.75em"
                ;; :border "green solid 0.1em"
                :box-sizing "border-box"}}
-      (action-buttons action-button-state)]]))
+      (action-buttons action-button-state selected)]]))
 
 (def standard-colors (->> (aget js/MaterialUIStyles "colors")
                           (js->clj)
@@ -1003,8 +1022,8 @@
 (defn task-menu-item [task]
   (let [id (str (:id task))]
     [ui/menu-item
-     {:key id
-      :value id
+     {:key (str id)
+      :value (str id)
       :primaryText (:name task)
       :leftIcon (r/as-element
                  (svg-mui-circle (:color task)) )}]
@@ -1138,7 +1157,7 @@
                        )}]
 
      [ui/select-field
-      {:value task-id
+      {:value (str task-id)
        :floatingLabelText "Task"
        :autoWidth true
        :fullWidth true
@@ -1147,7 +1166,7 @@
                            task-selection-render
                            tasks)
        :onChange (fn [e, i, v]
-                   (rf/dispatch [:set-period-form-task-id v]))
+                   (rf/dispatch [:set-period-form-task-id (uuid v)]))
        }
       (->> tasks
            (map task-menu-item))]

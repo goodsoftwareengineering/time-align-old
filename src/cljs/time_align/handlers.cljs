@@ -9,27 +9,66 @@
   (fn [_ _]
     db/default-db))
 
-(reg-event-db
+(reg-event-fx
   :set-active-page
-  (fn [db [_ params]]
-    (let [page (:page-id params)
+  (fn [cofx [_ params]]
+    (let [db (:db cofx)
+          page (:page-id params)
           type (:type params)
-          id (:id params)]
-      (case page
-        :home (assoc-in db [:view :page] {:page-id page
-                                          :type-or-nil nil
-                                          :id-or-nil nil})
-        :entity-forms (assoc-in db [:view :page]
-                                {:page-id page
-                                 :type-or-nil type
-                                 :id-or-nil id})
-        ;; default
-        (assoc-in db [:view :page] {:page-id page
-                                    :type-or-nil nil
-                                    :id-or-nil nil})
-        )
-            )
+          id (:id params)
+          view-page  (case page
+                       :home {:page-id page
+                              :type-or-nil nil
+                              :id-or-nil nil}
+                       :entity-forms {:page-id page
+                                      :type-or-nil type
+                                      :id-or-nil id}
+                       ;; default
+                       {:page-id page
+                        :type-or-nil nil
+                        :id-or-nil nil})
+          to-dispatch (case type
+                        :category [:load-category-entity-form id]
+                        :task [:load-task-entity-form id]
+                        :period [:load-period-entity-form id]
+                        nil)
+          ]
+      (merge {:db (assoc-in db [:view :page] view-page)}
+             (if (some? to-dispatch)
+               {:dispatch to-dispatch}
+               {}))
+      )
     ))
+
+(reg-event-db
+ :load-category-entity-form
+ (fn [db [_ id]]
+   db))
+
+(reg-event-db
+ :load-task-entity-form
+ (fn [db [_ id]]
+   db))
+
+(reg-event-db
+ :load-period-entity-form
+ (fn [db [_ id]]
+   (let [periods (utils/pull-periods db)
+         this-period (some #(if (= id (:id %)) %)
+                           periods)
+         task-id (:task-id this-period)
+         start (:start this-period)
+         stop (:stop this-period)
+         description (:description this-period)]
+
+     (assoc-in db [:view :period-form]
+               {:id-or-nil id
+                :task-id task-id
+                :error-or-nil nil
+                :start start
+                :stop stop
+                :description description})
+     )))
 
 (reg-event-db
  :set-zoom
@@ -369,10 +408,7 @@
          start-v (.valueOf start)
          stop-v (.valueOf stop)
 
-         tmp-task-id (:task-id period-form)
-         task-id (if (empty? tmp-task-id)
-                   nil
-                   (uuid (:task-id period-form)))
+         task-id (:task-id period-form)
          tasks (utils/pull-tasks db)
 
          category-id (->> tasks
@@ -393,18 +429,20 @@
                           (filter #(not (= (:id %) task-id))))
          this-task (some #(if (= (:id %) task-id) %) tasks)
 
-         this-planned-period (->> this-task
-                                  (:actual-periods)
-                                  (some #(if (= period-id (:id %)) %))
-                                  (#(assoc % :actual false)))
-         this-actual-period (->> this-task
-                                 (:planned-periods)
-                                 (some #(if (= period-id (:id %)) %))
-                                 (#(assoc % :actual true)))
-         this-period (if (some? this-planned-period)
+         is-this-planned-period (->> this-task
+                                     (:planned-periods)
+                                     (some #(if (= period-id (:id %)) %)))
+         this-planned-period (assoc is-this-planned-period :actual false)
+
+         is-this-actual-period (->> this-task
+                                 (:actual-periods)
+                                 (some #(if (= period-id (:id %)) %)))
+         this-actual-period (assoc is-this-actual-period :actual true)
+
+         this-period (if (some? is-this-planned-period)
                        this-planned-period
 
-                       (if (some? this-actual-period)
+                       (if (some? is-this-actual-period)
                          this-actual-period
 
                          {:id period-id
@@ -438,8 +476,8 @@
                                                                    :description (:description period-form)}))}))}))})
                  ;; resets period form
                  [:view :period-form ]
-                 {:id-or-nil nil :task-id nil :error-or-nil nil})]
-
+                 {:id-or-nil nil :task-id nil :error-or-nil nil})
+         ]
      (if (< start-v stop-v)
        (if (some? task-id)
          {:db new-db :dispatch [:set-active-page {:page-id :home}]}
