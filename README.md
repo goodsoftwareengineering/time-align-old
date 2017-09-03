@@ -26,9 +26,9 @@ Life is how you spend time. Use this tool to make goals about spending time and 
 - run `bash start.sh` or `start.bat` (will open an ssh connection to vm)
 - run `./cider-deps-repl` (in vm, will start an nrepl)
 - connect to nrepl at port 7000
-- run `(start)` (launches the server)
-- run `(start-fw)` (transpiles cljs and starts figwheel server)
-- run `(cljs)` (starts a clojurescript repl in your browser that will connect automagically when you open localhost:3000)
+- run in nrepl `(start)` (launches the server)
+- run in nrepl `(start-fw)` (transpiles cljs and starts figwheel server)
+- run in nrepl `(cljs)` (starts a clojurescript repl in your browser that will connect automagically when you open localhost:3000)
 
 ## working skeleton
 - [x] finish working out stubs for all action button set state
