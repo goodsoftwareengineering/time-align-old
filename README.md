@@ -113,10 +113,10 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
   - [ ] set top of the wheel time
 - [ ] drawer links
 
-- [ ] for periods straddling date divide use old stop value instead of new one in handlers
+- [ ] for periods straddling date divide 
+  - [ ] use end of day const to render (maybe add indicator that period continues?)
+  - [ ] use old stop value instead of new one in handlers ??
   - [ ] put the date in the viewers time zone to get the cut off right!!!
-  
-- [ ] use spec on app-db to validate every action
 
 - [ ] analytics
   - [ ] secretary url params for referer logs in db as referrer
@@ -166,6 +166,7 @@ _ arrived __ clicked floating action _____ ???
 - routing and pretty urls
 
 ## long term cleanup
+- use spec on app-db to validate every action
 - pull out all state from core and put it in view
 - merge selectio handlers into an entity selection handler
 - all handlers have non-anon functions
