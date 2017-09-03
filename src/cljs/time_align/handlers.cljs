@@ -405,8 +405,10 @@
                    (random-uuid))
          start (:start period-form)
          stop (:stop period-form)
-         start-v (.valueOf start)
-         stop-v (.valueOf stop)
+         start-v (if (some? start)
+                   (.valueOf start))
+         stop-v (if (some? stop)
+                  (.valueOf stop))
 
          task-id (:task-id period-form)
          tasks (utils/pull-tasks db)
@@ -445,11 +447,7 @@
                        (if (some? is-this-actual-period)
                          this-actual-period
 
-                         {:id period-id
-                          :start start
-                          :stop stop
-                          :actual false
-                          :description (:description period-form)}))
+                         {}))
          other-periods-planned (filter #(not (= (:id %) period-id)) (:planned-periods this-task))
          other-periods-actual  (filter #(not (= (:id %) period-id)) (:actual-periods this-task))
 
@@ -470,15 +468,19 @@
                                                              other-periods-actual
                                                              other-periods-planned)
                                                            (merge (dissoc this-period :actual)
-                                                                  {:id period-id
-                                                                   :start start
-                                                                   :stop stop
-                                                                   :description (:description period-form)}))}))}))})
+                                                                  (merge {:id period-id
+                                                                          :description (:description period-form)}
+                                                                         (if (and (nil? start) (nil? stop))
+                                                                           {}
+                                                                           {:start start :stop stop})
+                                                                         )
+                                                                  ))}))}))})
                  ;; resets period form
                  [:view :period-form ]
                  {:id-or-nil nil :task-id nil :error-or-nil nil})
          ]
-     (if (< start-v stop-v)
+     (if (or (and (nil? start) (nil? stop))
+             (< start-v stop-v))
        (if (some? task-id)
          {:db new-db :dispatch [:set-active-page {:page-id :home}]}
          {:db (assoc-in db [:view :period-form :error-or-nil] :no-task)}
