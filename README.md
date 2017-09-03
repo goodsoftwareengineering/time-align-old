@@ -121,9 +121,13 @@ Life is how you spend time. Use this tool to make goals about spending time and 
 
 
 ## first great refactor
+- use [specter](https://github.com/nathanmarz/specter) to get rid of ugly merge stuff in handlers
+- merge `:planned-periods` and `:actual-periods` in app-db
+  - add back a `:type` flag
+  - refactor handlers, components to work with new structure
 - use spec on app-db to validate every action
 - pull out all state from core and put it in view
-- merge selectio handlers into an entity selection handler
+- merge selection handlers into an entity selection handler
 - all handlers have non-anon functions
 - all subscriptions have non-anon functions
 - custom svg defn's have name format
