@@ -922,6 +922,26 @@
    ]
   )
 
+(defn entity-form-buttons [back-page-id save-dispatch-vec]
+  [:div.buttons {:style {:display "flex"
+                         :justify-content "space-between"
+                         :margin-top "1em"
+                         }}
+   [ui/flat-button {:icon            (r/as-element [ic/navigation-cancel basic-ic])
+                    :backgroundColor (:secondary app-theme)
+                    :onTouchTap      (fn [e]
+                                       (rf/dispatch [:set-active-page
+                                                     {:pageId back-page-id
+                                                      :type nil
+                                                      :id nil}])
+                                       )}]
+   [ui/flat-button {:icon            (r/as-element [ic/content-save basic-ic])
+                    :backgroundColor (:primary app-theme)
+                    :onTouchTap      (fn [e]
+                                       (rf/dispatch save-dispatch-vec)
+                                       )}]
+   ])
+
 (defn category-form [id]
   (let [color @(rf/subscribe [:category-form-color])
         name  @(rf/subscribe [:category-form-name])]
@@ -957,23 +977,7 @@
      [ui/divider {:style {:margin-top    "1em"
                           :margin-bottom "1em"}}]
 
-     [:div.buttons {:style {:display "flex"
-                            :justify-content "space-between"
-                            }}
-      [ui/flat-button {:icon            (r/as-element [ic/navigation-cancel basic-ic])
-                       :backgroundColor (:secondary app-theme)
-                       :onTouchTap      (fn [e]
-                                          (rf/dispatch [:set-active-page
-                                                        {:pageId :home
-                                                         :type nil
-                                                         :id nil}])
-                                          )}]
-      [ui/flat-button {:icon            (r/as-element [ic/content-save basic-ic])
-                       :backgroundColor (:primary app-theme)
-                       :onTouchTap      (fn [e]
-                                          (rf/dispatch [:save-category-form])
-                                          )}]
-      ]
+    (entity-form-buttons :home [:save-category-form])
      ]
     )
   )
@@ -1067,31 +1071,7 @@
                    :onCheck (fn [e v]
                               (rf/dispatch [:set-task-form-complete v]))}]
 
-     [:div.buttons {:style {:display "flex"
-                            :justify-content "space-between"
-                            :marginTop "1em"
-                            }}
-      [ui/flat-button {:icon
-                       (r/as-element
-                        [ic/navigation-cancel basic-ic])
-                       :backgroundColor
-                       (:secondary app-theme)
-                       :onTouchTap
-                       (fn [e]
-                         (rf/dispatch [:set-active-page
-                                       {:pageId :home
-                                        :type nil
-                                        :id nil}])
-                         )}]
-      [ui/flat-button {:icon
-                       (r/as-element [ic/content-save basic-ic])
-                       :backgroundColor
-                       (:primary app-theme)
-                       :onTouchTap
-                       (fn [e]
-                         (rf/dispatch [:submit-task-form])
-                         )}]
-      ]
+     (entity-form-buttons :home [:submit-task-form])
 
      ]
     )
@@ -1104,8 +1084,6 @@
         stop-d @(rf/subscribe [:period-form-stop])
         task-id @(rf/subscribe [:period-form-task-id])
         tasks @(rf/subscribe [:tasks])]
-
-    (println {:start start-d})
 
     [:div.task-form {:style {:padding         "0.5em"
                              :backgroundColor "white"}}
@@ -1162,6 +1140,8 @@
        }
       (->> tasks
            (map task-menu-item))]
+
+    (entity-form-buttons :home [:save-period-form])
      ]
     )
   )

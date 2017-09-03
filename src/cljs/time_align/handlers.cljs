@@ -354,4 +354,90 @@
  (fn [db [_ task-id]]
    (assoc-in db [:view :period-form :task-id] task-id))
    )
-;; TODO catch start stop error in submission of period form
+
+(reg-event-fx
+ :save-period-form
+ (fn [cofx [_ _]]
+   (let [db (:db cofx)
+
+         period-form (get-in db [:view :period-form])
+         period-id (if (some? (:id-or-nil period-form))
+                   (:id-or-nil period-form)
+                   (random-uuid))
+         start (:start period-form)
+         stop (:stop period-form)
+         start-v (.valueOf start)
+         stop-v (.valueOf stop)
+
+         task-id (uuid (:task-id period-form))
+         tasks (utils/pull-tasks db)
+
+         category-id (->> tasks
+                          (some #(if (= task-id (:id %)) %))
+                          (:category-id)
+                          )
+
+         other-categories (->> db
+                               (:categories)
+                               (filter #(not (= (:id %) category-id))))
+         this-category (->> db
+                            (:categories)
+                            (some #(if (= (:id %) category-id) %))
+                            )
+
+         other-tasks (->> this-category
+                          (:tasks)
+                          (filter #(not (= (:id %) task-id))))
+         this-task (some #(if (= (:id %) task-id) %) tasks)
+
+         this-planned-period (->> this-task
+                                  (:actual-periods)
+                                  (some #(if (= period-id (:id %)) %))
+                                  (#(assoc % :actual false)))
+         this-actual-period (->> this-task
+                                 (:planned-periods)
+                                 (some #(if (= period-id (:id %)) %))
+                                 (#(assoc % :actual true)))
+         this-period (if (some? this-planned-period)
+                       this-planned-period
+
+                       (if (some? this-actual-period)
+                         this-actual-period
+
+                         {:id period-id
+                          :start start
+                          :stop stop
+                          :actual false
+                          :description (:description period-form)}))
+         other-periods-planned (filter #(not (= (:id %) period-id)) (:planned-periods this-task))
+         other-periods-actual  (filter #(not (= (:id %) period-id)) (:actual-periods this-task))
+
+         is-actual (:actual this-period)
+
+         new-db (assoc-in
+                 (merge db
+                        {:categories
+                         (conj other-categories
+                               (merge this-category
+                                      {:tasks
+                                       (conj other-tasks
+                                             (merge (dissoc this-task :category-id :color)
+                                                    {(if (:actual this-period)
+                                                       :actual-periods
+                                                       :planned-periods)
+                                                     (conj (if (:actual this-period)
+                                                             other-periods-actual
+                                                             other-periods-planned)
+                                                           (merge (dissoc this-period :actual)
+                                                                  {:id period-id
+                                                                   :start start
+                                                                   :stop stop
+                                                                   :description (:description period-form)}))}))}))})
+                 ;; resets period form
+                 [:view :period-form ]
+                 {:id-or-nil nil :task-id nil :error-or-nil nil})]
+
+     {:db new-db :dispatch [:set-active-page {:page-id :home}]}
+     )))
+
+
