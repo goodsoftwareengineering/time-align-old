@@ -487,3 +487,59 @@
        )
      )))
 
+(reg-event-fx
+ :delete-period-form-entity
+ (fn [cofx [_ _]]
+   (let [db (:db cofx)
+         period-id (get-in db [:view :period-form :id-or-nil])
+         periods (utils/pull-periods db)
+         this-period (some #(if (= period-id (:id %)) %) periods)
+         type (:type this-period)
+         is-actual (= type :actual)
+
+         task-id (:task-id this-period)
+         category-id (:category-id this-period)
+
+         other-periods (->> periods
+                            (filter #(and (= task-id (:task-id %))
+                                          (not= period-id (:id %)))))
+         other-planned (->> other-periods
+                            (filter #(= :planned (:type %)))
+                            (map #(dissoc % :type :category-id :task-id :color))
+                            )
+         other-actual (->> other-periods
+                           (filter #(= :actual (:type %)))
+                           (map #(dissoc % :type :category-id :task-id :color))
+                           )
+
+         tasks (utils/pull-tasks db)
+         other-tasks (->> tasks
+                          (filter
+                           #(and (= category-id (:category-id %))
+                                 (not= task-id (:id %))))
+                          (map #(dissoc % :category-id :color)))
+         this-task (->> tasks
+                        (some #(if (= task-id (:id %)) %))
+                        (#(dissoc % :category-id :color)))
+
+         categories (:categories db)
+         other-categories (filter #(not= category-id (:id %)) categories)
+         this-category (some #(if (= category-id (:id %)) %) categories)
+         new-db (merge db
+                       {:categories
+                        (conj other-categories
+                              (merge this-category
+                                     {:tasks
+                                      (conj other-tasks (merge this-task (if is-actual
+                                                                           {:actual-periods other-actual}
+                                                                           {:planned-periods other-planned})))}
+
+                                     ))})
+         ]
+
+
+     {:db new-db
+      :dispatch-n (list [:set-active-page {:page-id :home}]
+                        [:set-selected-period nil])}
+     )))
+

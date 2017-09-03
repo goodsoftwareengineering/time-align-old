@@ -941,13 +941,20 @@
    ]
   )
 
-(defn entity-form-buttons [back-page-id save-dispatch-vec]
+(defn entity-form-buttons [back-page-id save-dispatch-vec delete-dispatch-vec]
   [:div.buttons {:style {:display "flex"
                          :justify-content "space-between"
                          :margin-top "1em"
                          }}
-   [ui/flat-button {:icon            (r/as-element [ic/navigation-cancel basic-ic])
+
+   [ui/flat-button {:icon            (r/as-element [ic/action-delete-forever basic-ic])
                     :backgroundColor (:secondary app-theme)
+                    :onTouchTap      (fn [e]
+                                       (rf/dispatch delete-dispatch-vec)
+                                       )}]
+
+   [ui/flat-button {:icon            (r/as-element [ic/navigation-cancel basic-ic])
+                    :backgroundColor "grey"
                     :onTouchTap      (fn [e]
                                        (rf/dispatch [:set-active-page
                                                      {:pageId back-page-id
@@ -996,7 +1003,7 @@
      [ui/divider {:style {:margin-top    "1em"
                           :margin-bottom "1em"}}]
 
-    (entity-form-buttons :home [:save-category-form])
+     (entity-form-buttons :home [:save-category-form] [:delete-category-form-entity])
      ]
     )
   )
@@ -1090,7 +1097,7 @@
                    :onCheck (fn [e v]
                               (rf/dispatch [:set-task-form-complete v]))}]
 
-     (entity-form-buttons :home [:submit-task-form])
+     (entity-form-buttons :home [:submit-task-form] [:delete-task-form-entity])
 
      ]
     )
@@ -1171,7 +1178,7 @@
       (->> tasks
            (map task-menu-item))]
 
-    (entity-form-buttons :home [:save-period-form])
+     (entity-form-buttons :home [:save-period-form] [:delete-period-form-entity])
      ]
     )
   )
