@@ -87,6 +87,9 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
     - [x] add some ad-hoc error display
 
 - [ ] edit forms
+  - [ ] alter page handler
+    - [ ] fx
+    - [ ] if id is not nil dispatch a load entity to form
   - [ ] category
     - [ ] delete button (change cancel to disabled color and delete to secondary)
   - [ ] tasks
@@ -95,11 +98,13 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
     - [ ] delete button
 
 - [ ] list (nested list component Categories->tasks->periods)
-- [ ] list item selection goes to edit form
+- [ ] list item actionable button edits
 - [ ] action button edit goes to edit form
 - [ ] account page
+  - [ ] name
+  - [ ] email
 - [ ] settings page
-- [ ] set top of the wheel time
+  - [ ] set top of the wheel time
 - [ ] drawer links
 
 - [ ] for periods straddling date divide use old stop value instead of new one in handlers
