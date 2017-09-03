@@ -6,6 +6,7 @@ Life is how you spend time. Use this tool to make goals about spending time and 
 - finish working skeleton
 - refactor skeleton to be readable and maintainable without changing any functionality
 - add [extras needed to launch proof of concept](#extras-needed-to-launch-proof-of-concept)
+- launch proof of concept SPA on github
 - starting adding things
   - functionality / ux changes to spa
   - back end api and database structure
