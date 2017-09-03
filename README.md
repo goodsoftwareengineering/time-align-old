@@ -80,10 +80,11 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
     - [x] work out how to get to edit version of form
     - [x] cancel button
   - [x] task
-  - [ ] period
+  - [x] period
     - [x] move time picker state to app-db
     - [x] description
-    - [ ] task picker (do the quick thing and just display all the task sorted by category and then name)
+    - [x] task picker (do the quick thing and just display all the task sorted by category and then name)
+    - [x] add some ad-hoc error display
 
 - [ ] edit forms
   - [ ] category
