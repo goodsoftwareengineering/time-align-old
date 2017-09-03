@@ -87,15 +87,21 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
     - [x] add some ad-hoc error display
 
 - [ ] edit forms
-  - [ ] alter page handler
-    - [ ] fx
-    - [ ] if id is not nil dispatch a load entity to form
+  - [x] alter page handler
+    - [x] fx
+    - [x] if id is not nil dispatch a load entity to form
   - [ ] category
     - [ ] delete button (change cancel to disabled color and delete to secondary)
   - [ ] tasks
     - [ ] delete button
-  - [ ] periods
-    - [ ] delete button
+  - [x] periods
+    - [x] delete button
+    - [x] dispatch fx change page
+    - [x] dispatch fx set selected nil
+    
+- [ ] queue needs two options (tabs)
+  - [ ] queue of tasks with no stamps
+  - [ ] queue of upcoming planned tasks
 
 - [ ] list (nested list component Categories->tasks->periods)
 - [ ] list item actionable button edits
@@ -148,6 +154,10 @@ _ arrived __ clicked floating action _____ ???
           \____ clicked period ______ ??? _____
                                       \_____
 ```
+
+## bugs
+- firefox moving periods
+- 11:59 ticker really thin
 
 ## techincal challenges
 - animations
