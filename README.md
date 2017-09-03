@@ -106,7 +106,7 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
   
 - [ ] use spec on app-db to validate every action
 
-- [ ] logging
+- [ ] analytics
   - [ ] secretary url params for referer logs in db as referrer
   - [ ] set up a bare bones luminus server that logs to a sql lite db
     - [ ] needs to decrypt with hard coded key
@@ -128,6 +128,7 @@ https://blog.estimate-work.com/a-new-world-writing-css-in-clojurescript-and-life
     - [ ] cljs
     - [ ] data is beautiful
     - [ ] time management
+    - [ ] productivity
 
 - [ ] analytics processing 
   - [ ] answer questions
