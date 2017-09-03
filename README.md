@@ -2,7 +2,7 @@
 
 Life is how you spend time. Use this tool to make goals about spending time and track how you actually spend time. Work towards aligning those.  
 
-## time line
+## sequence of events
 - finish working skeleton
 - refactor skeleton to be readable and maintainable without changing any functionality
 - add [extras needed to launch proof of concept](#extras-needed-to-launch-proof-of-concept)
