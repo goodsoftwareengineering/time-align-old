@@ -15,8 +15,8 @@ Life is how you spend time. Use this tool to make goals about spending time and 
 - profit
 
 ## prerequisites to dev
-- [Vagrant][https://www.vagrantup.com/]
-- [VirtualBox][https://www.virtualbox.org/wiki/VirtualBox]
+- [Vagrant](https://www.vagrantup.com/)
+- [VirtualBox](https://www.virtualbox.org/wiki/VirtualBox)
 - [nRepl enabled editor](https://cb.codes/what-editor-ide-to-use-for-clojure/)
 
 
