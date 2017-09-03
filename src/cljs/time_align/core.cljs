@@ -1079,6 +1079,7 @@
 
 (defn period-form [id]
   (let [desc @(rf/subscribe [:period-form-description])
+        error @(rf/subscribe [:period-form-error])
         description (if (some? desc) desc "")
         start-d @(rf/subscribe [:period-form-start])
         stop-d @(rf/subscribe [:period-form-stop])
@@ -1091,6 +1092,10 @@
      (entity-form-chooser :period)
 
      [ui/subheader "Start"]
+
+     (if (= :time-mismatch error)
+       [ui/subheader {:style {:color "red"}}
+        "Start must come before Stop"])
 
      [ui/date-picker {:hintText "Start Date"
                       :value start-d
@@ -1105,6 +1110,11 @@
                         (rf/dispatch [:set-period-form-time [new-s :start]]))}]
 
      [ui/subheader "Stop"]
+
+     (if (= :time-mismatch error)
+       [ui/subheader {:style {:color "red"}}
+        "Start must come before Stop"])
+
      [ui/date-picker {:hintText "Stop Date"
                       :value stop-d
                       :onChange
@@ -1132,6 +1142,7 @@
        :floatingLabelText "Task"
        :autoWidth true
        :fullWidth true
+       :errorText (if (= :no-task error) "Must Select Task")
        :selectionRenderer (partial
                            task-selection-render
                            tasks)

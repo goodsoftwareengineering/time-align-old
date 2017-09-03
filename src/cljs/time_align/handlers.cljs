@@ -369,7 +369,10 @@
          start-v (.valueOf start)
          stop-v (.valueOf stop)
 
-         task-id (uuid (:task-id period-form))
+         tmp-task-id (:task-id period-form)
+         task-id (if (empty? tmp-task-id)
+                   nil
+                   (uuid (:task-id period-form)))
          tasks (utils/pull-tasks db)
 
          category-id (->> tasks
@@ -437,7 +440,12 @@
                  [:view :period-form ]
                  {:id-or-nil nil :task-id nil :error-or-nil nil})]
 
-     {:db new-db :dispatch [:set-active-page {:page-id :home}]}
+     (if (< start-v stop-v)
+       (if (some? task-id)
+         {:db new-db :dispatch [:set-active-page {:page-id :home}]}
+         {:db (assoc-in db [:view :period-form :error-or-nil] :no-task)}
+         )
+       {:db (assoc-in db [:view :period-form :error-or-nil] :time-mismatch)}
+       )
      )))
-
 

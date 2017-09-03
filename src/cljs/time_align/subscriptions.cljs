@@ -108,3 +108,8 @@
  :period-form-task-id
  (fn [db _]
    (get-in db [:view :period-form :task-id])))
+
+(reg-sub
+ :period-form-error
+ (fn [db _]
+   (get-in db [:view :period-form :error-or-nil])))
