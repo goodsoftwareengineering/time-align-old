@@ -4,7 +4,7 @@
 
 users
 ----
-id pk int
+uid pk uuid
 name varchar(255)
 email varchar(255)
 hash_pass varchar(255)
@@ -12,7 +12,7 @@ hash_pass varchar(255)
 categories
 ----
 id pk int
-user_id int FK >- users.id
+user_uid uuid FK >- users.uid
 name varchar(255)
 color varchar(6)
 info jsonb
@@ -20,7 +20,7 @@ info jsonb
 tasks
 ----
 id pk int
-user_id int FK >- users.id
+user_uid uuid FK >- users.uid
 category_id int FK >- categories.id
 priority int 
 
@@ -28,8 +28,7 @@ periods
 ----
 id pk int
 task_id int FK >- tasks.id
-start_time timestamp
-end_time timestamp
+time_range tstzrange
 
 dependencies
 ----
@@ -39,8 +38,8 @@ dependency_id int FK >- tasks.id
 # check (task_id <> dependency_id)
 
 [settings]
-Position -12 -28
-Zoom 80
+Position 61 -100
+Zoom 100
 DefaultFieldType int
 CaseSensitive on
 
