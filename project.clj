@@ -19,7 +19,8 @@
                  [metosin/muuntaja "0.2.1"]
                  [metosin/ring-http-response "0.8.2"]
                  [mount "0.1.11"]
-                 [org.clojure/clojure "1.8.0"]
+                 [org.clojure/clojure "1.9.0-alpha19"]
+                 [org.clojure/core.async "0.3.443"]
                  [org.clojure/clojurescript "1.9.521" :scope "provided"]
                  [org.clojure/tools.cli "0.3.5"]
                  [org.clojure/tools.logging "0.3.1"]
@@ -36,8 +37,8 @@
                  [ring/ring-defaults "0.2.3"]
                  [reanimated "0.5.1"]
                  [secretary "1.2.3"]
-                 [selmer "1.10.7"]
-                 ]
+                 [selmer "1.10.7"]]
+
 
   :min-lein-version "2.0.0"
 
@@ -96,8 +97,8 @@
                                  [doo "0.1.7"]
                                  [figwheel-sidecar "0.5.10"]
                                  [org.clojure/test.check "0.9.0"]
-                                 [re-frisk "0.4.5"]
-                                 ]
+                                 [re-frisk "0.4.5"]]
+
                   :plugins      [[com.jakemccrary/lein-test-refresh "0.19.0"]
                                  [lein-doo "0.1.7"]
                                  [lein-figwheel "0.5.10"]
@@ -132,8 +133,8 @@
                      {:output-to "target/test.js"
                       :main "time-align.doo-runner"
                       :optimizations :whitespace
-                      :pretty-print true}}}}
+                      :pretty-print true}}}}}
                   
-                  }
+
    :profiles/dev {}
    :profiles/test {}})
