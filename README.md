@@ -14,10 +14,26 @@ Life is how you spend time. Use this tool to make goals about spending time and 
 - ???
 - profit
 
+## goals
+### Mark
+- 20170923
+  - app-db ported to cljc
+  - utils ported to cljc
+  - tests for utils
+### Justin
+- 20171001 
+  - finish [working skeleton](#working-skelton)
+### Global
+- 20171115
+  - finish [great refactor](#first-great-refactor)
+- 20171231
+  - proof of concept launch
+
 ## prerequisites to dev
 - [Vagrant](https://www.vagrantup.com/)
 - [VirtualBox](https://www.virtualbox.org/wiki/VirtualBox)
 - [nRepl enabled editor](https://cb.codes/what-editor-ide-to-use-for-clojure/)
+
 
 
 ## running
@@ -29,6 +45,7 @@ Life is how you spend time. Use this tool to make goals about spending time and 
 - run in nrepl `(start)` (launches the server)
 - run in nrepl `(start-fw)` (transpiles cljs and starts figwheel server)
 - run in nrepl `(cljs)` (starts a clojurescript repl in your browser that will connect automagically when you open localhost:3000)
+
 
 ## working skeleton
 - [x] finish working out stubs for all action button set state
@@ -62,6 +79,7 @@ Life is how you spend time. Use this tool to make goals about spending time and 
     - [x] delete button
     - [x] dispatch fx change page
     - [x] dispatch fx set selected nil
+    - [ ] add planned toggle
     
 - [ ] list (nested list component Categories->tasks->periods)
   - [ ] figure out nested list ui component
@@ -80,6 +98,7 @@ Life is how you spend time. Use this tool to make goals about spending time and 
   - [ ] use old stop value instead of new one in handlers ??
   - [ ] put the date in the viewers time zone to get the cut off right!!!
   
+
 ## checklist for Proof Of Concept
 - [ ] full crud interface for time-align
   - [x] structure in db.clj
@@ -120,6 +139,13 @@ Life is how you spend time. Use this tool to make goals about spending time and 
 
 
 
+
+## tests
+- [ ] utils functions
+- [ ] every handler
+- [ ] maybe test view only helper functions
+
+
 ## first great refactor
 - use [specter](https://github.com/nathanmarz/specter) to get rid of ugly merge stuff in handlers
 - merge `:planned-periods` and `:actual-periods` in app-db
@@ -139,6 +165,7 @@ Life is how you spend time. Use this tool to make goals about spending time and 
   - seems too _complex_ to have individual components subscribe to things
   - then would too many components be unessentially injecting subs they dont' care about for their children?
  
+
 ## extras needed to launch proof of concept
 - [ ] analytics
   - [ ] secretary url params for referer logs in db as referrer
@@ -177,9 +204,11 @@ _ arrived __ clicked floating action _____ ???
                                       \_____
 ```
 
+
 ## bugs to fix later
 - firefox moving periods
 - 11:59 ticker really thin
+
 
 ## techincal challenges to address in beta
 - animations
@@ -188,10 +217,12 @@ _ arrived __ clicked floating action _____ ???
 - routing and pretty urls
 
  
+
 ## ux changes
 - queue needs two options (tabs)
   - queue of tasks with no stamps
   - queue of upcoming planned tasks
+
 
 
 
