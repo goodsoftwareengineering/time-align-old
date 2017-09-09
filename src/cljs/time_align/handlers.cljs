@@ -454,16 +454,18 @@
          other-periods-actual  (filter #(not (= (:id %) period-id)) (:actual-periods this-task))
 
          is-actual (:actual this-period)
-         is-supposed-to-be-actual (not (get-in db [:view :period-form :planned]))
-         make-actual (or is-actual
-                         is-supposed-to-be-actual)
+         make-actual (and (not (or (nil? start)  ;; check for start and stop is to keep queue periods from being toggled actual
+                                   (nil? stop))) ;; if a user tries it will silently fail to toggle
+                                                 ;; TODO throw an error message
+                          (not (get-in db [:view :period-form :planned])))
 
          this-period-to-be-inserted (merge (dissoc this-period :actual)
                                            (merge {:id period-id
                                                    :description (:description period-form)}
                                                   (if (and (nil? start)
                                                            (nil? stop))
-                                                    {} ;; start & stop with nil fucks shit up keys have to be absent for queue
+                                                    {} ;; start & stop with nil fucks shit up
+                                                       ;;keys have to be absent for queue
                                                     {:start start :stop stop})))
 
          new-db (assoc-in
@@ -479,13 +481,13 @@
                                                     ;; from actual to planned
                                                     ;; by always merging over both sets in a task
                                                     {:actual-periods (if make-actual
-                                                               (conj other-periods-actual
-                                                                     this-period-to-be-inserted)
-                                                               other-periods-actual)}
+                                                                       (conj other-periods-actual
+                                                                             this-period-to-be-inserted)
+                                                                       other-periods-actual)}
                                                     {:planned-periods (if (not make-actual)
-                                                                (conj other-periods-planned
-                                                                      this-period-to-be-inserted)
-                                                                other-periods-planned)}))}))})
+                                                                        (conj other-periods-planned
+                                                                              this-period-to-be-inserted)
+                                                                        other-periods-planned)}))}))})
                  ;; resets period form
                  [:view :period-form ]
                  {:id-or-nil nil :task-id nil :error-or-nil nil :planned false}) ;; TODO move to a dispatched event
