@@ -149,12 +149,14 @@
                         (s/or :is-error ::error
                               :no-error nil?)
                         #(gen/return nil)))
+(s/def ::planned boolean?)
 (s/def ::period-form (s/with-gen
-                       (s/keys :req-un [::id-or-nil ::task-id ::error-or-nil]
+                       (s/keys :req-un [::id-or-nil ::task-id ::error-or-nil ::planned]
                                :opt-un [::start ::stop ::description])
                        #(gen/return {:id-or-nil nil
                                      :task-id nil
-                                     :error-or-nil nil})
+                                     :error-or-nil nil
+                                     :planned false})
                        ))
 (s/def ::view (s/and (s/keys :req-un [::page
                                       ::selected

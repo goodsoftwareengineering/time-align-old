@@ -1110,13 +1110,20 @@
         start-d @(rf/subscribe [:period-form-start])
         stop-d @(rf/subscribe [:period-form-stop])
         task-id @(rf/subscribe [:period-form-task-id])
-        tasks @(rf/subscribe [:tasks])]
+        tasks @(rf/subscribe [:tasks])
+        planned @(rf/subscribe [:period-form-planned])]
 
     [:div.task-form {:style {:padding         "0.5em"
                              :backgroundColor "white"}}
 
      (entity-form-chooser :period)
 
+     [ui/checkbox {:label "Planned"
+                   :labelStyle {:color (:primary app-theme)}
+                   :style {:marginTop "20"}
+                   :checked planned
+                   :onCheck (fn [e v]
+                              (rf/dispatch [:set-period-form-planned v]))}]
      [ui/subheader "Start"]
 
      (if (= :time-mismatch error)

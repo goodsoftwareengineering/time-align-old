@@ -56,6 +56,7 @@
    (let [periods (utils/pull-periods db)
          this-period (some #(if (= id (:id %)) %)
                            periods)
+         is-planned (= :planned (:type this-period))
          task-id (:task-id this-period)
          start (:start this-period)
          stop (:stop this-period)
@@ -67,6 +68,7 @@
                 :error-or-nil nil
                 :start start
                 :stop stop
+                :planned is-planned
                 :description description})
      )))
 
@@ -452,8 +454,20 @@
          other-periods-actual  (filter #(not (= (:id %) period-id)) (:actual-periods this-task))
 
          is-actual (:actual this-period)
+         is-supposed-to-be-actual (not (get-in db [:view :period-form :planned]))
+         make-actual (or is-actual
+                         is-supposed-to-be-actual)
+
+         this-period-to-be-inserted (merge (dissoc this-period :actual)
+                                           (merge {:id period-id
+                                                   :description (:description period-form)}
+                                                  (if (and (nil? start)
+                                                           (nil? stop))
+                                                    {} ;; start & stop with nil fucks shit up keys have to be absent for queue
+                                                    {:start start :stop stop})))
 
          new-db (assoc-in
+                 ;; puts period where it needs to be
                  (merge db
                         {:categories
                          (conj other-categories
@@ -461,23 +475,20 @@
                                       {:tasks
                                        (conj other-tasks
                                              (merge (dissoc this-task :category-id :color)
-                                                    {(if (:actual this-period)
-                                                       :actual-periods
-                                                       :planned-periods)
-                                                     (conj (if (:actual this-period)
-                                                             other-periods-actual
-                                                             other-periods-planned)
-                                                           (merge (dissoc this-period :actual)
-                                                                  (merge {:id period-id
-                                                                          :description (:description period-form)}
-                                                                         (if (and (nil? start) (nil? stop))
-                                                                           {}
-                                                                           {:start start :stop stop})
-                                                                         )
-                                                                  ))}))}))})
+                                                    ;; below will handle when a period is being changed
+                                                    ;; from actual to planned
+                                                    ;; by always merging over both sets in a task
+                                                    {:actual-periods (if make-actual
+                                                               (conj other-periods-actual
+                                                                     this-period-to-be-inserted)
+                                                               other-periods-actual)}
+                                                    {:planned-periods (if (not make-actual)
+                                                                (conj other-periods-planned
+                                                                      this-period-to-be-inserted)
+                                                                other-periods-planned)}))}))})
                  ;; resets period form
                  [:view :period-form ]
-                 {:id-or-nil nil :task-id nil :error-or-nil nil})
+                 {:id-or-nil nil :task-id nil :error-or-nil nil :planned false}) ;; TODO move to a dispatched event
          ]
      (if (or (and (nil? start) (nil? stop))
              (< start-v stop-v))
@@ -545,3 +556,7 @@
                         [:set-selected-period nil])}
      )))
 
+(reg-event-db
+ :set-period-form-planned
+ (fn [db [_ is-planned]]
+   (assoc-in db [:view :period-form :planned] is-planned)))
