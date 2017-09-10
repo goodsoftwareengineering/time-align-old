@@ -770,18 +770,12 @@
                  :open               main-drawer-state
                  :disableSwipeToOpen true
                  :onRequestChange    (fn [new-state] (rf/dispatch [:set-main-drawer new-state]))}
-      [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
+      [ui/menu-item {:onTouchTap    #(do
+                                       (rf/dispatch [:set-main-drawer false])
+                                       (rf/dispatch [:set-active-page {:page-id :list}]))
                      :innerDivStyle {:display "flex" :align-items "center"}}
-       (svg-mui-entity {:type :category :color "black" :style {:marginRight "0.5em"}})
-       [:span "Categories"]]
-      [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
-                     :innerDivStyle {:display "flex" :align-items "center"}}
-       (svg-mui-entity {:type :task :color "black" :style {:marginRight "0.5em"}})
-       [:span "Tasks"]]
-      [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
-                     :innerDivStyle {:display "flex" :align-items "center"}}
-       (svg-mui-entity {:type :period :color "black" :style {:marginRight "0.5em"}})
-       [:span "Periods"]]
+       (svg-mui-entity {:type :all :color "black" :style {:marginRight "0.5em"}})
+       [:span "List"]]
       [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
                      :innerDivStyle {:display "flex" :align-items "center"}}
        [ic/social-person {:style {:marginRight "0.5em"}}]
@@ -790,7 +784,9 @@
                      :innerDivStyle {:display "flex" :align-items "center"}}
        [ic/action-settings {:style {:marginRight "0.5em"}}]
        [:span "Settings"]]
-      [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
+      [ui/menu-item {:onTouchTap    #(do
+                                       (rf/dispatch [:set-main-drawer false])
+                                       (rf/dispatch [:set-active-page :home]))
                      :innerDivStyle {:display "flex" :align-items "center"}}
        (svg-mui-time-align {:color "black"
                             :style {:marginRight "0.5em"}})
@@ -1209,6 +1205,44 @@
     )
   )
 
+(defn list-page []
+  (let [categories @(rf/subscribe [:categories])
+        ]
+    [:div
+     (app-bar)
+     [ui/paper {:style {:width "100%"}}
+      [ui/list
+       (->> categories
+            (map (fn [category]
+                   (let [{:keys [id name color tasks]} category]
+                     [ui/list-item {:key id
+                                    :primaryText (if (empty? name)
+                                                   "no name"
+                                                   name)
+                                    :leftIcon (r/as-element (svg-mui-circle color))
+                                    :nestedItems (->> tasks
+                                                      (map (fn [task]
+                                                             (let [{:keys [id name actual-periods planned-periods]} task
+                                                                   periods (concat
+                                                                            (map #(assoc % :type :actual) actual-periods)
+                                                                            (map #(assoc % :type :planned) planned-periods))]
+                                                               (r/as-element
+                                                                [ui/list-item
+                                                                 {:key id
+                                                                  :primaryText name
+                                                                  :nestedItems (->> periods
+                                                                                    (map (fn [period]
+                                                                                           (let [{:keys [id description]} period]
+                                                                                             (r/as-element
+                                                                                              [ui/list-item
+                                                                                               {:key id
+                                                                                                :primaryText description}])))))}])))))
+                                    }]
+                     )
+                   )))]
+      ]
+     ]))
+
 (defn page []
   (let [this-page @(rf/subscribe [:page])
         page-id   (:page-id this-page)]
@@ -1222,6 +1256,7 @@
       (case page-id
         :home         (home-page)
         :entity-forms (entity-forms this-page)
+        :list         (list-page)
         ;; default
         (home-page))]
      ]

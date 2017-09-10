@@ -23,6 +23,9 @@
                        :entity-forms {:page-id page
                                       :type-or-nil type
                                       :id-or-nil id}
+                       :list {:page-id page
+                              :type-or-nil nil
+                              :id-or-nil nil}
                        ;; default
                        {:page-id page
                         :type-or-nil nil
