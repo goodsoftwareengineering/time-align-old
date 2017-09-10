@@ -481,7 +481,7 @@
                                             {}))
                       :key         (:id period)
                       :leftIcon    (r/as-element
-                                    (svg-mui-circle (:color period)))
+                                    [ui/svg-icon [ic/action-list {:color (:color period)}]])
                       :primaryText (concatonated-text (:description period) 10 "No period description ...")
                       :onTouchTap  (fn [e]
                                      (rf/dispatch
@@ -1277,7 +1277,7 @@
 
                ;; otherwise render a queue indicator
                {:leftIcon (r/as-element
-                           [ui/svg-icon [ic/action-list {:color "#cdcdcd"}]])}))])))
+                           [ui/svg-icon [ic/action-list {:color color}]])}))])))
 
 (defn list-task [task]
   (let [{:keys [id name actual-periods complete planned-periods color]} task
