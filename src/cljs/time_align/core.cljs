@@ -1232,6 +1232,8 @@
 
              (if (and (some? (:start period))
                       (some? (:stop period)))
+
+               ;; if not queue render the arc
                (let [start (:start period)
                      start-ms    (utils/get-ms start)
                      start-angle (utils/ms-to-angle start-ms)
@@ -1240,10 +1242,29 @@
                      stop-angle (utils/ms-to-angle stop-ms)
 
                      angle-difference (- stop-angle start-angle)
-                     not-big-enough (> angle-difference 22.5)
+                     optimal-angle 45
+                     ;; adjustments seek to push the angle difference towards optimal
+                     ;; catches when one side goes over edge
+                     start-angle-adjusted (.max js/Math
+                                                (- start-angle (- optimal-angle angle-difference))
+                                                1)
+                     stop-angle-adjusted (.min js/Math
+                                               (+ stop-angle (- optimal-angle angle-difference ))
+                                               359)
 
-                     start-angle-adjusted (- start-angle (/ angle-difference 4))
-                     stop-angle-adjusted (+ stop-angle (/ angle-difference 4))]
+                     adjusted-difference (- stop-angle-adjusted start-angle-adjusted)
+                     too-big (> adjusted-difference 350)
+                     too-small (< adjusted-difference 22.5)
+
+                     adjustment-works (and (not too-big)
+                                           (not too-small))
+                     start-used (if adjustment-works
+                                  start-angle-adjusted
+                                  start-angle)
+                     stop-used (if adjustment-works
+                                 stop-angle-adjusted
+                                 stop-angle)
+                     ]
 
                  {:leftIcon (r/as-element
                              [ui/svg-icon
@@ -1253,19 +1274,18 @@
                                          :stroke-width "2" :stroke "#cdcdcd"
                                          :fill "transparent"}]
                                [:path
-                                {:d            (describe-arc 12 12 11
-                                                             (if not-big-enough
-                                                               start-angle-adjusted
-                                                               start-angle)
-                                                             (if not-big-enough
-                                                               stop-angle-adjusted
-                                                               stop-angle))
+                                {:d            (describe-arc 12 12 11 start-used stop-used)
                                  :stroke       color
                                  :stroke-width "2"
                                  :fill         "transparent"
                                  }]
                                ]])}
-                 )))
+                 )
+
+               ;; otherwise render a queue indicator
+               {:leftIcon (r/as-element
+                           [ui/svg-icon [ic/action-list {:color "#cdcdcd"}]])}
+               ))
       ])))
 
 (defn list-task [task]
