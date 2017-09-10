@@ -72,14 +72,18 @@ Life is how you spend time. Use this tool to make goals about spending time and 
     - [x] fx
     - [x] if id is not nil dispatch a load entity to form
   - [ ] category
+    - [ ] navigate to edit particular
+    - [ ] submit handler works to update
     - [ ] delete button (change cancel to disabled color and delete to secondary)
   - [ ] tasks
+    - [ ] navigate to edit particular
+    - [ ] submit handler works to update
     - [ ] delete button
   - [x] periods
     - [x] delete button
     - [x] dispatch fx change page
     - [x] dispatch fx set selected nil
-    - [ ] add planned toggle
+    - [x] planned toggle
     
 - [ ] list (nested list component Categories->tasks->periods)
   - [ ] figure out nested list ui component
