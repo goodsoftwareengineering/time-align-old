@@ -1311,6 +1311,10 @@
                    :nestedItems (->> tasks
                                      (map #(assoc % :color color))
                                      (map list-task))
+                   :onClick     (fn [e]
+                                  (rf/dispatch [:set-active-page {:page-id :entity-forms
+                                                                  :type :category
+                                                                  :id id}]))
                    }]
     )
   )

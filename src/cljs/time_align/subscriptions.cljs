@@ -57,7 +57,7 @@
 (reg-sub
  :category-form-color
  (fn [db _]
-   (get-in db [:view :category-form-color])))
+   (get-in db [:view :category-form :color-map])))
 
 (reg-sub
  :categories
@@ -67,7 +67,7 @@
 (reg-sub
  :category-form-name
  (fn [db _]
-   (get-in db [:view :category-form-name])))
+   (get-in db [:view :category-form :name])))
 
 (reg-sub
  :task-form-name

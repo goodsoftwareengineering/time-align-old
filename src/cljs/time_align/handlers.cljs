@@ -46,7 +46,14 @@
 (reg-event-db
  :load-category-entity-form
  (fn [db [_ id]]
-   db))
+   (let [categories (:categories db)
+         this-category (some #(if (= id (:id %)) %) categories)
+         name (:name this-category)
+         color (utils/color-hex->255 (:color this-category))]
+     (assoc-in db [:view :category-form]
+               {:id-or-nil id
+                :name name
+                :color-map color}))))
 
 (reg-event-db
  :load-task-entity-form
@@ -269,8 +276,8 @@
 (reg-event-db
  :set-category-form-color
  (fn [db [_ color]]
-   (assoc-in db [:view :category-form-color]
-             (merge (get-in db [:view :category-form-color])
+   (assoc-in db [:view :category-form :color-map]
+             (merge (get-in db [:view :category-form :color-map])
                     color))
    ))
 
@@ -278,22 +285,26 @@
  :save-category-form
  (fn [cofx [_ _]]
    (let [db (:db cofx)
-         name (get-in db [:view :category-form-name])
-         id (if-let [id (get-in db [:view :category-form-id])]
+         name (get-in db [:view :category-form :name])
+         id (if-let [id (get-in db [:view :category-form :id-or-nil])]
               id
               (random-uuid))
-         color (utils/color-255->hex (get-in db [:view :category-form-color]))
-         categories (:categories db)]
+         color (utils/color-255->hex (get-in db [:view :category-form :color-map]))
+         categories (:categories db)
+         other-categories (filter #(not (= id (:id %))) categories)
+         this-category (some #(if (= id (:id %)) %) categories)
+         tasks (:tasks this-category)
+         ]
 
-     {:db (assoc db :categories (conj categories {:id id :name name :color color
-                                                  :tasks []}))
+     {:db (assoc db :categories (conj other-categories
+                                      (merge this-category {:name name :color color})))
       :dispatch [:set-active-page {:page-id :home :type nil :id nil}]}
      )))
 
 (reg-event-db
  :set-category-form-name
  (fn [db [_ name]]
-   (assoc-in db [:view :category-form-name] name)))
+   (assoc-in db [:view :category-form :name] name)))
 
 (reg-event-db
  :set-task-form-category-id
