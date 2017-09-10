@@ -133,6 +133,14 @@
      )
    ))
 
+(reg-event-db
+ :set-selected
+ (fn [db [_ {:keys [type id]}]]
+   (assoc-in db [:view :selected]
+             {:current-selection {:type-or-nil type
+                                  :id-or-nil   id}
+              :previous-selection (get-in db [:view :selected :current-selection])})))
+
 (reg-event-fx
  :set-selected-queue
  (fn [cofx [_ period-id]]

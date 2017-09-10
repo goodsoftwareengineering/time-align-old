@@ -1223,12 +1223,23 @@
     )
   )
 
-(defn list-period [period]
-  (let [{:keys [id description color]} period]
+(defn list-period [current-selection period]
+  (let [{:keys [id description color]} period
+        sel-id            (:id-or-nil current-selection)
+        sel-cat           (:type-or-nil current-selection)
+        is-selected       (and (= :period sel-cat)
+                               (= id sel-id))
+        is-child-selected false]
+
     (r/as-element
      [ui/list-item
       (merge {:key         id
-              :primaryText (concatonated-text description 10 "no description provided ...")}
+              :primaryText (concatonated-text description 10 "no description provided ...")
+              :style       (if is-selected {:backgroundColor "#dddddd"})
+              :onClick     (fn [e]
+                             (if is-selected
+                               (println "I'm selected")
+                               (rf/dispatch [:set-selected {:type :period :id id}])))}
 
              (if (and (some? (:start period))
                       (some? (:stop period)))
@@ -1279,7 +1290,7 @@
                {:leftIcon (r/as-element
                            [ui/svg-icon [ic/action-list {:color color}]])}))])))
 
-(defn list-task [task]
+(defn list-task [current-selection task]
   (let [{:keys [id name actual-periods complete planned-periods color]} task
 
         periods (concat
@@ -1290,44 +1301,72 @@
         periods-sorted     (reverse
                             (sort-by #(if (some? (:start %))
                                         (.valueOf (:start %))
-                                        0) periods-with-color))]
+                                        0) periods-with-color))
+        sel-id      (:id-or-nil current-selection)
+        sel-cat     (:type-or-nil current-selection)
+        is-selected (and (= :task sel-cat)
+                         (= id sel-id))
+        is-child-selected (->> task
+                               ((fn [task] ;; pulls periods into one seq
+                                  (concat (:planned-periods task) (:actual-periods task))))
+                               (some #(= sel-id (:id %))))]
     (r/as-element
      [ui/list-item
       {:key         id
        :primaryText (concatonated-text name 15 "no name entered ...")
        :nestedItems (->> periods-sorted
-                         (map list-period))
+                         (map (partial list-period current-selection)))
        :leftIcon    (r/as-element
                      [ui/checkbox {:checked   complete
                                    :iconStyle {:fill color}}])
+       :open        (or is-selected
+                        is-child-selected)
+       :style       (if is-selected {:backgroundColor "#dddddd"})
+       :onClick     (fn [e]
+                      (if is-selected
+                        (println "I'm selected")
+                        (rf/dispatch [:set-selected {:type :task :id id}])))
        }])))
 
-(defn list-category [category]
-  (let [{:keys [id name color tasks]} category]
+(defn list-category [current-selection category]
+  (let [{:keys [id name color tasks]} category
+        sel-id      (:id-or-nil current-selection)
+        sel-cat     (:type-or-nil current-selection)
+        is-selected (and (= :category sel-cat)
+                         (= id sel-id))
+        is-child-selected (->> category
+                               (:tasks)
+                               (some #(= sel-id (:id %))))]
+
     [ui/list-item {:key         id
                    :primaryText (concatonated-text name 20
                                                    "no name entered ...")
                    :leftIcon    (r/as-element (svg-mui-circle color))
                    :nestedItems (->> tasks
                                      (map #(assoc % :color color))
-                                     (map list-task))
+                                     (map (partial list-task current-selection)))
+                   :open        (or is-selected
+                                    is-child-selected)
+                   :style       (if is-selected {:backgroundColor "#dddddd"})
                    :onClick     (fn [e]
-                                  (rf/dispatch [:set-active-page {:page-id :entity-forms
-                                                                  :type :category
-                                                                  :id id}]))
+                                  (if is-selected
+                                    (println "I'm selected")
+                                    (rf/dispatch [:set-selected {:type :category :id id}])))
                    }]
     )
   )
 
 (defn list-page []
   (let [categories @(rf/subscribe [:categories])
-        ]
+        selected @(rf/subscribe [:selected])
+        current-selection (:current-selection selected)]
+
     [:div
      (app-bar)
      [ui/paper {:style {:width "100%"}}
       [ui/list
        (->> categories
-            (map list-category))]
+            (map (partial list-category current-selection)))]
       ]
      ]))
 
