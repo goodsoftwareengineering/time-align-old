@@ -58,7 +58,20 @@
 (reg-event-db
  :load-task-entity-form
  (fn [db [_ id]]
-   db))
+   (let [tasks (utils/pull-tasks db)
+         this-task (some #(if (= id (:id %)) %) tasks)
+         id (:id this-task)
+         name (str (:name this-task))
+         description (str (:description this-task))
+         complete (:complete this-task)
+         category-id (:category-id this-task)
+         ]
+     (assoc-in db [:view :task-form]
+               {:id-or-nil id
+                :name name
+                :description description
+                :complete complete
+                :category-id category-id}))))
 
 (reg-event-db
  :load-period-entity-form
