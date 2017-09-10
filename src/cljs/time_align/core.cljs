@@ -1309,7 +1309,8 @@
         is-child-selected (->> task
                                ((fn [task] ;; pulls periods into one seq
                                   (concat (:planned-periods task) (:actual-periods task))))
-                               (some #(= sel-id (:id %))))]
+                               (some #(if (= sel-id (:id %)) true nil))
+                               (some?))]
     (r/as-element
      [ui/list-item
       {:key         id
@@ -1336,25 +1337,39 @@
                          (= id sel-id))
         is-child-selected (->> category
                                (:tasks)
-                               (some #(= sel-id (:id %))))]
+                               (some #(if (= sel-id (:id %)) true nil))
+                               (some?))
+        is-grandchild-selected (if is-child-selected
+                                 (->> category
+                                      (:tasks)
+                                      (some #(if (= sel-id (:id %)) %))
+                                      ((fn [task] ;; pulls periods into one seq
+                                         (concat (:planned-periods task) (:actual-periods task))))
+                                      (some #(if (= sel-id (:id %)) true nil))
+                                      (some?)))
+        ordered-tasks (sort-by (fn [task]
+                                 (+ (if (:complete task) 100 0)
+                                    0 ;; TODO use first character alphabet value of name to provide a two level order
+                                      ;; using just sort by and no java comparator
+                                    ))
+                               tasks)]
 
     [ui/list-item {:key         id
                    :primaryText (concatonated-text name 20
                                                    "no name entered ...")
                    :leftIcon    (r/as-element (svg-mui-circle color))
-                   :nestedItems (->> tasks
+                   :nestedItems (->> ordered-tasks
                                      (map #(assoc % :color color))
                                      (map (partial list-task current-selection)))
                    :open        (or is-selected
-                                    is-child-selected)
+                                    is-child-selected
+                                    is-grandchild-selected)
                    :style       (if is-selected {:backgroundColor "#dddddd"})
                    :onClick     (fn [e]
                                   (if is-selected
                                     (println "I'm selected")
                                     (rf/dispatch [:set-selected {:type :category :id id}])))
-                   }]
-    )
-  )
+                   }]))
 
 (defn list-page []
   (let [categories @(rf/subscribe [:categories])
