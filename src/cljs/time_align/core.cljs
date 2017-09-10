@@ -1242,29 +1242,24 @@
                      stop-angle  (utils/ms-to-angle stop-ms)
 
                      angle-difference     (- stop-angle start-angle)
-                     optimal-angle        45
-                     ;; adjustments seek to push the angle difference towards optimal
-                     ;; catches when one side goes over edge
+                     minimum-angle        30
+                     factor-change        (- minimum-angle angle-difference)
+                     ;; adjustments seek to set the angle difference to minimum (no matter what it is)
+                     ;; catches when one side goes over edge with max & min
                      start-angle-adjusted (.max js/Math
-                                                (- start-angle (- optimal-angle angle-difference))
+                                                (- start-angle (/ factor-change 2))
                                                 1)
                      stop-angle-adjusted  (.min js/Math
-                                                (+ stop-angle (- optimal-angle angle-difference ))
+                                                (+ stop-angle (/ factor-change 2))
                                                 359)
 
-                     adjusted-difference (- stop-angle-adjusted start-angle-adjusted)
-                     too-big             (> adjusted-difference 350)
-                     too-small           (< adjusted-difference 22.5)
-
-                     adjustment-works (and (not too-big)
-                                           (not too-small))
-                     start-used       (if adjustment-works
-                                        start-angle-adjusted
-                                        start-angle)
-                     stop-used        (if adjustment-works
-                                        stop-angle-adjusted
-                                        stop-angle)
-                     ]
+                     use-adjustment (< angle-difference 20)
+                     start-used     (if use-adjustment
+                                      start-angle-adjusted
+                                      start-angle)
+                     stop-used      (if use-adjustment
+                                      stop-angle-adjusted
+                                      stop-angle)]
 
                  {:leftIcon (r/as-element
                              [ui/svg-icon
@@ -1278,15 +1273,11 @@
                                  :stroke       color
                                  :stroke-width "2"
                                  :fill         "transparent"
-                                 }]
-                               ]])}
-                 )
+                                 }]]])})
 
                ;; otherwise render a queue indicator
                {:leftIcon (r/as-element
-                           [ui/svg-icon [ic/action-list {:color "#cdcdcd"}]])}
-               ))
-      ])))
+                           [ui/svg-icon [ic/action-list {:color "#cdcdcd"}]])}))])))
 
 (defn list-task [task]
   (let [{:keys [id name actual-periods complete planned-periods color]} task
@@ -1309,9 +1300,7 @@
        :leftIcon    (r/as-element
                      [ui/checkbox {:checked   complete
                                    :iconStyle {:fill color}}])
-       :onCheck     (fn [e checked]
-                      (rf/dispatch
-                       [:set-task-complete {:id id :complete checked}]))}])))
+       }])))
 
 (defn list-category [category]
   (let [{:keys [id name color tasks]} category]
