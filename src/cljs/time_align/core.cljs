@@ -996,9 +996,6 @@
                      :onChange            (fn [e v]
                                             (rf/dispatch [:set-category-form-name v]))}]
 
-     [ui/divider {:style {:margin-top    "1em"
-                          :margin-bottom "1em"}}]
-
      [:div.colorHeader {:style {:display         "flex"
                                 :flexWrap        "nowrap"
                                 :align-items     "center"
@@ -1111,6 +1108,9 @@
                    :onCheck    (fn [e v]
                                  (rf/dispatch [:set-task-form-complete v]))}]
 
+     [ui/divider {:style {:margin-top    "1em"
+                          :margin-bottom "1em"}}]
+
      (entity-form-buttons :home [:submit-task-form] [:delete-task-form-entity])
 
      ]
@@ -1198,6 +1198,9 @@
        }
       (->> tasks
            (map task-menu-item))]
+
+     [ui/divider {:style {:margin-top    "1em"
+                          :margin-bottom "1em"}}]
 
      (entity-form-buttons :home [:save-period-form] [:delete-period-form-entity])
      ]
