@@ -452,6 +452,20 @@
    {:viewBox "0 0 24 24" :style {:margin-left "0.5em"}}
    [:circle {:cx "12" :cy "12" :r "11" :fill color}]])
 
+(defn concatonated-text
+  "Takes a text message, a cut off character limit, and a fall back message. Returns text concatonated with ellipsis, full text if it is less than 10 characters or an (r/element) styled grey if text is empty."
+  [text character-limit if-empty-message]
+  (if (and (some? text)
+           (not (empty? text)))
+    (if (< character-limit (count text))
+      (str (string/join "" (take character-limit text)) " ...")
+      text)
+    (r/as-element
+     [:span {:style {:text-decoration "italic"
+                     :color           "grey"}}
+      if-empty-message]))
+  )
+
 (defn queue [tasks selected]
   (let [periods-no-stamps (utils/filter-periods-no-stamps tasks)
         sel               (:current-selection selected)
@@ -468,14 +482,7 @@
                       :key         (:id period)
                       :leftIcon    (r/as-element
                                     (svg-mui-circle (:color period)))
-                      :primaryText (if (some? (:description period))
-                                     (if (< 10 (count (:description period)))
-                                       (str (string/join "" (take 10 (:description period))) " ...")
-                                       (:description period))
-                                     (r/as-element
-                                      [:span {:style {:text-decoration "italic"
-                                                      :color           "grey"}}
-                                       "No period description ..."]))
+                      :primaryText (concatonated-text (:description period) 10 "No period description ...")
                       :onTouchTap  (fn [e]
                                      (rf/dispatch
                                       [:set-selected-queue (:id period)])
@@ -751,6 +758,17 @@
             :stroke-width "2"
             :stroke       color
             :fill         "transparent"}]
+    ]
+   ]
+  )
+
+(defn svg-mui-task-symbol [{:keys [color style]}]
+  [ui/svg-icon
+   (merge {:style style} {:viewBox "0 0 24 24"})
+   [:g
+
+    [:polyline {:points "12,1 1,12 12,23 23,12 12,1"
+                :fill   color}]
     ]
    ]
   )
@@ -1206,36 +1224,85 @@
   )
 
 (defn list-period [period]
-  (let [{:keys [id description]} period]
+  (let [{:keys [id description color]} period]
     (r/as-element
      [ui/list-item
-      {:key id
-       :primaryText description}])))
+      (merge {:key id
+              :primaryText (concatonated-text description 10 "no description provided ...")}
+
+             (if (and (some? (:start period))
+                      (some? (:stop period)))
+               (let [start (:start period)
+                     start-ms    (utils/get-ms start)
+                     start-angle (utils/ms-to-angle start-ms)
+                     stop (:stop period)
+                     stop-ms    (utils/get-ms stop)
+                     stop-angle (utils/ms-to-angle stop-ms)
+
+                     angle-difference (- stop-angle start-angle)
+                     not-big-enough (> angle-difference 22.5)
+
+                     start-angle-adjusted (- start-angle (/ angle-difference 4))
+                     stop-angle-adjusted (+ stop-angle (/ angle-difference 4))]
+
+                 {:leftIcon (r/as-element
+                             [ui/svg-icon
+                              {:viewBox "0 0 24 24"}
+                              [:g
+                               [:circle {:cx "12" :cy "12" :r "11"
+                                         :stroke-width "2" :stroke "#cdcdcd"
+                                         :fill "transparent"}]
+                               [:path
+                                {:d            (describe-arc 12 12 11
+                                                             (if not-big-enough
+                                                               start-angle-adjusted
+                                                               start-angle)
+                                                             (if not-big-enough
+                                                               stop-angle-adjusted
+                                                               stop-angle))
+                                 :stroke       color
+                                 :stroke-width "2"
+                                 :fill         "transparent"
+                                 }]
+                               ]])}
+                 )))
+      ])))
 
 (defn list-task [task]
-  (let [{:keys [id name actual-periods planned-periods]} task
+  (let [{:keys [id name actual-periods complete planned-periods color]} task
+
         periods (concat
                  (map #(assoc % :type :actual) actual-periods)
-                 (map #(assoc % :type :planned) planned-periods))]
+                 (map #(assoc % :type :planned) planned-periods))
+
+        periods-with-color (->> periods (map #(assoc % :color color)))
+        ]
     (r/as-element
      [ui/list-item
       {:key id
-       :primaryText name
-       :nestedItems (->> periods
-                         (map list-period))}])))
+       :primaryText (concatonated-text name 15 "no name entered ...")
+       :nestedItems (->> periods-with-color
+                         (map list-period))
+       :leftIcon (r/as-element
+                  [ui/checkbox {:checked complete
+                                :iconStyle {:fill color}}])
+       :onCheck (fn [e checked]
+                  (rf/dispatch
+                   [:set-task-complete {:id id :complete checked}]))}])))
 
 (defn list-category [category]
   (let [{:keys [id name color tasks]} category]
     [ui/list-item {:key id
-                   :primaryText (if (empty? name)
-                                  "no name"
-                                  name)
+                   :primaryText (concatonated-text name 20
+                                                      "no name entered ...")
                    :leftIcon (r/as-element (svg-mui-circle color))
                    :nestedItems (->> tasks
+                                     (map #(assoc % :color color))
                                      (map list-task))
                    }]
     )
   )
+
 (defn list-page []
   (let [categories @(rf/subscribe [:categories])
         ]
