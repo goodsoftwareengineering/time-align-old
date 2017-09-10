@@ -1296,12 +1296,15 @@
                  (map #(assoc % :type :planned) planned-periods))
 
         periods-with-color (->> periods (map #(assoc % :color color)))
-        ]
+        periods-sorted (reverse
+                        (sort-by #(if (some? (:start %))
+                                    (.valueOf (:start %))
+                                    0) periods-with-color))]
     (r/as-element
      [ui/list-item
       {:key id
        :primaryText (concatonated-text name 15 "no name entered ...")
-       :nestedItems (->> periods-with-color
+       :nestedItems (->> periods-sorted
                          (map list-period))
        :leftIcon (r/as-element
                   [ui/checkbox {:checked complete
