@@ -86,10 +86,10 @@ Life is how you spend time. Use this tool to make goals about spending time and 
     - [x] planned toggle
     
 - [ ] list (nested list component Categories->tasks->periods)
-  - [ ] figure out nested list ui component
-  - [ ] remove entities from drawer replace with list option
-- [ ] list items have actionable button edits
-- [ ] action button edit goes to edit form
+  - [x] figure out nested list ui component
+  - [x] remove entities from drawer replace with list option
+  - [x] render nested list with appropriate icons
+  - [ ] clicking list item navigates to edit page
 - [ ] account page
   - [ ] name
   - [ ] email
