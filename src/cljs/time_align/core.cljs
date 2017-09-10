@@ -1205,6 +1205,37 @@
     )
   )
 
+(defn list-period [period]
+  (let [{:keys [id description]} period]
+    (r/as-element
+     [ui/list-item
+      {:key id
+       :primaryText description}])))
+
+(defn list-task [task]
+  (let [{:keys [id name actual-periods planned-periods]} task
+        periods (concat
+                 (map #(assoc % :type :actual) actual-periods)
+                 (map #(assoc % :type :planned) planned-periods))]
+    (r/as-element
+     [ui/list-item
+      {:key id
+       :primaryText name
+       :nestedItems (->> periods
+                         (map list-period))}])))
+
+(defn list-category [category]
+  (let [{:keys [id name color tasks]} category]
+    [ui/list-item {:key id
+                   :primaryText (if (empty? name)
+                                  "no name"
+                                  name)
+                   :leftIcon (r/as-element (svg-mui-circle color))
+                   :nestedItems (->> tasks
+                                     (map list-task))
+                   }]
+    )
+  )
 (defn list-page []
   (let [categories @(rf/subscribe [:categories])
         ]
@@ -1213,33 +1244,7 @@
      [ui/paper {:style {:width "100%"}}
       [ui/list
        (->> categories
-            (map (fn [category]
-                   (let [{:keys [id name color tasks]} category]
-                     [ui/list-item {:key id
-                                    :primaryText (if (empty? name)
-                                                   "no name"
-                                                   name)
-                                    :leftIcon (r/as-element (svg-mui-circle color))
-                                    :nestedItems (->> tasks
-                                                      (map (fn [task]
-                                                             (let [{:keys [id name actual-periods planned-periods]} task
-                                                                   periods (concat
-                                                                            (map #(assoc % :type :actual) actual-periods)
-                                                                            (map #(assoc % :type :planned) planned-periods))]
-                                                               (r/as-element
-                                                                [ui/list-item
-                                                                 {:key id
-                                                                  :primaryText name
-                                                                  :nestedItems (->> periods
-                                                                                    (map (fn [period]
-                                                                                           (let [{:keys [id description]} period]
-                                                                                             (r/as-element
-                                                                                              [ui/list-item
-                                                                                               {:key id
-                                                                                                :primaryText description}])))))}])))))
-                                    }]
-                     )
-                   )))]
+            (map list-category))]
       ]
      ]))
 
