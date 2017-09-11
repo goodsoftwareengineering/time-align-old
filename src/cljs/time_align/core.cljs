@@ -1241,7 +1241,9 @@
               :style       (if is-selected {:backgroundColor "#dddddd"})
               :onClick     (fn [e]
                              (if is-selected
-                               (println "I'm selected")
+                               (rf/dispatch [:set-active-page {:page-id :entity-forms
+                                                               :type :period
+                                                               :id id}])
                                (rf/dispatch [:set-selected {:type :period :id id}])))}
 
              (if (and (some? (:start period))
@@ -1328,7 +1330,9 @@
        :style       (if is-selected {:backgroundColor "#dddddd"})
        :onClick     (fn [e]
                       (if is-selected
-                        (println "I'm selected")
+                        (rf/dispatch [:set-active-page {:page-id :entity-forms
+                                                        :type :task
+                                                        :id id}])
                         (rf/dispatch [:set-selected {:type :task :id id}])))
        }])))
 
@@ -1370,7 +1374,9 @@
                    :style       (if is-selected {:backgroundColor "#dddddd"})
                    :onClick     (fn [e]
                                   (if is-selected
-                                    (println "I'm selected")
+                                    (rf/dispatch [:set-active-page {:page-id :entity-forms
+                                                                    :type :category
+                                                                    :id id}])
                                     (rf/dispatch [:set-selected {:type :category :id id}])))
                    }]))
 
