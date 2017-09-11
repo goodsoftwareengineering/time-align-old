@@ -23,6 +23,9 @@
                        :entity-forms {:page-id page
                                       :type-or-nil type
                                       :id-or-nil id}
+                       :list {:page-id page
+                              :type-or-nil nil
+                              :id-or-nil nil}
                        ;; default
                        {:page-id page
                         :type-or-nil nil
@@ -43,12 +46,32 @@
 (reg-event-db
  :load-category-entity-form
  (fn [db [_ id]]
-   db))
+   (let [categories (:categories db)
+         this-category (some #(if (= id (:id %)) %) categories)
+         name (:name this-category)
+         color (utils/color-hex->255 (:color this-category))]
+     (assoc-in db [:view :category-form]
+               {:id-or-nil id
+                :name name
+                :color-map color}))))
 
 (reg-event-db
  :load-task-entity-form
  (fn [db [_ id]]
-   db))
+   (let [tasks (utils/pull-tasks db)
+         this-task (some #(if (= id (:id %)) %) tasks)
+         id (:id this-task)
+         name (str (:name this-task))
+         description (str (:description this-task))
+         complete (:complete this-task)
+         category-id (:category-id this-task)
+         ]
+     (assoc-in db [:view :task-form]
+               {:id-or-nil id
+                :name name
+                :description description
+                :complete complete
+                :category-id category-id}))))
 
 (reg-event-db
  :load-period-entity-form
@@ -56,6 +79,7 @@
    (let [periods (utils/pull-periods db)
          this-period (some #(if (= id (:id %)) %)
                            periods)
+         is-planned (= :planned (:type this-period))
          task-id (:task-id this-period)
          start (:start this-period)
          stop (:stop this-period)
@@ -67,6 +91,7 @@
                 :error-or-nil nil
                 :start start
                 :stop stop
+                :planned is-planned
                 :description description})
      )))
 
@@ -120,6 +145,14 @@
       :dispatch [:action-buttons-back]}
      )
    ))
+
+(reg-event-db
+ :set-selected
+ (fn [db [_ {:keys [type id]}]]
+   (assoc-in db [:view :selected]
+             {:current-selection {:type-or-nil type
+                                  :id-or-nil   id}
+              :previous-selection (get-in db [:view :selected :current-selection])})))
 
 (reg-event-fx
  :set-selected-queue
@@ -264,8 +297,8 @@
 (reg-event-db
  :set-category-form-color
  (fn [db [_ color]]
-   (assoc-in db [:view :category-form-color]
-             (merge (get-in db [:view :category-form-color])
+   (assoc-in db [:view :category-form :color-map]
+             (merge (get-in db [:view :category-form :color-map])
                     color))
    ))
 
@@ -273,22 +306,26 @@
  :save-category-form
  (fn [cofx [_ _]]
    (let [db (:db cofx)
-         name (get-in db [:view :category-form-name])
-         id (if-let [id (get-in db [:view :category-form-id])]
+         name (get-in db [:view :category-form :name])
+         id (if-let [id (get-in db [:view :category-form :id-or-nil])]
               id
               (random-uuid))
-         color (utils/color-255->hex (get-in db [:view :category-form-color]))
-         categories (:categories db)]
+         color (utils/color-255->hex (get-in db [:view :category-form :color-map]))
+         categories (:categories db)
+         other-categories (filter #(not (= id (:id %))) categories)
+         this-category (some #(if (= id (:id %)) %) categories)
+         tasks (:tasks this-category)
+         ]
 
-     {:db (assoc db :categories (conj categories {:id id :name name :color color
-                                                  :tasks []}))
+     {:db (assoc db :categories (conj other-categories
+                                      (merge this-category {:name name :color color})))
       :dispatch [:set-active-page {:page-id :home :type nil :id nil}]}
      )))
 
 (reg-event-db
  :set-category-form-name
  (fn [db [_ name]]
-   (assoc-in db [:view :category-form-name] name)))
+   (assoc-in db [:view :category-form :name] name)))
 
 (reg-event-db
  :set-task-form-category-id
@@ -452,8 +489,22 @@
          other-periods-actual  (filter #(not (= (:id %) period-id)) (:actual-periods this-task))
 
          is-actual (:actual this-period)
+         make-actual (and (not (or (nil? start)  ;; check for start and stop is to keep queue periods from being toggled actual
+                                   (nil? stop))) ;; if a user tries it will silently fail to toggle
+                                                 ;; TODO throw an error message
+                          (not (get-in db [:view :period-form :planned])))
+
+         this-period-to-be-inserted (merge (dissoc this-period :actual)
+                                           (merge {:id period-id
+                                                   :description (:description period-form)}
+                                                  (if (and (nil? start)
+                                                           (nil? stop))
+                                                    {} ;; start & stop with nil fucks shit up
+                                                       ;;keys have to be absent for queue
+                                                    {:start start :stop stop})))
 
          new-db (assoc-in
+                 ;; puts period where it needs to be
                  (merge db
                         {:categories
                          (conj other-categories
@@ -461,23 +512,20 @@
                                       {:tasks
                                        (conj other-tasks
                                              (merge (dissoc this-task :category-id :color)
-                                                    {(if (:actual this-period)
-                                                       :actual-periods
-                                                       :planned-periods)
-                                                     (conj (if (:actual this-period)
-                                                             other-periods-actual
-                                                             other-periods-planned)
-                                                           (merge (dissoc this-period :actual)
-                                                                  (merge {:id period-id
-                                                                          :description (:description period-form)}
-                                                                         (if (and (nil? start) (nil? stop))
-                                                                           {}
-                                                                           {:start start :stop stop})
-                                                                         )
-                                                                  ))}))}))})
+                                                    ;; below will handle when a period is being changed
+                                                    ;; from actual to planned
+                                                    ;; by always merging over both sets in a task
+                                                    {:actual-periods (if make-actual
+                                                                       (conj other-periods-actual
+                                                                             this-period-to-be-inserted)
+                                                                       other-periods-actual)}
+                                                    {:planned-periods (if (not make-actual)
+                                                                        (conj other-periods-planned
+                                                                              this-period-to-be-inserted)
+                                                                        other-periods-planned)}))}))})
                  ;; resets period form
                  [:view :period-form ]
-                 {:id-or-nil nil :task-id nil :error-or-nil nil})
+                 {:id-or-nil nil :task-id nil :error-or-nil nil :planned false}) ;; TODO move to a dispatched event
          ]
      (if (or (and (nil? start) (nil? stop))
              (< start-v stop-v))
@@ -545,3 +593,7 @@
                         [:set-selected-period nil])}
      )))
 
+(reg-event-db
+ :set-period-form-planned
+ (fn [db [_ is-planned]]
+   (assoc-in db [:view :period-form :planned] is-planned)))

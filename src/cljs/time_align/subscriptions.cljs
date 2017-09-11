@@ -57,7 +57,7 @@
 (reg-sub
  :category-form-color
  (fn [db _]
-   (get-in db [:view :category-form-color])))
+   (get-in db [:view :category-form :color-map])))
 
 (reg-sub
  :categories
@@ -67,7 +67,7 @@
 (reg-sub
  :category-form-name
  (fn [db _]
-   (get-in db [:view :category-form-name])))
+   (get-in db [:view :category-form :name])))
 
 (reg-sub
  :task-form-name
@@ -113,3 +113,18 @@
  :period-form-error
  (fn [db _]
    (get-in db [:view :period-form :error-or-nil])))
+
+(reg-sub
+ :period-form-planned
+ (fn [db _]
+   ;; (let [period-id (get-in db [:view :period-form :id-or-nil])]
+   ;;   (if (some? period-id)
+   ;;     (let [all-periods (utils/pull-periods db)
+   ;;           this-period (->> all-periods
+   ;;                            (some #(if (= (:id %) period-id) %)))
+   ;;           is-planned (= :planned (:type this-period))]
+   ;;       is-planned)
+   ;;     true ;; default to true
+   ;;     ))
+   (get-in db [:view :period-form :planned])
+   ))

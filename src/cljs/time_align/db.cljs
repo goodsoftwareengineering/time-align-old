@@ -128,10 +128,12 @@
 (s/def ::red ::color-255)
 (s/def ::blue ::color-255)
 (s/def ::green ::color-255)
-(s/def ::category-form-color (s/keys :req-un [::red ::blue ::green]))
-(s/def ::category-form-name (s/with-gen string?
-                              #(gen/return "")))
-(s/def ::category-form-id ::id-or-nil)
+(s/def ::color-map (s/keys :req-un [::red ::blue ::green]))
+(s/def ::category-form (s/with-gen
+                         (s/keys :req-un [::id-or-nil ::name ::color-map])
+                         #(gen/return {:id-or-nil nil
+                                       :name ""
+                                       :color-map {:red 0 :green 0 :blue 0}})))
 (s/def ::category-id ::id-or-nil)
 (s/def ::task-form (s/with-gen
                      (s/keys :req-un [::id-or-nil ::name ::description ::complete ::category-id])
@@ -149,12 +151,14 @@
                         (s/or :is-error ::error
                               :no-error nil?)
                         #(gen/return nil)))
+(s/def ::planned boolean?)
 (s/def ::period-form (s/with-gen
-                       (s/keys :req-un [::id-or-nil ::task-id ::error-or-nil]
+                       (s/keys :req-un [::id-or-nil ::task-id ::error-or-nil ::planned]
                                :opt-un [::start ::stop ::description])
                        #(gen/return {:id-or-nil nil
                                      :task-id nil
-                                     :error-or-nil nil})
+                                     :error-or-nil nil
+                                     :planned false})
                        ))
 (s/def ::view (s/and (s/keys :req-un [::page
                                       ::selected
@@ -162,8 +166,7 @@
                                       ::main-drawer
                                       ::zoom
                                       ::action-buttons
-                                      ::category-form-color
-                                      ::category-form-name
+                                      ::category-form
                                       ::task-form
                                       ::period-form
                                       ])

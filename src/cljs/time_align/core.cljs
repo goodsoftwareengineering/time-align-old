@@ -88,21 +88,21 @@
         start-abs-ms (.valueOf start-date)
         stop-abs-ms  (.valueOf stop-date)
 
-        is-period-selected (= :period
-                              (get-in
-                               selected
-                               [:current-selection :type-or-nil]))
-        selected-period    (if is-period-selected
-                             (get-in
-                              selected
-                              [:current-selection :id-or-nil])
-                             nil)
+        is-period-selected   (= :period
+                                (get-in
+                                 selected
+                                 [:current-selection :type-or-nil]))
+        selected-period      (if is-period-selected
+                               (get-in
+                                selected
+                                [:current-selection :id-or-nil])
+                               nil)
         this-period-selected (= selected-period id)
 
-        opacity      (cond
-                       this-period-selected "0.9"
-                       (> curr-time-ms stop-abs-ms) "0.2"
-                       :else                        "0.7")
+        opacity (cond
+                  this-period-selected         "0.9"
+                  (> curr-time-ms stop-abs-ms) "0.2"
+                  :else                        "0.7")
 
 
 
@@ -452,6 +452,20 @@
    {:viewBox "0 0 24 24" :style {:margin-left "0.5em"}}
    [:circle {:cx "12" :cy "12" :r "11" :fill color}]])
 
+(defn concatonated-text
+  "Takes a text message, a cut off character limit, and a fall back message. Returns text concatonated with ellipsis, full text if it is less than 10 characters or an (r/element) styled grey if text is empty."
+  [text character-limit if-empty-message]
+  (if (and (some? text)
+           (not (empty? text)))
+    (if (< character-limit (count text))
+      (str (string/join "" (take character-limit text)) " ...")
+      text)
+    (r/as-element
+     [:span {:style {:text-decoration "italic"
+                     :color           "grey"}}
+      if-empty-message]))
+  )
+
 (defn queue [tasks selected]
   (let [periods-no-stamps (utils/filter-periods-no-stamps tasks)
         sel               (:current-selection selected)
@@ -467,15 +481,8 @@
                                             {}))
                       :key         (:id period)
                       :leftIcon    (r/as-element
-                                    (svg-mui-circle (:color period)))
-                      :primaryText (if (some? (:description period))
-                                     (if (< 10 (count (:description period)))
-                                       (str (string/join "" (take 10 (:description period))) " ...")
-                                       (:description period))
-                                     (r/as-element
-                                      [:span {:style {:text-decoration "italic"
-                                                      :color           "grey"}}
-                                       "No period description ..."]))
+                                    [ui/svg-icon [ic/action-list {:color (:color period)}]])
+                      :primaryText (concatonated-text (:description period) 10 "No period description ...")
                       :onTouchTap  (fn [e]
                                      (rf/dispatch
                                       [:set-selected-queue (:id period)])
@@ -602,7 +609,7 @@
     ]])
 
 (defn action-buttons-no-selection []
-  (let [zoom   @(rf/subscribe [:zoom])
+  (let [zoom @(rf/subscribe [:zoom])
         ;; spring @mae-spring
         ]
 
@@ -671,17 +678,17 @@
 
    [ui/floating-action-button
     (merge basic-mini-button
-           {:style (merge (:style basic-mini-button)
-                          {:marginBottom "20"})
+           {:style      (merge (:style basic-mini-button)
+                               {:marginBottom "20"})
             :onTouchTap (fn [e]
                           (rf/dispatch
                            [:set-active-page
                             {:page-id :entity-forms
-                             :type :period
-                             :id (get-in
-                                  selected
-                                  [:current-selection
-                                   :id-or-nil])}]))})
+                             :type    :period
+                             :id      (get-in
+                                       selected
+                                       [:current-selection
+                                        :id-or-nil])}]))})
 
     [ic/editor-mode-edit basic-ic]]
 
@@ -706,17 +713,17 @@
 
    [ui/floating-action-button
     (merge basic-mini-button
-           {:style (merge (:style basic-mini-button)
-                          {:marginBottom "20"})
+           {:style      (merge (:style basic-mini-button)
+                               {:marginBottom "20"})
             :onTouchTap (fn [e]
                           (rf/dispatch
                            [:set-active-page
                             {:page-id :entity-forms
-                             :type :period
-                             :id (get-in
-                                  selected
-                                  [:current-selection
-                                   :id-or-nil])}]))})
+                             :type    :period
+                             :id      (get-in
+                                       selected
+                                       [:current-selection
+                                        :id-or-nil])}]))})
     [ic/editor-mode-edit basic-ic]]
 
    (back-button)
@@ -755,6 +762,17 @@
    ]
   )
 
+(defn svg-mui-task-symbol [{:keys [color style]}]
+  [ui/svg-icon
+   (merge {:style style} {:viewBox "0 0 24 24"})
+   [:g
+
+    [:polyline {:points "12,1 1,12 12,23 23,12 12,1"
+                :fill   color}]
+    ]
+   ]
+  )
+
 (defn app-bar []
   (let [
         main-drawer-state @(rf/subscribe [:main-drawer-state])
@@ -770,18 +788,12 @@
                  :open               main-drawer-state
                  :disableSwipeToOpen true
                  :onRequestChange    (fn [new-state] (rf/dispatch [:set-main-drawer new-state]))}
-      [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
+      [ui/menu-item {:onTouchTap    #(do
+                                       (rf/dispatch [:set-main-drawer false])
+                                       (rf/dispatch [:set-active-page {:page-id :list}]))
                      :innerDivStyle {:display "flex" :align-items "center"}}
-       (svg-mui-entity {:type :category :color "black" :style {:marginRight "0.5em"}})
-       [:span "Categories"]]
-      [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
-                     :innerDivStyle {:display "flex" :align-items "center"}}
-       (svg-mui-entity {:type :task :color "black" :style {:marginRight "0.5em"}})
-       [:span "Tasks"]]
-      [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
-                     :innerDivStyle {:display "flex" :align-items "center"}}
-       (svg-mui-entity {:type :period :color "black" :style {:marginRight "0.5em"}})
-       [:span "Periods"]]
+       (svg-mui-entity {:type :all :color "black" :style {:marginRight "0.5em"}})
+       [:span "List"]]
       [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
                      :innerDivStyle {:display "flex" :align-items "center"}}
        [ic/social-person {:style {:marginRight "0.5em"}}]
@@ -790,7 +802,9 @@
                      :innerDivStyle {:display "flex" :align-items "center"}}
        [ic/action-settings {:style {:marginRight "0.5em"}}]
        [:span "Settings"]]
-      [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
+      [ui/menu-item {:onTouchTap    #(do
+                                       (rf/dispatch [:set-main-drawer false])
+                                       (rf/dispatch [:set-active-page :home]))
                      :innerDivStyle {:display "flex" :align-items "center"}}
        (svg-mui-time-align {:color "black"
                             :style {:marginRight "0.5em"}})
@@ -896,7 +910,7 @@
   [:div.entity-selection
    [ui/flat-button {:label    "Category"
                     :disabled (= type :category)
-                    :primary (not= type :category)
+                    :primary  (not= type :category)
                     ;; TODO get sizing right
                     ;; TODO disable coloring on icon
                     ;; :icon (r/as-element
@@ -912,7 +926,7 @@
                                    :id      nil}]))}]
    [ui/flat-button {:label    "Task"
                     :disabled (= type :task)
-                    :primary (not= type :task)
+                    :primary  (not= type :task)
                     ;; :icon (r/as-element
                     ;;        (svg-mui-entity
                     ;;         {:type :task
@@ -926,7 +940,7 @@
                                    :id      nil}]))}]
    [ui/flat-button {:label    "Period"
                     :disabled (= type :period)
-                    :primary (not= type :period)
+                    :primary  (not= type :period)
                     ;; :icon (r/as-element
                     ;;        (svg-mui-entity
                     ;;         {:type :period
@@ -942,9 +956,9 @@
   )
 
 (defn entity-form-buttons [back-page-id save-dispatch-vec delete-dispatch-vec]
-  [:div.buttons {:style {:display "flex"
+  [:div.buttons {:style {:display         "flex"
                          :justify-content "space-between"
-                         :margin-top "1em"
+                         :margin-top      "1em"
                          }}
 
    [ui/flat-button {:icon            (r/as-element [ic/action-delete-forever basic-ic])
@@ -958,8 +972,8 @@
                     :onTouchTap      (fn [e]
                                        (rf/dispatch [:set-active-page
                                                      {:pageId back-page-id
-                                                      :type nil
-                                                      :id nil}])
+                                                      :type   nil
+                                                      :id     nil}])
                                        )}]
    [ui/flat-button {:icon            (r/as-element [ic/content-save basic-ic])
                     :backgroundColor (:primary app-theme)
@@ -981,9 +995,6 @@
                      :value               name
                      :onChange            (fn [e v]
                                             (rf/dispatch [:set-category-form-name v]))}]
-
-     [ui/divider {:style {:margin-top    "1em"
-                          :margin-bottom "1em"}}]
 
      [:div.colorHeader {:style {:display         "flex"
                                 :flexWrap        "nowrap"
@@ -1011,11 +1022,11 @@
 (defn category-menu-item [category]
   (let [id (str (:id category))]
     [ui/menu-item
-     {:key id
-      :value id
+     {:key         id
+      :value       id
       :primaryText (:name category)
-      :leftIcon (r/as-element
-                 (svg-mui-circle (:color category)) )}]
+      :leftIcon    (r/as-element
+                    (svg-mui-circle (:color category)) )}]
     )
   )
 
@@ -1029,11 +1040,11 @@
 (defn task-menu-item [task]
   (let [id (str (:id task))]
     [ui/menu-item
-     {:key (str id)
-      :value (str id)
+     {:key         (str id)
+      :value       (str id)
       :primaryText (:name task)
-      :leftIcon (r/as-element
-                 (svg-mui-circle (:color task)) )}]
+      :leftIcon    (r/as-element
+                    (svg-mui-circle (:color task)) )}]
     )
   )
 
@@ -1046,11 +1057,11 @@
   )
 
 (defn task-form [id]
-  (let [name @(rf/subscribe [:task-form-name])
+  (let [name        @(rf/subscribe [:task-form-name])
         description @(rf/subscribe [:task-form-description])
-        complete @(rf/subscribe [:task-form-complete])
+        complete    @(rf/subscribe [:task-form-complete])
         category-id @(rf/subscribe [:task-form-category-id])
-        categories @(rf/subscribe [:categories])
+        categories  @(rf/subscribe [:categories])
         ]
 
     [:div.task-form {:style {:padding         "0.5em"
@@ -1060,7 +1071,7 @@
 
      [ui/text-field {:floating-label-text "Name"
                      :value               name
-                     :fullWidth true
+                     :fullWidth           true
                      :onChange
                      (fn [e v]
                        (rf/dispatch [:set-task-form-name v])
@@ -1068,34 +1079,37 @@
 
      [ui/text-field {:floating-label-text "Description"
                      :value               description
-                     :fullWidth true
-                     :multiLine true
-                     :rows 4
+                     :fullWidth           true
+                     :multiLine           true
+                     :rows                4
                      :onChange
                      (fn [e v]
                        (rf/dispatch [:set-task-form-description v])
                        )}]
 
      [ui/select-field
-      {:value category-id
+      {:value             category-id
        :floatingLabelText "Category"
-       :autoWidth true
-       :fullWidth true
+       :autoWidth         true
+       :fullWidth         true
        :selectionRenderer (partial
                            category-selection-render
                            categories)
-       :onChange (fn [e, i, v]
-                   (rf/dispatch [:set-task-form-category-id v]))
+       :onChange          (fn [e, i, v]
+                            (rf/dispatch [:set-task-form-category-id v]))
        }
       (->> categories
            (map category-menu-item))]
 
-     [ui/checkbox {:label "complete"
+     [ui/checkbox {:label      "complete"
                    :labelStyle {:color (:primary app-theme)}
-                   :style {:marginTop "20"}
-                   :checked complete
-                   :onCheck (fn [e v]
-                              (rf/dispatch [:set-task-form-complete v]))}]
+                   :style      {:marginTop "20"}
+                   :checked    complete
+                   :onCheck    (fn [e v]
+                                 (rf/dispatch [:set-task-form-complete v]))}]
+
+     [ui/divider {:style {:margin-top    "1em"
+                          :margin-bottom "1em"}}]
 
      (entity-form-buttons :home [:submit-task-form] [:delete-task-form-entity])
 
@@ -1104,19 +1118,26 @@
   )
 
 (defn period-form [id]
-  (let [desc @(rf/subscribe [:period-form-description])
-        error @(rf/subscribe [:period-form-error])
+  (let [desc        @(rf/subscribe [:period-form-description])
+        error       @(rf/subscribe [:period-form-error])
         description (if (some? desc) desc "")
-        start-d @(rf/subscribe [:period-form-start])
-        stop-d @(rf/subscribe [:period-form-stop])
-        task-id @(rf/subscribe [:period-form-task-id])
-        tasks @(rf/subscribe [:tasks])]
+        start-d     @(rf/subscribe [:period-form-start])
+        stop-d      @(rf/subscribe [:period-form-stop])
+        task-id     @(rf/subscribe [:period-form-task-id])
+        tasks       @(rf/subscribe [:tasks])
+        planned     @(rf/subscribe [:period-form-planned])]
 
     [:div.task-form {:style {:padding         "0.5em"
                              :backgroundColor "white"}}
 
      (entity-form-chooser :period)
 
+     [ui/checkbox {:label      "Planned"
+                   :labelStyle {:color (:primary app-theme)}
+                   :style      {:marginTop "20"}
+                   :checked    planned
+                   :onCheck    (fn [e v]
+                                 (rf/dispatch [:set-period-form-planned v]))}]
      [ui/subheader "Start"]
 
      (if (= :time-mismatch error)
@@ -1124,13 +1145,13 @@
         "Start must come before Stop"])
 
      [ui/date-picker {:hintText "Start Date"
-                      :value start-d
+                      :value    start-d
                       :onChange
                       (fn [_ new-d]
                         (rf/dispatch [:set-period-form-date [new-d :start]]))}]
 
      [ui/time-picker {:hintText "Start Time"
-                      :value start-d
+                      :value    start-d
                       :onChange
                       (fn [_ new-s]
                         (rf/dispatch [:set-period-form-time [new-s :start]]))}]
@@ -1142,41 +1163,44 @@
         "Start must come before Stop"])
 
      [ui/date-picker {:hintText "Stop Date"
-                      :value stop-d
+                      :value    stop-d
                       :onChange
                       (fn [_ new-d]
                         (rf/dispatch [:set-period-form-date [new-d :stop]]))}]
 
      [ui/time-picker {:hintText "Stop Time"
-                      :value stop-d
+                      :value    stop-d
                       :onChange
                       (fn [_ new-s]
                         (rf/dispatch [:set-period-form-time [new-s :stop]]))}]
 
      [ui/text-field {:floating-label-text "Description"
                      :value               description
-                     :fullWidth true
-                     :multiLine true
-                     :rows 4
+                     :fullWidth           true
+                     :multiLine           true
+                     :rows                4
                      :onChange
                      (fn [e v]
                        (rf/dispatch [:set-period-form-description v])
                        )}]
 
      [ui/select-field
-      {:value (str task-id)
+      {:value             (str task-id)
        :floatingLabelText "Task"
-       :autoWidth true
-       :fullWidth true
-       :errorText (if (= :no-task error) "Must Select Task")
+       :autoWidth         true
+       :fullWidth         true
+       :errorText         (if (= :no-task error) "Must Select Task")
        :selectionRenderer (partial
                            task-selection-render
                            tasks)
-       :onChange (fn [e, i, v]
-                   (rf/dispatch [:set-period-form-task-id (uuid v)]))
+       :onChange          (fn [e, i, v]
+                            (rf/dispatch [:set-period-form-task-id (uuid v)]))
        }
       (->> tasks
            (map task-menu-item))]
+
+     [ui/divider {:style {:margin-top    "1em"
+                          :margin-bottom "1em"}}]
 
      (entity-form-buttons :home [:save-period-form] [:delete-period-form-entity])
      ]
@@ -1202,6 +1226,168 @@
     )
   )
 
+(defn list-period [current-selection period]
+  (let [{:keys [id description color]} period
+        sel-id            (:id-or-nil current-selection)
+        sel-cat           (:type-or-nil current-selection)
+        is-selected       (and (= :period sel-cat)
+                               (= id sel-id))
+        is-child-selected false]
+
+    (r/as-element
+     [ui/list-item
+      (merge {:key         id
+              :primaryText (concatonated-text description 10 "no description provided ...")
+              :style       (if is-selected {:backgroundColor "#dddddd"})
+              :onClick     (fn [e]
+                             (if is-selected
+                               (println "I'm selected")
+                               (rf/dispatch [:set-selected {:type :period :id id}])))}
+
+             (if (and (some? (:start period))
+                      (some? (:stop period)))
+
+               ;; if not queue render the arc
+               (let [start       (:start period)
+                     start-ms    (utils/get-ms start)
+                     start-angle (utils/ms-to-angle start-ms)
+                     stop        (:stop period)
+                     stop-ms     (utils/get-ms stop)
+                     stop-angle  (utils/ms-to-angle stop-ms)
+
+                     angle-difference     (- stop-angle start-angle)
+                     minimum-angle        30
+                     factor-change        (- minimum-angle angle-difference)
+                     ;; adjustments seek to set the angle difference to minimum (no matter what it is)
+                     ;; catches when one side goes over edge with max & min
+                     start-angle-adjusted (.max js/Math
+                                                (- start-angle (/ factor-change 2))
+                                                1)
+                     stop-angle-adjusted  (.min js/Math
+                                                (+ stop-angle (/ factor-change 2))
+                                                359)
+
+                     use-adjustment (< angle-difference 20)
+                     start-used     (if use-adjustment
+                                      start-angle-adjusted
+                                      start-angle)
+                     stop-used      (if use-adjustment
+                                      stop-angle-adjusted
+                                      stop-angle)]
+
+                 {:leftIcon (r/as-element
+                             [ui/svg-icon
+                              {:viewBox "0 0 24 24"}
+                              [:g
+                               [:circle {:cx           "12" :cy     "12" :r "11"
+                                         :stroke-width "2"  :stroke "#cdcdcd"
+                                         :fill         "transparent"}]
+                               [:path
+                                {:d            (describe-arc 12 12 11 start-used stop-used)
+                                 :stroke       color
+                                 :stroke-width "2"
+                                 :fill         "transparent"
+                                 }]]])})
+
+               ;; otherwise render a queue indicator
+               {:leftIcon (r/as-element
+                           [ui/svg-icon [ic/action-list {:color color}]])}))])))
+
+(defn list-task [current-selection task]
+  (let [{:keys [id name actual-periods complete planned-periods color]} task
+
+        periods (concat
+                 (map #(assoc % :type :actual) actual-periods)
+                 (map #(assoc % :type :planned) planned-periods))
+
+        periods-with-color (->> periods (map #(assoc % :color color)))
+        periods-sorted     (reverse
+                            (sort-by #(if (some? (:start %))
+                                        (.valueOf (:start %))
+                                        0) periods-with-color))
+        sel-id      (:id-or-nil current-selection)
+        sel-cat     (:type-or-nil current-selection)
+        is-selected (and (= :task sel-cat)
+                         (= id sel-id))
+        is-child-selected (->> task
+                               ((fn [task] ;; pulls periods into one seq
+                                  (concat (:planned-periods task) (:actual-periods task))))
+                               (some #(if (= sel-id (:id %)) true nil))
+                               (some?))]
+    (r/as-element
+     [ui/list-item
+      {:key         id
+       :primaryText (concatonated-text name 15 "no name entered ...")
+       :nestedItems (->> periods-sorted
+                         (map (partial list-period current-selection)))
+       :leftIcon    (r/as-element
+                     [ui/checkbox {:checked   complete
+                                   :iconStyle {:fill color}}])
+       :open        (or is-selected
+                        is-child-selected)
+       :style       (if is-selected {:backgroundColor "#dddddd"})
+       :onClick     (fn [e]
+                      (if is-selected
+                        (println "I'm selected")
+                        (rf/dispatch [:set-selected {:type :task :id id}])))
+       }])))
+
+(defn list-category [current-selection category]
+  (let [{:keys [id name color tasks]} category
+        sel-id      (:id-or-nil current-selection)
+        sel-cat     (:type-or-nil current-selection)
+        is-selected (and (= :category sel-cat)
+                         (= id sel-id))
+        is-child-selected (->> category
+                               (:tasks)
+                               (some #(if (= sel-id (:id %)) true nil))
+                               (some?))
+        is-grandchild-selected (if is-child-selected
+                                 (->> category
+                                      (:tasks)
+                                      (some #(if (= sel-id (:id %)) %))
+                                      ((fn [task] ;; pulls periods into one seq
+                                         (concat (:planned-periods task) (:actual-periods task))))
+                                      (some #(if (= sel-id (:id %)) true nil))
+                                      (some?)))
+        ordered-tasks (sort-by (fn [task]
+                                 (+ (if (:complete task) 100 0)
+                                    0 ;; TODO use first character alphabet value of name to provide a two level order
+                                      ;; using just sort by and no java comparator
+                                    ))
+                               tasks)]
+
+    [ui/list-item {:key         id
+                   :primaryText (concatonated-text name 20
+                                                   "no name entered ...")
+                   :leftIcon    (r/as-element (svg-mui-circle color))
+                   :nestedItems (->> ordered-tasks
+                                     (map #(assoc % :color color))
+                                     (map (partial list-task current-selection)))
+                   :open        (or is-selected
+                                    is-child-selected
+                                    is-grandchild-selected)
+                   :style       (if is-selected {:backgroundColor "#dddddd"})
+                   :onClick     (fn [e]
+                                  (if is-selected
+                                    (println "I'm selected")
+                                    (rf/dispatch [:set-selected {:type :category :id id}])))
+                   }]))
+
+(defn list-page []
+  (let [categories @(rf/subscribe [:categories])
+        selected @(rf/subscribe [:selected])
+        current-selection (:current-selection selected)]
+
+    [:div
+     (app-bar)
+     [ui/paper {:style {:width "100%"}}
+      [ui/list
+       (->> categories
+            (map (partial list-category current-selection)))]
+      ]
+     ]))
+
 (defn page []
   (let [this-page @(rf/subscribe [:page])
         page-id   (:page-id this-page)]
@@ -1215,6 +1401,7 @@
       (case page-id
         :home         (home-page)
         :entity-forms (entity-forms this-page)
+        :list         (list-page)
         ;; default
         (home-page))]
      ]
