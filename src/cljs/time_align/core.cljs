@@ -1088,7 +1088,7 @@
                        )}]
 
      [ui/select-field
-      {:value             category-id
+      {:value             (str category-id)
        :floatingLabelText "Category"
        :autoWidth         true
        :fullWidth         true
@@ -1096,7 +1096,7 @@
                            category-selection-render
                            categories)
        :onChange          (fn [e, i, v]
-                            (rf/dispatch [:set-task-form-category-id v]))
+                            (rf/dispatch [:set-task-form-category-id (uuid v)]))
        }
       (->> categories
            (map category-menu-item))]
