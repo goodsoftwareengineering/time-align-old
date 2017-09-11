@@ -551,6 +551,31 @@
       :dispatch [:set-active-page {:page-id :home}]})))
 
 (reg-event-fx
+ :delete-task-form-entity
+ (fn [cofx [_ _]]
+   (let [db (:db cofx)
+         task-id (get-in db [:view :task-form :id-or-nil])
+         this-task (->> db
+                        (utils/pull-tasks)
+                        (some #(if (= task-id (:id %)) %)))
+         category-id (:category-id this-task)
+         categories (:categories db)
+         this-category (->> categories
+                            (some #(if (= category-id (:id %)) %)))
+         other-categories (->> categories
+                               (filter #(not (= category-id (:id %)))))
+
+         other-tasks (->> this-category
+                          (:tasks)
+                          (filter #(not (= task-id (:id %)))))
+         new-db (merge db {:categories (conj other-categories
+                                             (merge this-category {:tasks other-tasks}))})
+         ]
+     {:db new-db
+      :dispatch [:set-active-page {:page-id :home}]}
+     )))
+
+(reg-event-fx
  :delete-period-form-entity
  (fn [cofx [_ _]]
    (let [db (:db cofx)
