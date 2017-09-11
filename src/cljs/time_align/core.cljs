@@ -804,7 +804,7 @@
        [:span "Settings"]]
       [ui/menu-item {:onTouchTap    #(do
                                        (rf/dispatch [:set-main-drawer false])
-                                       (rf/dispatch [:set-active-page :home]))
+                                       (rf/dispatch [:set-active-page {:page-id :home}]))
                      :innerDivStyle {:display "flex" :align-items "center"}}
        (svg-mui-time-align {:color "black"
                             :style {:marginRight "0.5em"}})
