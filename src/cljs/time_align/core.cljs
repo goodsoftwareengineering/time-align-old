@@ -1088,6 +1088,12 @@
                        )}]
 
      [ui/select-field
+      ;; select fields get a little strange with the parent entity id's
+      ;; this goes for tasks and periods
+      ;; the value stored on the mui element is a string conversion of the uuid
+      ;; the value stored in the app-db form is of uuid type
+      ;; function for the renderer, in this select field element, takes in a string id
+      ;; but converts it to uuid type before comparing to the collection
       {:value             (str category-id)
        :floatingLabelText "Category"
        :autoWidth         true
@@ -1185,6 +1191,12 @@
                        )}]
 
      [ui/select-field
+      ;; select fields get a little strange with the parent entity id's
+      ;; this goes for tasks and periods
+      ;; the value stored on the mui element is a string conversion of the uuid
+      ;; the value stored in the app-db form is of uuid type
+      ;; function for the renderer, in this select field element, takes in a string id
+      ;; but converts it to uuid type before comparing to the collection
       {:value             (str task-id)
        :floatingLabelText "Task"
        :autoWidth         true
