@@ -51,7 +51,7 @@ Life is how you spend time. Use this tool to make goals about spending time and 
 - [x] finish working out stubs for all action button set state
 - [x] effects for selecting periods change appropriate action button state
 
-- [ ] create forms
+- [x] create forms
   - [x] leaving id blank generates new in handler
   - [x] category
     - [x] color selector
@@ -67,29 +67,29 @@ Life is how you spend time. Use this tool to make goals about spending time and 
     - [x] task picker (do the quick thing and just display all the task sorted by category and then name)
     - [x] add some ad-hoc error display
 
-- [ ] edit forms
+- [x] edit forms
   - [x] alter page handler
     - [x] fx
     - [x] if id is not nil dispatch a load entity to form
-  - [ ] category
-    - [ ] navigate to edit particular
-    - [ ] submit handler works to update
-    - [ ] delete button (change cancel to disabled color and delete to secondary)
+  - [x] category
+    - [x] navigate to edit particular
+    - [x] submit handler works to update
+    - [x] delete button (change cancel to disabled color and delete to secondary)
   - [ ] tasks
-    - [ ] navigate to edit particular
-    - [ ] submit handler works to update
-    - [ ] delete button
+    - [x] navigate to edit particular
+    - [x] submit handler works to update
+    - [x] delete button
   - [x] periods
     - [x] delete button
     - [x] dispatch fx change page
     - [x] dispatch fx set selected nil
     - [x] planned toggle
     
-- [ ] list (nested list component Categories->tasks->periods)
+- [x] list (nested list component Categories->tasks->periods)
   - [x] figure out nested list ui component
   - [x] remove entities from drawer replace with list option
   - [x] render nested list with appropriate icons
-  - [ ] clicking list item navigates to edit page
+  - [x] clicking list item navigates to edit page
 - [ ] account page
   - [ ] name
   - [ ] email
