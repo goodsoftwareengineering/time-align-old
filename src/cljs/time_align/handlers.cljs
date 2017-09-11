@@ -538,6 +538,19 @@
      )))
 
 (reg-event-fx
+ :delete-category-form-entity
+ (fn [cofx [_ _]]
+   (let [db (:db cofx)
+         category-id (get-in db [:view :category-form :id-or-nil])
+         other-categories (->> db
+                               (:categories)
+                               (filter #(not (= (:id %) category-id))))
+         new-db (merge db {:categories other-categories})
+         ]
+     {:db new-db
+      :dispatch [:set-active-page {:page-id :home}]})))
+
+(reg-event-fx
  :delete-period-form-entity
  (fn [cofx [_ _]]
    (let [db (:db cofx)
