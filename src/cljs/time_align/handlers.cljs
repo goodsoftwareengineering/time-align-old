@@ -30,15 +30,15 @@
                        {:page-id page
                         :type-or-nil nil
                         :id-or-nil nil})
-          to-dispatch (case type
+          to-load (case type
                         :category [:load-category-entity-form id]
                         :task [:load-task-entity-form id]
                         :period [:load-period-entity-form id]
                         nil)
           ]
       (merge {:db (assoc-in db [:view :page] view-page)}
-             (if (some? to-dispatch)
-               {:dispatch to-dispatch}
+             (if (some? id)
+               {:dispatch to-load}
                {}))
       )
     ))
