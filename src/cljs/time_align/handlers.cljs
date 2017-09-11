@@ -355,7 +355,7 @@
          task-id (if (some? (:id task-form))
                             (:id task-form)
                             (random-uuid))
-         category-id (uuid (:category-id task-form))
+         category-id (:category-id task-form)
          other-categories (->> db
                              (:categories)
                              (filter #(not= (:id %) category-id)))
