@@ -30,15 +30,15 @@
                        {:page-id page
                         :type-or-nil nil
                         :id-or-nil nil})
-          to-dispatch (case type
+          to-load (case type
                         :category [:load-category-entity-form id]
                         :task [:load-task-entity-form id]
                         :period [:load-period-entity-form id]
                         nil)
           ]
       (merge {:db (assoc-in db [:view :page] view-page)}
-             (if (some? to-dispatch)
-               {:dispatch to-dispatch}
+             (if (some? id)
+               {:dispatch to-load}
                {}))
       )
     ))
@@ -355,7 +355,7 @@
          task-id (if (some? (:id task-form))
                             (:id task-form)
                             (random-uuid))
-         category-id (uuid (:category-id task-form))
+         category-id (:category-id task-form)
          other-categories (->> db
                              (:categories)
                              (filter #(not= (:id %) category-id)))
@@ -535,6 +535,44 @@
          )
        {:db (assoc-in db [:view :period-form :error-or-nil] :time-mismatch)}
        )
+     )))
+
+(reg-event-fx
+ :delete-category-form-entity
+ (fn [cofx [_ _]]
+   (let [db (:db cofx)
+         category-id (get-in db [:view :category-form :id-or-nil])
+         other-categories (->> db
+                               (:categories)
+                               (filter #(not (= (:id %) category-id))))
+         new-db (merge db {:categories other-categories})
+         ]
+     {:db new-db
+      :dispatch [:set-active-page {:page-id :home}]})))
+
+(reg-event-fx
+ :delete-task-form-entity
+ (fn [cofx [_ _]]
+   (let [db (:db cofx)
+         task-id (get-in db [:view :task-form :id-or-nil])
+         this-task (->> db
+                        (utils/pull-tasks)
+                        (some #(if (= task-id (:id %)) %)))
+         category-id (:category-id this-task)
+         categories (:categories db)
+         this-category (->> categories
+                            (some #(if (= category-id (:id %)) %)))
+         other-categories (->> categories
+                               (filter #(not (= category-id (:id %)))))
+
+         other-tasks (->> this-category
+                          (:tasks)
+                          (filter #(not (= task-id (:id %)))))
+         new-db (merge db {:categories (conj other-categories
+                                             (merge this-category {:tasks other-tasks}))})
+         ]
+     {:db new-db
+      :dispatch [:set-active-page {:page-id :home}]}
      )))
 
 (reg-event-fx

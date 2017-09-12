@@ -804,7 +804,7 @@
        [:span "Settings"]]
       [ui/menu-item {:onTouchTap    #(do
                                        (rf/dispatch [:set-main-drawer false])
-                                       (rf/dispatch [:set-active-page :home]))
+                                       (rf/dispatch [:set-active-page {:page-id :home}]))
                      :innerDivStyle {:display "flex" :align-items "center"}}
        (svg-mui-time-align {:color "black"
                             :style {:marginRight "0.5em"}})
@@ -1088,7 +1088,13 @@
                        )}]
 
      [ui/select-field
-      {:value             category-id
+      ;; select fields get a little strange with the parent entity id's
+      ;; this goes for tasks and periods
+      ;; the value stored on the mui element is a string conversion of the uuid
+      ;; the value stored in the app-db form is of uuid type
+      ;; function for the renderer, in this select field element, takes in a string id
+      ;; but converts it to uuid type before comparing to the collection
+      {:value             (str category-id)
        :floatingLabelText "Category"
        :autoWidth         true
        :fullWidth         true
@@ -1096,7 +1102,7 @@
                            category-selection-render
                            categories)
        :onChange          (fn [e, i, v]
-                            (rf/dispatch [:set-task-form-category-id v]))
+                            (rf/dispatch [:set-task-form-category-id (uuid v)]))
        }
       (->> categories
            (map category-menu-item))]
@@ -1185,6 +1191,12 @@
                        )}]
 
      [ui/select-field
+      ;; select fields get a little strange with the parent entity id's
+      ;; this goes for tasks and periods
+      ;; the value stored on the mui element is a string conversion of the uuid
+      ;; the value stored in the app-db form is of uuid type
+      ;; function for the renderer, in this select field element, takes in a string id
+      ;; but converts it to uuid type before comparing to the collection
       {:value             (str task-id)
        :floatingLabelText "Task"
        :autoWidth         true
@@ -1241,7 +1253,9 @@
               :style       (if is-selected {:backgroundColor "#dddddd"})
               :onClick     (fn [e]
                              (if is-selected
-                               (println "I'm selected")
+                               (rf/dispatch [:set-active-page {:page-id :entity-forms
+                                                               :type :period
+                                                               :id id}])
                                (rf/dispatch [:set-selected {:type :period :id id}])))}
 
              (if (and (some? (:start period))
@@ -1328,7 +1342,9 @@
        :style       (if is-selected {:backgroundColor "#dddddd"})
        :onClick     (fn [e]
                       (if is-selected
-                        (println "I'm selected")
+                        (rf/dispatch [:set-active-page {:page-id :entity-forms
+                                                        :type :task
+                                                        :id id}])
                         (rf/dispatch [:set-selected {:type :task :id id}])))
        }])))
 
@@ -1370,7 +1386,9 @@
                    :style       (if is-selected {:backgroundColor "#dddddd"})
                    :onClick     (fn [e]
                                   (if is-selected
-                                    (println "I'm selected")
+                                    (rf/dispatch [:set-active-page {:page-id :entity-forms
+                                                                    :type :category
+                                                                    :id id}])
                                     (rf/dispatch [:set-selected {:type :category :id id}])))
                    }]))
 
