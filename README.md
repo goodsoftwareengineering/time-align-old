@@ -90,9 +90,9 @@ generated using Luminus version "2.9.11.46"
   - [x] remove entities from drawer replace with list option
   - [x] render nested list with appropriate icons
   - [x] clicking list item navigates to edit page
-- [ ] account page
-  - [ ] name
-  - [ ] email
+- [x] account page
+  - [x] name
+  - [x] email
 - [ ] settings page
   - [ ] set top of the wheel time
 - [ ] drawer links
