@@ -17,16 +17,17 @@
           type (:type params)
           id (:id params)
           view-page  (case page
-                       :home {:page-id page
-                              :type-or-nil nil
-                              :id-or-nil nil}
+                       ;; :home {:page-id page
+                       ;;        :type-or-nil nil
+                       ;;        :id-or-nil nil}
                        :entity-forms {:page-id page
                                       :type-or-nil type
                                       :id-or-nil id}
-                       :list {:page-id page
-                              :type-or-nil nil
-                              :id-or-nil nil}
-                       ;; default
+                       ;; :list {:page-id page
+                       ;;        :type-or-nil nil
+                       ;;        :id-or-nil nil}
+
+                       ;; default works for :home :account :list
                        {:page-id page
                         :type-or-nil nil
                         :id-or-nil nil})

@@ -790,25 +790,29 @@
                  :onRequestChange    (fn [new-state] (rf/dispatch [:set-main-drawer new-state]))}
       [ui/menu-item {:onTouchTap    #(do
                                        (rf/dispatch [:set-main-drawer false])
+                                       (rf/dispatch [:set-active-page {:page-id :home}]))
+                     :innerDivStyle {:display "flex" :align-items "center"}}
+       (svg-mui-time-align {:color "black"
+                            :style {:marginRight "0.5em"}})
+       [:span "Home"]]
+      [ui/menu-item {:onTouchTap    #(do
+                                       (rf/dispatch [:set-main-drawer false])
                                        (rf/dispatch [:set-active-page {:page-id :list}]))
                      :innerDivStyle {:display "flex" :align-items "center"}}
        (svg-mui-entity {:type :all :color "black" :style {:marginRight "0.5em"}})
        [:span "List"]]
       [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
                      :innerDivStyle {:display "flex" :align-items "center"}}
-       [ic/social-person {:style {:marginRight "0.5em"}}]
-       [:span "Account"]]
-      [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
-                     :innerDivStyle {:display "flex" :align-items "center"}}
        [ic/action-settings {:style {:marginRight "0.5em"}}]
        [:span "Settings"]]
       [ui/menu-item {:onTouchTap    #(do
                                        (rf/dispatch [:set-main-drawer false])
-                                       (rf/dispatch [:set-active-page {:page-id :home}]))
-                     :innerDivStyle {:display "flex" :align-items "center"}}
-       (svg-mui-time-align {:color "black"
-                            :style {:marginRight "0.5em"}})
-       [:span "Home"]]
+                                       (rf/dispatch [:set-active-page {:page-id :account}]))
+                     :innerDivStyle {:display "flex" :align-items "center"}
+                     :disabled true}
+       [ic/social-person {:style {:marginRight "0.5em"
+                                  :color "grey"}}]
+       [:span "Account"]]
       ]]
     )
   )
@@ -1406,6 +1410,20 @@
       ]
      ]))
 
+(defn account-page []
+  (let []
+
+    [:div
+     (app-bar)
+     [ui/paper {:style {:width "100%"
+                        :padding "1em"}}
+      [ui/text-field {:floating-label-text "Name"
+                      :fullWidth           true}]
+      [ui/text-field {:floating-label-text "Email"
+                      :fullWidth           true}]]
+     ])
+  )
+
 (defn page []
   (let [this-page @(rf/subscribe [:page])
         page-id   (:page-id this-page)]
@@ -1420,6 +1438,7 @@
         :home         (home-page)
         :entity-forms (entity-forms this-page)
         :list         (list-page)
+        :account      (account-page)
         ;; default
         (home-page))]
      ]
