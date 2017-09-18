@@ -77,12 +77,18 @@
 (defn period [selected curr-time is-moving-period type period]
   (let [id          (:id period)
         start-date  (:start period)
+        starts-yesterday (utils/before-today start-date)
         start-ms    (utils/get-ms start-date)
-        start-angle (utils/ms-to-angle start-ms)
+        start-angle (if starts-yesterday
+                      0
+                      (utils/ms-to-angle start-ms))
 
         stop-date  (:stop period)
+        stops-tomorrow (utils/after-today stop-date)
         stop-ms    (utils/get-ms stop-date)
-        stop-angle (utils/ms-to-angle stop-ms)
+        stop-angle (if stops-tomorrow
+                     360
+                     (utils/ms-to-angle stop-ms))
 
         curr-time-ms (.valueOf curr-time)
         start-abs-ms (.valueOf start-date)
@@ -103,8 +109,6 @@
                   this-period-selected         "0.9"
                   (> curr-time-ms stop-abs-ms) "0.2"
                   :else                        "0.7")
-
-
 
         color        (cond
                        (or (nil? selected-period)
@@ -140,7 +144,21 @@
                                      (.stopPropagation e)
                                      (rf/dispatch
                                       [:set-moving-period true]))
-                                   )]
+                                   )
+
+        yesterday-arrow-point     (utils/polar-to-cartesian cx cy r 0)
+        yesterday-arrow-point-bt  (utils/polar-to-cartesian
+                                   cx cy (+ r (/ period-width 2)) 5)
+        yesterday-arrow-point-bb  (utils/polar-to-cartesian
+                                   cx cy (- r (/ period-width 2)) 5)
+
+        tomorrow-arrow-point     (utils/polar-to-cartesian cx cy r 360)
+        tomorrow-arrow-point-bt  (utils/polar-to-cartesian
+                                   cx cy (+ r (/ period-width 2)) 360)
+        tomorrow-arrow-point-bb  (utils/polar-to-cartesian
+                                   cx cy (- r (/ period-width 2)) 360)
+        ]
+
     [:g {:key (str id)}
      [:path
       {:d            arc
@@ -152,6 +170,23 @@
        :onTouchStart movement-trigger-handler
        :onMouseDown  movement-trigger-handler
        }]
+
+     (if starts-yesterday
+       [:polyline {:fill "transparent"
+                   :stroke "black"
+                   :stroke-width "1"
+                   :stroke-linecap "round"
+                   :points (str
+                            (:x yesterday-arrow-point-bt) ","
+                            (:y yesterday-arrow-point-bt) " "
+                            (:x yesterday-arrow-point) ","
+                            (:y yesterday-arrow-point) " "
+                            (:x yesterday-arrow-point-bb) ","
+                            (:y yesterday-arrow-point-bb) " "
+                            )
+
+                   }])
+
      ]
     ))
 

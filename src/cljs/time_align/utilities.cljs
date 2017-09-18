@@ -384,3 +384,35 @@
     {:red r :green g :blue b }
     ))
 
+;; TODO would this function not work given utc dates?
+(defn before-today
+  "Given a date will return true when the day is before today. if the day is today or later will return false."
+  [day]
+  (let [today       (new js/Date)
+        today-year  (.getFullYear today)
+        today-month (.getMonth today)
+        today-day   (.getDate today)
+
+        day-year  (.getFullYear day)
+        day-month (.getMonth day)
+        day-day   (.getDate day)]
+
+    (and (>= today-year day-year)
+         (>= today-month day-month)
+         (> today-day day-day))))
+
+(defn after-today
+  "Given a date will return true when the day is after today. If the day is today or earlier will return false."
+  [day]
+  (let [today       (new js/Date)
+        today-year  (.getFullYear today)
+        today-month (.getMonth today)
+        today-day   (.getDate today)
+
+        day-year  (.getFullYear day)
+        day-month (.getMonth day)
+        day-day   (.getDate day)]
+
+    (and (<= today-year day-year)
+         (<= today-month day-month)
+         (< today-day day-day))))
