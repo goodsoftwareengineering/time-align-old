@@ -110,6 +110,33 @@
      (-> s (* 1000))
      ms)))
 
+(defn is-this-day-before-that-day? [this-day that-day]
+  (let [that-day-year  (.getFullYear that-day)
+        that-day-month (.getMonth that-day)
+        that-day-day   (.getDate that-day)
+
+        this-day-year  (.getFullYear this-day)
+        this-day-month (.getMonth this-day)
+        this-day-day   (.getDate this-day)]
+
+    (and (>= that-day-year this-day-year)
+         (>= that-day-month this-day-month)
+         (> that-day-day this-day-day)))
+  )
+
+(defn is-this-day-after-that-day? [this-day that-day]
+  (let [that-day-year  (.getFullYear that-day)
+        that-day-month (.getMonth that-day)
+        that-day-day   (.getDate that-day)
+
+        this-day-year  (.getFullYear this-day)
+        this-day-month (.getMonth this-day)
+        this-day-day   (.getDate this-day)]
+
+    (and (<= that-day-year this-day-year)
+         (<= that-day-month this-day-month)
+         (< that-day-day this-day-day))))
+
 (defn period-in-day [day period]
   (if (not (nil? period)) ;; TODO add spec here
     (let [day-y   (.getFullYear day)
@@ -130,8 +157,19 @@
           stop-str (str stop-y stop-m stop-d)]
 
       (or
+       ;; start or stop is on the day
        (= day-str start-str)
-       (= day-str stop-str)))
+       (= day-str stop-str)
+
+       ;; start and stop are on either side of the day
+       (and
+        ;; start is before day
+        (is-this-day-before-that-day? start day)
+
+        ;; stop is after day
+        (is-this-day-after-that-day? stop day)
+        )
+       ))
     false))
 
 (defn filter-out-stamps
@@ -388,31 +426,11 @@
 (defn before-today
   "Given a date will return true when the day is before today. if the day is today or later will return false."
   [day]
-  (let [today       (new js/Date)
-        today-year  (.getFullYear today)
-        today-month (.getMonth today)
-        today-day   (.getDate today)
-
-        day-year  (.getFullYear day)
-        day-month (.getMonth day)
-        day-day   (.getDate day)]
-
-    (and (>= today-year day-year)
-         (>= today-month day-month)
-         (> today-day day-day))))
+  (is-this-day-before-that-day? day (new js/Date)))
 
 (defn after-today
   "Given a date will return true when the day is after today. If the day is today or earlier will return false."
   [day]
-  (let [today       (new js/Date)
-        today-year  (.getFullYear today)
-        today-month (.getMonth today)
-        today-day   (.getDate today)
+  (is-this-day-after-that-day? day (new js/Date)))
 
-        day-year  (.getFullYear day)
-        day-month (.getMonth day)
-        day-day   (.getDate day)]
 
-    (and (<= today-year day-year)
-         (<= today-month day-month)
-         (< today-day day-day))))
