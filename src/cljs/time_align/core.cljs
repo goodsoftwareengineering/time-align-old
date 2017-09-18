@@ -464,6 +464,8 @@
      [:circle (merge {:fill "#f1f1f1" :r (:inner-r svg-consts)}
                      (select-keys svg-consts [:cx :cy]))]
 
+     (periods filtered-periods selected is-moving-period curr-time)
+
      (if display-ticker
        [:g
         [:line {:fill         "transparent"
@@ -480,8 +482,6 @@
                         (select-keys svg-consts [:cx :cy]))]
         ]
        )
-
-     (periods filtered-periods selected is-moving-period curr-time)
      ]))
 
 (defn days [days tasks selected-period]
