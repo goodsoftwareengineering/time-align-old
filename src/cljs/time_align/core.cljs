@@ -146,11 +146,17 @@
                                       [:set-moving-period true]))
                                    )
 
-        yesterday-arrow-point     (utils/polar-to-cartesian cx cy r 0)
+        yesterday-arrow-point     (utils/polar-to-cartesian cx cy r 1)
         yesterday-arrow-point-bt  (utils/polar-to-cartesian
-                                   cx cy (+ r (/ period-width 2)) 5)
+                                   cx cy (+ r (* 0.7 (/ period-width 2))) 3)
         yesterday-arrow-point-bb  (utils/polar-to-cartesian
-                                   cx cy (- r (/ period-width 2)) 5)
+                                   cx cy (- r (* 0.7 (/ period-width 2))) 3)
+
+        yesterday-2-arrow-point     (utils/polar-to-cartesian cx cy r 3)
+        yesterday-2-arrow-point-bt  (utils/polar-to-cartesian
+                                     cx cy (+ r (* 0.7 (/ period-width 2))) 5)
+        yesterday-2-arrow-point-bb  (utils/polar-to-cartesian
+                                     cx cy (- r (* 0.7 (/ period-width 2))) 5)
 
         tomorrow-arrow-point     (utils/polar-to-cartesian cx cy r 360)
         tomorrow-arrow-point-bt  (utils/polar-to-cartesian
@@ -172,21 +178,37 @@
        }]
 
      (if starts-yesterday
-       [:polyline {:fill "transparent"
-                   :stroke "black"
-                   :stroke-width "1"
-                   :stroke-linecap "round"
-                   :points (str
-                            (:x yesterday-arrow-point-bt) ","
-                            (:y yesterday-arrow-point-bt) " "
-                            (:x yesterday-arrow-point) ","
-                            (:y yesterday-arrow-point) " "
-                            (:x yesterday-arrow-point-bb) ","
-                            (:y yesterday-arrow-point-bb) " "
-                            )
+       [:g
+        [:polyline {:fill "transparent"
+                    :stroke "white"
+                    :stroke-width "0.5"
+                    :stroke-linecap "round"
+                    :points (str
+                             (:x yesterday-arrow-point-bt) ","
+                             (:y yesterday-arrow-point-bt) " "
+                             (:x yesterday-arrow-point) ","
+                             (:y yesterday-arrow-point) " "
+                             (:x yesterday-arrow-point-bb) ","
+                             (:y yesterday-arrow-point-bb) " "
+                             )
 
-                   }])
+                    }]
+        [:polyline {:fill "transparent"
+                    :stroke "white"
+                    :stroke-width "0.5"
+                    :stroke-linecap "round"
+                    :points (str
+                             (:x yesterday-2-arrow-point-bt) ","
+                             (:y yesterday-2-arrow-point-bt) " "
+                             (:x yesterday-2-arrow-point) ","
+                             (:y yesterday-2-arrow-point) " "
+                             (:x yesterday-2-arrow-point-bb) ","
+                             (:y yesterday-2-arrow-point-bb) " "
+                             )
 
+                    }]
+        ]
+       )
      ]
     ))
 
