@@ -3,53 +3,12 @@ Life is how you spend time. This tool will help you work towards aligning what y
 
 generated using Luminus version "2.9.11.46"
 
-## sequence of events
-- finish working skeleton
-- refactor skeleton to be readable and maintainable without changing any functionality
-- consider [ux progress](#ux-progress) and what is _practical_ to do at this point
-- add [extras needed to launch proof of concept](#extras-needed-to-launch-proof-of-concept)
-- launch alpha SPA on github
-- simultaneously
-  - data base configuration
-  - resty api
-  - rest of _possible_ [ux progress](#ux-progress)
-- launch paid for beta (full app front & back)
-- ???
-- profit
-
-## launches
-### alpha
-- web app 
-- no syncing
-- no auth
-### beta
-- web app 
-- with syncing 
-- oauth via google
-### 1.0
-ios + android + webapp
-
-## goals
-### Mark
-- 20170923
-  - app-db ported to cljc
-  - utils ported to cljc
-  - tests for utils
-### Justin
-- 20171001 
-  - finish [working skeleton](#working-skelton)
-### Global
-- 20171115
-  - finish [great refactor](#first-great-refactor)
-- 20171231
-  - proof of concept launch
-
 ## prerequisites to dev
 - [Vagrant](https://www.vagrantup.com/)
 - [VirtualBox](https://www.virtualbox.org/wiki/VirtualBox)
 - [nRepl enabled editor](https://cb.codes/what-editor-ide-to-use-for-clojure/)
 
-## running
+## running dev
 - clone repo
 - run `vagrant up` (in a command line environment)
 - run `bash start.sh` or `start.bat` (will open an ssh connection to vm)
@@ -59,7 +18,49 @@ ios + android + webapp
 - run in nrepl `(start-fw)` (transpiles cljs and starts figwheel server)
 - run in nrepl `(cljs)` (starts a clojurescript repl in your browser that will connect automagically when you open localhost:3000)
 
-## working skeleton
+## launches
+### alpha
+- web app 
+- no syncing
+- no auth
+### beta
+- web app
+- api
+- with syncing 
+- oauth via google
+### 1.0
+ios + android + webapp
+
+## sequence of events
+- finish [working client](#working-client)
+- [refactor](#first-great-refactor) skeleton to be readable and maintainable without changing any functionality
+- consider [ux progress](#ux-progress) and what is _practical_ to do at this point
+- add [extras needed to launch proof of concept](#extras-needed-to-launch-proof-of-concept)
+- launch alpha SPA on github
+- simultaneously
+  - data base configuration
+  - resty api
+  - rest of _possible_ [ux progress](#ux-progress)
+- launch paid for beta (full app front & back)
+- figure out a react native framework
+- launch 1.0
+
+## goals
+### Mark
+- 20170923
+  - app-db ported to cljc
+  - utils ported to cljc
+  - tests for utils
+### Justin
+- 20171001 
+  - finish [working client](#working-client)
+### Global
+- 20171115
+  - finish [great refactor](#first-great-refactor)
+- 20171231
+  - proof of concept launch
+
+## working client
 - [x] finish working out stubs for all action button set state
 - [x] effects for selecting periods change appropriate action button state
 
@@ -106,8 +107,8 @@ ios + android + webapp
   - [x] name
   - [x] email
   
-- [ ] category doesn't clear on save form
-- [ ] opening list after creating category errors
+- [x] category doesn't clear on save form
+- [x] opening list after creating category errors
 
 - [ ] for periods straddling date divide 
   - [ ] use end of day const to render (maybe add indicator that period continues?)
