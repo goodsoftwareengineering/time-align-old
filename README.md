@@ -110,13 +110,28 @@ ios + android + webapp
 - [x] category doesn't clear on save form
 - [x] opening list after creating category errors
 
-- [ ] for periods straddling date divide 
-  - [ ] use end of day const to render (maybe add indicator that period continues?)
-  - [ ] use old stop value instead of new one in handlers ??
-  - [ ] put the date in the viewers time zone to get the cut off right!!!
+- [ ] periods straddling date divide 
+  - [x] determine if starts yesterday
+  - [x] render yesterday indicator
+  - [ ] determine if ends tomorrow
+  - [ ] render tomorrow indicator
+  - [ ] put the date in the viewers time zone to get the cut off right ???
+     - does this mean only in the utility function for determining cutt off?
+  
+- [ ] for straddling now
+  - [ ] split into two arcs so that opacity changes make sense
   
 - [ ] settings page
   - [ ] set top of the wheel time
+    - this does not change the date divide just rotates the wheel display
+    - date divide is still 00:00
+    - consider letting date divide be a setting
+      - if the date divide was 06:00 then the rendered day would be 06:00 (today) - 05:59 (tomorrow)
+      - this might be better in the next release
+  - [ ] keep a date divide indicator will be at 00:00 or 0 deg
+    - deg shouldn't change for rendering because the whole visual will likely be rotated
+      - unless that isn't performant
+      - then deg need to be adjusted and relative
 - [ ] drawer links
  
 - [ ] action buttons
