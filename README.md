@@ -1,5 +1,5 @@
 # time align
-Life is how you spend time. Use this tool to make goals and track how you spend time. It will help you work towards aligning what you plan and what you do.  
+Life is how you spend time. This tool will help you work towards aligning what you plan and what you do.  
 
 generated using Luminus version "2.9.11.46"
 
@@ -8,7 +8,7 @@ generated using Luminus version "2.9.11.46"
 - refactor skeleton to be readable and maintainable without changing any functionality
 - consider [ux progress](#ux-progress) and what is _practical_ to do at this point
 - add [extras needed to launch proof of concept](#extras-needed-to-launch-proof-of-concept)
-- launch proof of concept SPA on github
+- launch alpha SPA on github
 - simultaneously
   - data base configuration
   - resty api
@@ -16,6 +16,18 @@ generated using Luminus version "2.9.11.46"
 - launch paid for beta (full app front & back)
 - ???
 - profit
+
+## launches
+### alpha
+- web app 
+- no syncing
+- no auth
+### beta
+- web app 
+- with syncing 
+- oauth via google
+### 1.0
+ios + android + webapp
 
 ## goals
 ### Mark
@@ -93,15 +105,19 @@ generated using Luminus version "2.9.11.46"
 - [x] account page
   - [x] name
   - [x] email
-- [ ] settings page
-  - [ ] set top of the wheel time
-- [ ] drawer links
+  
+- [ ] category doesn't clear on save form
+- [ ] opening list after creating category errors
 
 - [ ] for periods straddling date divide 
   - [ ] use end of day const to render (maybe add indicator that period continues?)
   - [ ] use old stop value instead of new one in handlers ??
   - [ ] put the date in the viewers time zone to get the cut off right!!!
   
+- [ ] settings page
+  - [ ] set top of the wheel time
+- [ ] drawer links
+ 
 - [ ] action buttons
 
 ## checklist for Proof Of Concept
