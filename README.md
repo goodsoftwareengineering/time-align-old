@@ -159,12 +159,13 @@ ios + android + webapp
       - [ ] edit all data (can't delete unless no periods)
     - [ ] delete
 
-## tests
-- [ ] utils functions
-- [ ] every handler
-- [ ] maybe test view only helper functions
-
 ## first great refactor
+### tests
+- utils functions
+- every handler
+- maybe test view only helper functions
+
+### other
 - use [specter](https://github.com/nathanmarz/specter) to get rid of ugly merge stuff in handlers
 - merge `:planned-periods` and `:actual-periods` in app-db
   - add back a `:type` flag
