@@ -137,7 +137,7 @@ ios + android + webapp
 
 - [ ] double tap to edit
   - [x] list page
-  - [ ] queue
+  - [x] queue
   - [ ] period tasks
 
 - [ ] lower pane
