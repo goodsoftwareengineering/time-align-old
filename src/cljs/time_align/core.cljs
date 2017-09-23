@@ -604,6 +604,8 @@
 (defn queue [tasks selected]
   (let [periods-no-stamps (utils/filter-periods-no-stamps tasks)
         sel               (:current-selection selected)
+        period-selected (= :queue (:type-or-nil sel))
+        sel-id (:id-or-nil sel)
         ]
     [ui/list {:style {:width "100%"}}
         (->> periods-no-stamps
@@ -618,10 +620,18 @@
                       :leftIcon    (r/as-element
                                     [ui/svg-icon [ic/action-list {:color (:color period)}]])
                       :primaryText (concatonated-text (:description period) 10 "No period description ...")
-                      :onTouchTap  (fn [e]
-                                     (rf/dispatch
-                                      [:set-selected-queue (:id period)])
-                                     )}])))]))
+                      :onTouchTap  (if (and period-selected
+                                            (= sel-id (:id period)))
+                                     (fn [e]
+                                       (rf/dispatch [:set-active-page
+                                                     {:page-id :entity-forms
+                                                      :type :period
+                                                      :id (:id period)}]))
+                                       (fn [e]
+                                         (rf/dispatch
+                                          [:set-selected-queue (:id period)])
+                                         )
+                                       )}])))]))
 
 (def basic-button {:style {}})
 (def basic-mini-button {:mini             true
