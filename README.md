@@ -3,6 +3,8 @@ Life is how you spend time. This tool will help you work towards aligning what y
 
 generated using Luminus version "2.9.11.46"
 
+[trello board](https://trello.com/b/kGu6Xm74/time-align)
+
 ## prerequisites to dev
 - [Vagrant](https://www.vagrantup.com/)
 - [VirtualBox](https://www.virtualbox.org/wiki/VirtualBox)
@@ -18,6 +20,17 @@ generated using Luminus version "2.9.11.46"
 - run in nrepl `(start-fw)` (transpiles cljs and starts figwheel server)
 - run in nrepl `(cljs)` (starts a clojurescript repl in your browser that will connect automagically when you open localhost:3000)
 
+## sequence of events
+- finish mvp-a
+- analytics back end
+- analytics integration into spa
+- launch alpha SPA (2017/10/31)
+- [refactor](#first-great-refactor) skeleton to be readable and maintainable without changing any functionality
+- figure out mvp-b
+- finish mvp-b (2018/07/01)
+- figure out mvp
+- finish 1.0 mvp (2018/12/31)
+
 ## launches
 ### alpha
 - web app 
@@ -31,163 +44,15 @@ generated using Luminus version "2.9.11.46"
 ### 1.0
 ios + android + webapp
 
-## sequence of events
-- finish [working client](#working-client)
-- [refactor](#first-great-refactor) skeleton to be readable and maintainable without changing any functionality
-- consider [ux progress](#ux-progress) and what is _practical_ to do at this point
-- add [extras needed to launch proof of concept](#extras-needed-to-launch-proof-of-concept)
-- launch alpha SPA on github
-- simultaneously
-  - data base configuration
-  - resty api
-  - rest of _possible_ [ux progress](#ux-progress)
-- launch paid for beta (full app front & back)
-- figure out a react native framework
-- launch 1.0
-
-## goals
-### Mark
-- 20170923
-  - app-db ported to cljc
-  - utils ported to cljc
-  - tests for utils
-### Justin
-- 20171001 
-  - finish [working client](#working-client)
-### Global
-- 20171115
-  - finish [great refactor](#first-great-refactor)
-- 20171231
-  - proof of concept launch
-
-## next discussion
-  - put the date in the viewers time zone to get the cut off right ???
-     - does this mean only in the utility function for determining cutt off?
- - set top of the wheel time
-    - this does not change the date divide just rotates the wheel display
-    - date divide is still 00:00
-    - consider letting date divide be a setting
-      - if the date divide was 06:00 then the rendered day would be 06:00 (today) - 05:59 (tomorrow)
-      - this might be better in the next release
-  - keep a date divide indicator will be at 00:00 or 0 deg
-    - deg shouldn't change for rendering because the whole visual will likely be rotated
-      - unless that isn't performant
-      - then deg need to be adjusted and relative
-
-## working client
-- [x] finish working out stubs for all action button set state
-- [x] effects for selecting periods change appropriate action button state
-
-- [x] create forms
-  - [x] leaving id blank generates new in handler
-  - [x] category
-    - [x] color selector
-    - [x] save new category form
-    - [x] remove tabs 
-    - [x] clean up save form action (navigates away)
-    - [x] work out how to get to edit version of form
-    - [x] cancel button
-  - [x] task
-  - [x] period
-    - [x] move time picker state to app-db
-    - [x] description
-    - [x] task picker (do the quick thing and just display all the task sorted by category and then name)
-    - [x] add some ad-hoc error display
-
-- [x] edit forms
-  - [x] alter page handler
-    - [x] fx
-    - [x] if id is not nil dispatch a load entity to form
-  - [x] category
-    - [x] navigate to edit particular
-    - [x] submit handler works to update
-    - [x] delete button (change cancel to disabled color and delete to secondary)
-  - [ ] tasks
-    - [x] navigate to edit particular
-    - [x] submit handler works to update
-    - [x] delete button
-  - [x] periods
-    - [x] delete button
-    - [x] dispatch fx change page
-    - [x] dispatch fx set selected nil
-    - [x] planned toggle
-    
-- [x] list (nested list component Categories->tasks->periods)
-  - [x] figure out nested list ui component
-  - [x] remove entities from drawer replace with list option
-  - [x] render nested list with appropriate icons
-  - [x] clicking list item navigates to edit page
-- [x] account page
-  - [x] name
-  - [x] email
-  
-- [x] category doesn't clear on save form
-- [x] opening list after creating category errors
-
-- [x] periods straddling date divide 
-  - [x] determine if starts yesterday
-  - [x] render yesterday indicator
-  - [x] determine if ends tomorrow
-  - [x] render tomorrow indicator
- 
-- [x] for straddling now
-  - [x] split into two arcs so that opacity changes make sense
-  
-- [ ] disable settings page
-
-- [ ] double tap to edit
-  - [x] list page
-  - [x] queue
-  - [ ] period tasks
-
-- [ ] lower pane
-  - [ ] display day stats by default
-  - [ ] select queue
-  - [ ] select agenda (list of planned tasks)
-    - [ ] selecting in day display also selects in agenda
-
-- [ ] queue page
-- [ ] agenda page
-
-- [ ] action buttons
-
-## checklist for Proof Of Concept
-- [ ] full crud interface for time-align
-  - [x] structure in db.clj
-  - [ ] periods
-    - [ ] create new
-    - [ ] read
-      - [x] planned/actual wheel display
-      - [x] queue (any without start/stop)
-    - [x] update
-      - [x] slidding
-      - [ ] stretching/shrinking
-    - [ ] delete
-  - [ ] categories
-    - [ ] create 
-      - [ ] name
-      - [ ] color
-      - [ ] priority?
-    - [ ] read 
-    - [ ] update
-    - [ ] delete
-  - [ ] tasks
-    - [ ] create
-      - [ ] assign category (color + name)
-      - [ ] meta data (name, desc, completed, dependencies)
-      - [ ] priority
-    - [ ] read
-      - [ ] task list 
-        - [ ] one list
-        - [ ] sorting
-          - [ ] date created
-          - [ ] last modified
-          - [ ] number of periods
-          - [ ] category
-          - [ ] priority
-    - [ ] update
-      - [ ] edit all data (can't delete unless no periods)
-    - [ ] delete
+## mvp-a
+- CRUD on all entities
+  - categories
+  - tasks
+  - periods
+- intuitive display
+- feedback or email list
+- testing on all browsers
+- local storage persistance
 
 ## first great refactor
 ### tests
@@ -237,44 +102,6 @@ ios + android + webapp
   - queue of upcoming planned tasks
 ### actionable
 
-
-## extras needed to launch proof of concept
-- [ ] analytics
-  - [ ] secretary url params for referer logs in db as referrer
-  - [ ] set up a bare bones luminus server that logs to a sql lite db
-    - [ ] needs to decrypt with hard coded key
-    - [ ] authenticates with hard coded token
-  - [ ] send info
-    - [ ] initial db
-    - [ ] every action
-    - [ ] encrypt every send
-    - [ ] add token
-    
-- [ ] automatic demo
-  - [ ] set up the app to run a series of actions at specific ~~time intervals~~ to demo the app
-  - [ ] configure a snack bar with `next` and `close` buttons
-
-- [ ] market
-  - [ ] post to reddits (personalize each link with referrer `https://timealign.github.io/#/clojure`)
-    - [ ] gather stats on audience total size for each subredit
-    - [ ] clojure
-    - [ ] cljs
-    - [ ] data is beautiful
-    - [ ] time management
-    - [ ] productivity
-
-- [ ] analytics processing 
-  - [ ] answer questions
-    - [ ] how many unique ip visits from each referrer?
-    - [ ] how many sessions for each unique ip?
-    - [ ] time spent in app
-  - [ ] construct a sort of tree of each session action series overlaid (example below)
-
-```
-_ arrived __ clicked floating action _____ ??? 
-          \____ clicked period ______ ??? _____
-                                      \_____
-```
 
 ## bugs to fix later
 - firefox moving periods
