@@ -221,7 +221,6 @@
           :onMouseDown  movement-trigger-handler
           }]
         ])
-     
 
      (if starts-yesterday
        [:g
@@ -962,6 +961,28 @@
     )
   )
 
+(defn stats [selected]
+  [ui/table {:selectable false}
+   [ui/table-body {:display-row-checkbox false}
+    [ui/table-row
+     [ui/table-row-column "time planned"]
+     [ui/table-row-column "123456"]
+     ]
+    [ui/table-row
+     [ui/table-row-column "time accounted"]
+     [ui/table-row-column "123456"]
+     ]
+    [ui/table-row
+     [ui/table-row-column "queue items"]
+     [ui/table-row-column "123456"]
+     ]
+    [ui/table-row
+     [ui/table-row-column "incomplete tasks"]
+     [ui/table-row-column "123456"]
+     ]
+    ]
+   ])
+
 (defn home-page []
   (let [
         tasks               @(rf/subscribe [:tasks])
@@ -988,13 +1009,29 @@
                :box-sizing "border-box"}}
       (day tasks selected (new js/Date))]
 
-     [:div.queue-container
+     [:div.lower-container
       {:style {:display    "flex"
                :flex       "1 0 100%"
                ;; :border "blue solid 0.1em"
                :box-sizing "border-box"}}
-      [ui/paper {:style {:width "100%"}}
-       (queue tasks selected)
+      [ui/paper {:style {:width "100%"
+                         :min-height "10em" ;; keeps the tabs above action
+                                           ;; and from tabs 'jumping' if there
+                                           ;; is no content in other tab
+                         }}
+
+       [ui/tabs {:tabItemContainerStyle {:backgroundColor "white"}
+                 :inkBarStyle           {:backgroundColor (:primary app-theme)}}
+        [ui/tab {:label "stats" :style {:color (:primary app-theme)}}
+         (stats selected)
+         ]
+        [ui/tab {:label "queue" :style {:color (:primary app-theme)}}
+         (queue tasks selected)
+         ]
+        [ui/tab {:label "agenda" :style {:color (:primary app-theme)}}
+         [:div "agenda here"]
+         ]
+        ]
        ]
       ]
 
