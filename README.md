@@ -130,14 +130,25 @@ ios + android + webapp
   - [x] determine if ends tomorrow
   - [x] render tomorrow indicator
  
-- [ ] for straddling now
-  - [ ] split into two arcs so that opacity changes make sense
+- [x] for straddling now
+  - [x] split into two arcs so that opacity changes make sense
   
-- [ ] settings page
-  - [ ] set top of the wheel time
-     - [ ] keep a date divide indicator will be at 00:00 or 0 deg
-   - [ ] drawer links
- 
+- [ ] disable settings page
+
+- [ ] double tap to edit
+  - [x] list page
+  - [ ] queue
+  - [ ] period tasks
+
+- [ ] lower pane
+  - [ ] display day stats by default
+  - [ ] select queue
+  - [ ] select agenda (list of planned tasks)
+    - [ ] selecting in day display also selects in agenda
+
+- [ ] queue page
+- [ ] agenda page
+
 - [ ] action buttons
 
 ## checklist for Proof Of Concept
