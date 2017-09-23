@@ -90,6 +90,11 @@
                      359.5
                      (utils/ms-to-angle stop-ms))
 
+        straddles-now (utils/straddles-now? start-date stop-date)
+        now-ms (utils/get-ms (new js/Date))
+        broken-stop-before-angle (utils/ms-to-angle now-ms)
+        broken-start-after-angle (utils/ms-to-angle now-ms)
+
         curr-time-ms (.valueOf curr-time)
         start-abs-ms (.valueOf start-date)
         stop-abs-ms  (.valueOf stop-date)
@@ -105,9 +110,11 @@
                                nil)
         this-period-selected (= selected-period id)
 
+        opacity-before "0.3"
+        opacity-after  "0.9"
         opacity (cond
-                  this-period-selected         "0.9"
-                  (> curr-time-ms stop-abs-ms) "0.2"
+                  this-period-selected         opacity-after
+                  (> curr-time-ms stop-abs-ms) opacity-before
                   :else                        "0.7")
 
         color        (cond
@@ -132,6 +139,13 @@
                          (- (/ period-width 2)))
 
         arc                      (describe-arc cx cy r start-angle stop-angle)
+        broken-arc-before        (describe-arc cx cy r
+                                               start-angle
+                                               broken-stop-before-angle)
+        broken-arc-after        (describe-arc cx cy r
+                                              broken-start-after-angle
+                                              stop-angle)
+
         touch-click-handler      (if (not is-period-selected)
                                    (fn [e]
                                      (.stopPropagation e)
@@ -172,16 +186,42 @@
          ]
 
     [:g {:key (str id)}
-     [:path
-      {:d            arc
-       :stroke       color
-       :opacity      opacity
-       :stroke-width period-width
-       :fill         "transparent"
-       :onClick      touch-click-handler
-       :onTouchStart movement-trigger-handler
-       :onMouseDown  movement-trigger-handler
-       }]
+     (if straddles-now
+       [:g
+        [:path
+         {:d            broken-arc-before
+          :stroke       color
+          :opacity      opacity-before
+          :stroke-width period-width
+          :fill         "transparent"
+          :onClick      touch-click-handler
+          :onTouchStart movement-trigger-handler
+          :onMouseDown  movement-trigger-handler
+          }]
+        [:path
+         {:d            broken-arc-after
+          :stroke       color
+          :opacity      opacity-after
+          :stroke-width period-width
+          :fill         "transparent"
+          :onClick      touch-click-handler
+          :onTouchStart movement-trigger-handler
+          :onMouseDown  movement-trigger-handler
+          }]
+        ]
+       [:g
+        [:path
+         {:d            arc
+          :stroke       color
+          :opacity      opacity
+          :stroke-width period-width
+          :fill         "transparent"
+          :onClick      touch-click-handler
+          :onTouchStart movement-trigger-handler
+          :onMouseDown  movement-trigger-handler
+          }]
+        ])
+     
 
      (if starts-yesterday
        [:g

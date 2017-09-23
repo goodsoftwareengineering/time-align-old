@@ -93,7 +93,7 @@
   (* (/ ms-in-day 360) angle))
 
 (defn get-ms
-  "takes a js/date and returns milliseconds since 00:00 that day"
+  "takes a js/date and returns milliseconds since 00:00 that day. Essentially relative ms for the day."
   [date]
   (let [h  (.getHours date)
         m  (.getMinutes date)
@@ -433,4 +433,14 @@
   [day]
   (is-this-day-after-that-day? day (new js/Date)))
 
+(defn straddles-this-date? [this-date start-date stop-date]
+  (let [this (.valueOf this-date)
+        start (.valueOf start-date)
+        stop (.valueOf stop-date)]
 
+    (and (> stop this)
+         (< start this))
+    ))
+
+(defn straddles-now? [start-date stop-date]
+  (straddles-this-date? (new js/Date) start-date stop-date))
