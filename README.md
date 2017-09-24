@@ -44,7 +44,7 @@ generated using Luminus version "2.9.11.46"
 ### 1.0
 ios + android + webapp
 
-## mvp-a
+## mvp-alpha
 - CRUD on all entities
   - categories
   - tasks
@@ -100,8 +100,9 @@ ios + android + webapp
 - queue needs two options (tabs)
   - queue of tasks with no stamps
   - queue of upcoming planned tasks
-### actionable
 
+### actionable
+...
 
 ## bugs to fix later
 - firefox moving periods
@@ -114,6 +115,7 @@ ios + android + webapp
 - routing and pretty urls
 
 ## license
+MIT
 Copyright 2017 Justin Good
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
