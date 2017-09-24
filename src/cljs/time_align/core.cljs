@@ -74,17 +74,19 @@
     (string/join " " ["M" (:x p-start) (:y p-start)
                       "A" r r 0 large-arc-flag 1 (:x p-stop) (:y p-stop)])))
 
-(defn period [selected curr-time is-moving-period type period]
+(defn period [selected curr-time is-moving-period type period displayed-day]
   (let [id          (:id period)
         start-date  (:start period)
-        starts-yesterday (utils/before-today start-date)
+        starts-yesterday (utils/is-this-day-before-that-day?
+                          start-date displayed-day)
         start-ms    (utils/get-ms start-date)
         start-angle (if starts-yesterday
                       0.5
                       (utils/ms-to-angle start-ms))
 
         stop-date  (:stop period)
-        stops-tomorrow (utils/after-today stop-date)
+        stops-tomorrow (utils/is-this-day-after-that-day?
+                        stop-date displayed-day)
         stop-ms    (utils/get-ms stop-date)
         stop-angle (if stops-tomorrow
                      359.5
@@ -289,7 +291,7 @@
      ]
     ))
 
-(defn periods [periods selected is-moving-period curr-time]
+(defn periods [periods selected is-moving-period curr-time displayed-day]
   (let [actual  (:actual-periods periods)
         planned (:planned-periods periods)]
     [:g
@@ -300,7 +302,8 @@
                                               curr-time
                                               is-moving-period
                                               :actual
-                                              actual-period)))))]
+                                              actual-period
+                                              displayed-day)))))]
      [:g
       (if (some? planned)
         (->> planned
@@ -308,7 +311,8 @@
                                                curr-time
                                                is-moving-period
                                                :planned
-                                               planned-period))))
+                                               planned-period
+                                               displayed-day))))
         )]]))
 
 (defn handle-period-move [id type evt]
@@ -541,7 +545,7 @@
      [:circle (merge {:fill "#f1f1f1" :r (:inner-r svg-consts)}
                      (select-keys svg-consts [:cx :cy]))]
 
-     (periods filtered-periods selected is-moving-period curr-time)
+     (periods filtered-periods selected is-moving-period curr-time day)
 
      (if display-ticker
        [:g
@@ -559,6 +563,13 @@
                         (select-keys svg-consts [:cx :cy]))]
         ]
        )
+
+     [:polyline {:points "10,85 5,90 10,95"
+                 :onClick (fn [e]
+                            (rf/dispatch [:iterate-displayed-day :prev]))}]
+     [:polyline {:points "90,85 95,90 90,95"
+                 :onClick (fn [e]
+                            (rf/dispatch [:iterate-displayed-day :next]))}]
      ]))
 
 (defn days [days tasks selected-period]
@@ -962,32 +973,36 @@
   )
 
 (defn stats [selected]
-  [ui/table {:selectable false}
-   [ui/table-body {:display-row-checkbox false}
-    [ui/table-row
-     [ui/table-row-column "time planned"]
-     [ui/table-row-column "123456"]
+  (let []
+    [ui/table {:selectable false}
+     [ui/table-body {:display-row-checkbox false}
+      [ui/table-row
+       [ui/table-row-column "time planned"]
+       [ui/table-row-column "123456"]
+       ]
+      [ui/table-row
+       [ui/table-row-column "time accounted"]
+       [ui/table-row-column "123456"]
+       ]
+      [ui/table-row
+       [ui/table-row-column "queue items"]
+       [ui/table-row-column "123456"]
+       ]
+      [ui/table-row
+       [ui/table-row-column "incomplete tasks"]
+       [ui/table-row-column "123456"]
+       ]
+      ]
      ]
-    [ui/table-row
-     [ui/table-row-column "time accounted"]
-     [ui/table-row-column "123456"]
-     ]
-    [ui/table-row
-     [ui/table-row-column "queue items"]
-     [ui/table-row-column "123456"]
-     ]
-    [ui/table-row
-     [ui/table-row-column "incomplete tasks"]
-     [ui/table-row-column "123456"]
-     ]
-    ]
-   ])
+    )
+  )
 
 (defn home-page []
   (let [
         tasks               @(rf/subscribe [:tasks])
         selected            @(rf/subscribe [:selected])
         action-button-state @(rf/subscribe [:action-buttons])
+        displayed-day       @(rf/subscribe [:displayed-day])
         ]
 
     [:div.app-container
@@ -1006,8 +1021,12 @@
                :flex       "1 0 100%"
                :max-height "60%"
                ;; :border "red solid 0.1em"
-               :box-sizing "border-box"}}
-      (day tasks selected (new js/Date))]
+               :box-sizing "border-box"
+               :justify-content "center"
+               :align-items "center"
+               :flex-direction "column"}}
+      [:div.day-label (.toDateString displayed-day)]
+      (day tasks selected displayed-day)]
 
      [:div.lower-container
       {:style {:display    "flex"

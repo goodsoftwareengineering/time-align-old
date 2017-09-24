@@ -647,3 +647,22 @@
  :set-period-form-planned
  (fn [db [_ is-planned]]
    (assoc-in db [:view :period-form :planned] is-planned)))
+
+(reg-event-db
+ :iterate-displayed-day
+ (fn [db [_ direction]]
+   (let [current (get-in db [:view :displayed-day])
+         current-date (.getDate current)
+         new-date (case direction
+                     :next (+ current-date 1)
+                     :prev (- current-date 1)
+                     :next-week (+ current-date 7)
+                     :prev-week (- current-date 7))
+         new (as-> current day;; TODO ugly, not immutable, and not UTC O.O
+                   (.valueOf day)
+                   (new js/Date day)
+                   (.setDate day new-date)
+                   (new js/Date day))]
+
+     (assoc-in db [:view :displayed-day]
+               new))))

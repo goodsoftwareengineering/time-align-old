@@ -128,3 +128,8 @@
    ;;     ))
    (get-in db [:view :period-form :planned])
    ))
+
+(reg-sub
+ :displayed-day
+ (fn [db _]
+   (get-in db [:view :displayed-day])))
