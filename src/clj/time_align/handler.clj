@@ -9,7 +9,7 @@
 
 (mount/defstate init-app
                 :start ((or (:init defaults) identity))
-                :stop  ((or (:stop defaults) identity)))
+                :stop ((or (:stop defaults) identity)))
 
 (def app-routes
   (routes
@@ -19,7 +19,7 @@
     (route/not-found
       (:body
         (error-page {:status 404
-                     :title "page not found"})))))
+                     :title  "page not found"})))))
 
 
 (defn app [] (middleware/wrap-base #'app-routes))

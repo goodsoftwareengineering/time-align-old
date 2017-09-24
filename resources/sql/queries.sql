@@ -12,7 +12,8 @@ WHERE id = :id
 
 -- :name get-user :? :1
 -- :doc retrieve a user given the id.
-SELECT * FROM users
+SELECT *
+FROM users
 WHERE id = :id
 
 -- :name delete-user! :! :n

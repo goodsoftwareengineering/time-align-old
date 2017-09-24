@@ -29,18 +29,18 @@
                  :cx           "50" :cy "50" :r "40"
                  :inner-r      "30"
                  :ticker-r     "5"
-                 :center-r     "5"  ;; TODO might not be used
+                 :center-r     "5"                                                                                      ;; TODO might not be used
                  :period-width "10"})
 
 (def shadow-filter
   [:defs
    [:filter {:id    "shadow-2dp"
-             :x     "-50%" :y      "-100%"
+             :x     "-50%" :y "-100%"
              :width "200%" :height "300%"}
     [:feOffset {:in "SourceAlpha" :result "offA" :dy "2"}]
     [:feOffset {:in "SourceAlpha" :result "offB" :dy "1"}]
     [:feOffset {:in "SourceAlpha" :result "offC" :dy "3"}]
-    [:feMorphology {:in       "offC"  :result "spreadC"
+    [:feMorphology {:in       "offC" :result "spreadC"
                     :operator "erode" :radius "2"}]
     [:feGaussianBlur {:in           "offA" :result "blurA"
                       :stdDeviation "1"}]
@@ -51,11 +51,11 @@
     [:feFlood {:flood-opacity "0.14" :result "opA"}]
     [:feFlood {:flood-opacity "0.12" :result "opB"}]
     [:feFlood {:flood-opacity "0.20" :result "opC"}]
-    [:feComposite {:in     "opA" :in2      "blurA"
+    [:feComposite {:in     "opA" :in2 "blurA"
                    :result "shA" :operator "in"}]
-    [:feComposite {:in     "opB" :in2      "blurB"
+    [:feComposite {:in     "opB" :in2 "blurB"
                    :result "shB" :operator "in"}]
-    [:feComposite {:in     "opC" :in2      "blurC"
+    [:feComposite {:in     "opC" :in2 "blurC"
                    :result "shC" :operator "in"}]
     [:feMerge
      [:feMergeNode {:in "shA"}]
@@ -68,8 +68,8 @@
 
 (defn describe-arc [cx cy r start stop]
   (let [
-        p-start (utils/polar-to-cartesian cx cy r start)
-        p-stop  (utils/polar-to-cartesian cx cy r stop)
+        p-start        (utils/polar-to-cartesian cx cy r start)
+        p-stop         (utils/polar-to-cartesian cx cy r stop)
 
         large-arc-flag (if (<= (- stop start) 180) "0" "1")]
 
@@ -94,100 +94,100 @@
                      359.5
                      (utils/ms-to-angle stop-ms))
 
-        straddles-now (utils/straddles-now? start-date stop-date)
-        now-ms (utils/get-ms (new js/Date))
-        broken-stop-before-angle (utils/ms-to-angle now-ms)
-        broken-start-after-angle (utils/ms-to-angle now-ms)
+        straddles-now              (utils/straddles-now? start-date stop-date)
+        now-ms                     (utils/get-ms (new js/Date))
+        broken-stop-before-angle   (utils/ms-to-angle now-ms)
+        broken-start-after-angle   (utils/ms-to-angle now-ms)
 
-        curr-time-ms (.valueOf curr-time)
-        start-abs-ms (.valueOf start-date)
-        stop-abs-ms  (.valueOf stop-date)
+        curr-time-ms               (.valueOf curr-time)
+        start-abs-ms               (.valueOf start-date)
+        stop-abs-ms                (.valueOf stop-date)
 
-        is-period-selected   (= :period
-                                (get-in
-                                 selected
-                                 [:current-selection :type-or-nil]))
-        selected-period      (if is-period-selected
-                               (get-in
-                                selected
-                                [:current-selection :id-or-nil])
-                               nil)
-        this-period-selected (= selected-period id)
+        is-period-selected         (= :period
+                                      (get-in
+                                        selected
+                                        [:current-selection :type-or-nil]))
+        selected-period            (if is-period-selected
+                                     (get-in
+                                       selected
+                                       [:current-selection :id-or-nil])
+                                     nil)
+        this-period-selected       (= selected-period id)
 
-        opacity-before "0.3"
-        opacity-after  "0.9"
-        opacity (cond
-                  this-period-selected         opacity-after
-                  (> curr-time-ms stop-abs-ms) opacity-before
-                  :else                        "0.7")
+        opacity-before             "0.3"
+        opacity-after              "0.9"
+        opacity                    (cond
+                                     this-period-selected opacity-after
+                                     (> curr-time-ms stop-abs-ms) opacity-before
+                                     :else "0.7")
 
-        color        (cond
-                       (or (nil? selected-period)
-                           (= selected-period id))
-                       (:color period)
-                       (and (some? selected-period)
-                            (not= selected-period id))
-                       "#aaaaaa"
-                       :else "#000000")
-        period-width (js/parseInt (:period-width svg-consts))
-        cx           (js/parseInt (:cx svg-consts))
-        cy           (js/parseInt (:cy svg-consts))
+        color                      (cond
+                                     (or (nil? selected-period)
+                                         (= selected-period id))
+                                     (:color period)
+                                     (and (some? selected-period)
+                                          (not= selected-period id))
+                                     "#aaaaaa"
+                                     :else "#000000")
+        period-width               (js/parseInt (:period-width svg-consts))
+        cx                         (js/parseInt (:cx svg-consts))
+        cy                         (js/parseInt (:cy svg-consts))
         ;; radii need to be offset to account for path using
         ;; A (arc) command having radius as the center of path
         ;; instead of edge (like circle)
-        r            (-> (case type
-                           :actual  (:r svg-consts)
-                           :planned (:inner-r svg-consts)
-                           (* 0.5 (:inner-r svg-consts)))
-                         (js/parseInt )
-                         (- (/ period-width 2)))
+        r                          (-> (case type
+                                         :actual (:r svg-consts)
+                                         :planned (:inner-r svg-consts)
+                                         (* 0.5 (:inner-r svg-consts)))
+                                       (js/parseInt)
+                                       (- (/ period-width 2)))
 
-        arc                      (describe-arc cx cy r start-angle stop-angle)
-        broken-arc-before        (describe-arc cx cy r
-                                               start-angle
-                                               broken-stop-before-angle)
-        broken-arc-after        (describe-arc cx cy r
-                                              broken-start-after-angle
-                                              stop-angle)
+        arc                        (describe-arc cx cy r start-angle stop-angle)
+        broken-arc-before          (describe-arc cx cy r
+                                                 start-angle
+                                                 broken-stop-before-angle)
+        broken-arc-after           (describe-arc cx cy r
+                                                 broken-start-after-angle
+                                                 stop-angle)
 
-        touch-click-handler      (if (not is-period-selected)
-                                   (fn [e]
-                                     (.stopPropagation e)
-                                     (.preventDefault e)
-                                     (rf/dispatch
-                                      [:set-selected-period id])))
-        movement-trigger-handler (if (and is-period-selected
-                                          (= selected-period id))
-                                   (fn [e]
-                                     (.stopPropagation e)
-                                     (rf/dispatch
-                                      [:set-moving-period true]))
-                                   )
+        touch-click-handler        (if (not is-period-selected)
+                                     (fn [e]
+                                       (.stopPropagation e)
+                                       (.preventDefault e)
+                                       (rf/dispatch
+                                         [:set-selected-period id])))
+        movement-trigger-handler   (if (and is-period-selected
+                                            (= selected-period id))
+                                     (fn [e]
+                                       (.stopPropagation e)
+                                       (rf/dispatch
+                                         [:set-moving-period true]))
+                                     )
 
-        yesterday-arrow-point     (utils/polar-to-cartesian cx cy r 1)
-        yesterday-arrow-point-bt  (utils/polar-to-cartesian
-                                   cx cy (+ r (* 0.7 (/ period-width 2))) 3)
-        yesterday-arrow-point-bb  (utils/polar-to-cartesian
-                                   cx cy (- r (* 0.7 (/ period-width 2))) 3)
+        yesterday-arrow-point      (utils/polar-to-cartesian cx cy r 1)
+        yesterday-arrow-point-bt   (utils/polar-to-cartesian
+                                     cx cy (+ r (* 0.7 (/ period-width 2))) 3)
+        yesterday-arrow-point-bb   (utils/polar-to-cartesian
+                                     cx cy (- r (* 0.7 (/ period-width 2))) 3)
 
-        yesterday-2-arrow-point     (utils/polar-to-cartesian cx cy r 3)
-        yesterday-2-arrow-point-bt  (utils/polar-to-cartesian
+        yesterday-2-arrow-point    (utils/polar-to-cartesian cx cy r 3)
+        yesterday-2-arrow-point-bt (utils/polar-to-cartesian
                                      cx cy (+ r (* 0.7 (/ period-width 2))) 5)
-        yesterday-2-arrow-point-bb  (utils/polar-to-cartesian
+        yesterday-2-arrow-point-bb (utils/polar-to-cartesian
                                      cx cy (- r (* 0.7 (/ period-width 2))) 5)
 
-        tomorrow-arrow-point     (utils/polar-to-cartesian cx cy r 359)
-        tomorrow-arrow-point-bt  (utils/polar-to-cartesian
-                                   cx cy (+ r (* 0.7 (/ period-width 2))) 357)
-        tomorrow-arrow-point-bb  (utils/polar-to-cartesian
-                                   cx cy (- r (* 0.7 (/ period-width 2))) 357)
+        tomorrow-arrow-point       (utils/polar-to-cartesian cx cy r 359)
+        tomorrow-arrow-point-bt    (utils/polar-to-cartesian
+                                     cx cy (+ r (* 0.7 (/ period-width 2))) 357)
+        tomorrow-arrow-point-bb    (utils/polar-to-cartesian
+                                     cx cy (- r (* 0.7 (/ period-width 2))) 357)
 
         tomorrow-2-arrow-point     (utils/polar-to-cartesian cx cy r 357)
         tomorrow-2-arrow-point-bt  (utils/polar-to-cartesian
                                      cx cy (+ r (* 0.7 (/ period-width 2))) 355)
         tomorrow-2-arrow-point-bb  (utils/polar-to-cartesian
                                      cx cy (- r (* 0.7 (/ period-width 2))) 355)
-         ]
+        ]
 
     [:g {:key (str id)}
      (if straddles-now
@@ -228,32 +228,32 @@
 
      (if starts-yesterday
        [:g
-        [:polyline {:fill "transparent"
-                    :stroke "white"
-                    :stroke-width "0.5"
+        [:polyline {:fill           "transparent"
+                    :stroke         "white"
+                    :stroke-width   "0.5"
                     :stroke-linecap "round"
-                    :points (str
-                             (:x yesterday-arrow-point-bt) ","
-                             (:y yesterday-arrow-point-bt) " "
-                             (:x yesterday-arrow-point) ","
-                             (:y yesterday-arrow-point) " "
-                             (:x yesterday-arrow-point-bb) ","
-                             (:y yesterday-arrow-point-bb) " "
-                             )
+                    :points         (str
+                                      (:x yesterday-arrow-point-bt) ","
+                                      (:y yesterday-arrow-point-bt) " "
+                                      (:x yesterday-arrow-point) ","
+                                      (:y yesterday-arrow-point) " "
+                                      (:x yesterday-arrow-point-bb) ","
+                                      (:y yesterday-arrow-point-bb) " "
+                                      )
 
                     }]
-        [:polyline {:fill "transparent"
-                    :stroke "white"
-                    :stroke-width "0.5"
+        [:polyline {:fill           "transparent"
+                    :stroke         "white"
+                    :stroke-width   "0.5"
                     :stroke-linecap "round"
-                    :points (str
-                             (:x yesterday-2-arrow-point-bt) ","
-                             (:y yesterday-2-arrow-point-bt) " "
-                             (:x yesterday-2-arrow-point) ","
-                             (:y yesterday-2-arrow-point) " "
-                             (:x yesterday-2-arrow-point-bb) ","
-                             (:y yesterday-2-arrow-point-bb) " "
-                             )
+                    :points         (str
+                                      (:x yesterday-2-arrow-point-bt) ","
+                                      (:y yesterday-2-arrow-point-bt) " "
+                                      (:x yesterday-2-arrow-point) ","
+                                      (:y yesterday-2-arrow-point) " "
+                                      (:x yesterday-2-arrow-point-bb) ","
+                                      (:y yesterday-2-arrow-point-bb) " "
+                                      )
 
                     }]
         ]
@@ -261,32 +261,32 @@
 
      (if stops-tomorrow
        [:g
-        [:polyline {:fill "transparent"
-                    :stroke "white"
-                    :stroke-width "0.5"
+        [:polyline {:fill           "transparent"
+                    :stroke         "white"
+                    :stroke-width   "0.5"
                     :stroke-linecap "round"
-                    :points (str
-                             (:x tomorrow-arrow-point-bt) ","
-                             (:y tomorrow-arrow-point-bt) " "
-                             (:x tomorrow-arrow-point) ","
-                             (:y tomorrow-arrow-point) " "
-                             (:x tomorrow-arrow-point-bb) ","
-                             (:y tomorrow-arrow-point-bb) " "
-                             )
+                    :points         (str
+                                      (:x tomorrow-arrow-point-bt) ","
+                                      (:y tomorrow-arrow-point-bt) " "
+                                      (:x tomorrow-arrow-point) ","
+                                      (:y tomorrow-arrow-point) " "
+                                      (:x tomorrow-arrow-point-bb) ","
+                                      (:y tomorrow-arrow-point-bb) " "
+                                      )
 
                     }]
-        [:polyline {:fill "transparent"
-                    :stroke "white"
-                    :stroke-width "0.5"
+        [:polyline {:fill           "transparent"
+                    :stroke         "white"
+                    :stroke-width   "0.5"
                     :stroke-linecap "round"
-                    :points (str
-                             (:x tomorrow-2-arrow-point-bt) ","
-                             (:y tomorrow-2-arrow-point-bt) " "
-                             (:x tomorrow-2-arrow-point) ","
-                             (:y tomorrow-2-arrow-point) " "
-                             (:x tomorrow-2-arrow-point-bb) ","
-                             (:y tomorrow-2-arrow-point-bb) " "
-                             )
+                    :points         (str
+                                      (:x tomorrow-2-arrow-point-bt) ","
+                                      (:y tomorrow-2-arrow-point-bt) " "
+                                      (:x tomorrow-2-arrow-point) ","
+                                      (:y tomorrow-2-arrow-point) " "
+                                      (:x tomorrow-2-arrow-point-bb) ","
+                                      (:y tomorrow-2-arrow-point-bb) " "
+                                      )
 
                     }]
         ])
@@ -322,104 +322,104 @@
         cy                (js/parseInt (:cy svg-consts))
         pos               (utils/client-to-view-box id evt type)
         pos-t             (utils/point-to-centered-circle
-                           (merge pos {:cx cx :cy cy}))
+                            (merge pos {:cx cx :cy cy}))
         angle             (utils/point-to-angle pos-t)
         mid-point-time-ms (utils/angle-to-ms angle)]
 
     (rf/dispatch [:move-selected-period mid-point-time-ms])))
 
-(defn x-svg [{:keys [cx cy r fill stroke shadow click] }]
+(defn x-svg [{:keys [cx cy r fill stroke shadow click]}]
   (let [pi        (.-PI js/Math)
         cx-int    (js/parseInt cx)
         cy-int    (js/parseInt cy)
         r-int     (js/parseInt r)
         r-int-adj (* 0.70 r-int)
 
-        x1 (+ cx-int (* r-int-adj (.cos js/Math (* pi (/ 3 4)))))
-        y1 (+ cy-int (* r-int-adj (.sin js/Math (* pi (/ 3 4)))))
-        x2 (+ cx-int (* r-int-adj (.cos js/Math (* pi (/ 7 4)))))
-        y2 (+ cy-int (* r-int-adj (.sin js/Math (* pi (/ 7 4)))))
+        x1        (+ cx-int (* r-int-adj (.cos js/Math (* pi (/ 3 4)))))
+        y1        (+ cy-int (* r-int-adj (.sin js/Math (* pi (/ 3 4)))))
+        x2        (+ cx-int (* r-int-adj (.cos js/Math (* pi (/ 7 4)))))
+        y2        (+ cy-int (* r-int-adj (.sin js/Math (* pi (/ 7 4)))))
 
-        x3 (+ cx-int (* r-int-adj (.cos js/Math (* pi (/ 1 4)))))
-        y3 (+ cy-int (* r-int-adj (.sin js/Math (* pi (/ 1 4)))))
-        x4 (+ cx-int (* r-int-adj (.cos js/Math (* pi (/ 5 4)))))
-        y4 (+ cy-int (* r-int-adj (.sin js/Math (* pi (/ 5 4)))))
+        x3        (+ cx-int (* r-int-adj (.cos js/Math (* pi (/ 1 4)))))
+        y3        (+ cy-int (* r-int-adj (.sin js/Math (* pi (/ 1 4)))))
+        x4        (+ cx-int (* r-int-adj (.cos js/Math (* pi (/ 5 4)))))
+        y4        (+ cy-int (* r-int-adj (.sin js/Math (* pi (/ 5 4)))))
 
-        generic {:fill           "transparent"
-                 :stroke         stroke
-                 :stroke-width   "1"
-                 :stroke-linecap "round"}]
+        generic   {:fill           "transparent"
+                   :stroke         stroke
+                   :stroke-width   "1"
+                   :stroke-linecap "round"}]
 
     [:g {:onClick click}
      [:circle (merge {:fill fill :cx cx :cy cy :r r}
-                   (if shadow
-                     {:filter "url(#shadow-2dp)"}
-                     {}))]
+                     (if shadow
+                       {:filter "url(#shadow-2dp)"}
+                       {}))]
 
-   [:path (merge generic
-                 {:d (str "M " x1 " " y1 " " "L " x2 " " y2 " ")})]
-   [:path (merge generic
-                 {:d (str "M " x3 " " y3 " " "L " x4 " " y4 " ")})]
-   ]))
+     [:path (merge generic
+                   {:d (str "M " x1 " " y1 " " "L " x2 " " y2 " ")})]
+     [:path (merge generic
+                   {:d (str "M " x3 " " y3 " " "L " x4 " " y4 " ")})]
+     ]))
 
-(defn +-svg [{:keys [cx cy r fill stroke shadow click] }]
+(defn +-svg [{:keys [cx cy r fill stroke shadow click]}]
   (let [pi        (.-PI js/Math)
         cx-int    (js/parseInt cx)
         cy-int    (js/parseInt cy)
         r-int     (js/parseInt r)
         r-int-adj (* 0.70 r-int)
 
-        x1 (+ cx-int (* r-int-adj (.cos js/Math (* pi (/ 1 2)))))
-        y1 (+ cy-int (* r-int-adj (.sin js/Math (* pi (/ 1 2)))))
-        x2 (+ cx-int (* r-int-adj (.cos js/Math (* pi (/ 3 2)))))
-        y2 (+ cy-int (* r-int-adj (.sin js/Math (* pi (/ 3 2)))))
+        x1        (+ cx-int (* r-int-adj (.cos js/Math (* pi (/ 1 2)))))
+        y1        (+ cy-int (* r-int-adj (.sin js/Math (* pi (/ 1 2)))))
+        x2        (+ cx-int (* r-int-adj (.cos js/Math (* pi (/ 3 2)))))
+        y2        (+ cy-int (* r-int-adj (.sin js/Math (* pi (/ 3 2)))))
 
-        x3 (+ cx-int (* r-int-adj (.cos js/Math pi)))
-        y3 (+ cy-int (* r-int-adj (.sin js/Math pi)))
-        x4 (+ cx-int (* r-int-adj (.cos js/Math (* pi 2))))
-        y4 (+ cy-int (* r-int-adj (.sin js/Math (* pi 2))))
+        x3        (+ cx-int (* r-int-adj (.cos js/Math pi)))
+        y3        (+ cy-int (* r-int-adj (.sin js/Math pi)))
+        x4        (+ cx-int (* r-int-adj (.cos js/Math (* pi 2))))
+        y4        (+ cy-int (* r-int-adj (.sin js/Math (* pi 2))))
 
-        generic {:fill           "transparent"
-                 :stroke         stroke
-                 :stroke-width   "1"
-                 :stroke-linecap "round"}]
+        generic   {:fill           "transparent"
+                   :stroke         stroke
+                   :stroke-width   "1"
+                   :stroke-linecap "round"}]
 
     [:g {:onClick click}
      [:circle (merge {:fill fill :cx cx :cy cy :r r}
-                   (if shadow
-                     {:filter "url(#shadow-2dp)"}
-                     {}))]
-   [:path (merge generic
-                 {:d (str "M " x1 " " y1 " " "L " x2 " " y2 " ")})]
-   [:path (merge generic
-                 {:d (str "M " x3 " " y3 " " "L " x4 " " y4 " ")})]
-   ]))
+                     (if shadow
+                       {:filter "url(#shadow-2dp)"}
+                       {}))]
+     [:path (merge generic
+                   {:d (str "M " x1 " " y1 " " "L " x2 " " y2 " ")})]
+     [:path (merge generic
+                   {:d (str "M " x3 " " y3 " " "L " x4 " " y4 " ")})]
+     ]))
 
-(defn --svg [{:keys [cx cy r fill stroke shadow click] }]
+(defn --svg [{:keys [cx cy r fill stroke shadow click]}]
   (let [pi        (.-PI js/Math)
         cx-int    (js/parseInt cx)
         cy-int    (js/parseInt cy)
         r-int     (js/parseInt r)
         r-int-adj (* 0.70 r-int)
 
-        x3 (+ cx-int (* r-int-adj (.cos js/Math pi)))
-        y3 (+ cy-int (* r-int-adj (.sin js/Math pi)))
-        x4 (+ cx-int (* r-int-adj (.cos js/Math (* pi 2))))
-        y4 (+ cy-int (* r-int-adj (.sin js/Math (* pi 2))))
+        x3        (+ cx-int (* r-int-adj (.cos js/Math pi)))
+        y3        (+ cy-int (* r-int-adj (.sin js/Math pi)))
+        x4        (+ cx-int (* r-int-adj (.cos js/Math (* pi 2))))
+        y4        (+ cy-int (* r-int-adj (.sin js/Math (* pi 2))))
 
-        generic {:fill           "transparent"
-                 :stroke         stroke
-                 :stroke-width   "1"
-                 :stroke-linecap "round"}]
+        generic   {:fill           "transparent"
+                   :stroke         stroke
+                   :stroke-width   "1"
+                   :stroke-linecap "round"}]
 
     [:g {:onClick click}
      [:circle (merge {:fill fill :cx cx :cy cy :r r}
-                   (if shadow
-                     {:filter "url(#shadow-2dp)"}
-                     {}))]
-   [:path (merge generic
-                 {:d (str "M " x3 " " y3 " " "L " x4 " " y4 " ")})]
-   ]))
+                     (if shadow
+                       {:filter "url(#shadow-2dp)"}
+                       {}))]
+     [:path (merge generic
+                   {:d (str "M " x3 " " y3 " " "L " x4 " " y4 " ")})]
+     ]))
 
 (defn zoom-in-buttons []
   (let [basics {:fill   "#c2c2c2"
@@ -487,16 +487,16 @@
         ticker-ms                (utils/get-ms curr-time)
         ticker-angle             (utils/ms-to-angle ticker-ms)
         ticker-pos               (utils/polar-to-cartesian
-                                  (:cx svg-consts)
-                                  (:cy svg-consts)
-                                  (:r svg-consts)
-                                  ticker-angle)
+                                   (:cx svg-consts)
+                                   (:cy svg-consts)
+                                   (:r svg-consts)
+                                   ticker-angle)
         zoom                     @(rf/subscribe [:zoom])
         filtered-periods         (utils/filter-periods-for-day day tasks)
         selected-period          (if (= :period
                                         (get-in
-                                         selected
-                                         [:current-selection :type-or-nil]))
+                                          selected
+                                          [:current-selection :type-or-nil]))
                                    (get-in selected
                                            [:current-selection :id-or-nil])
                                    nil)
@@ -505,12 +505,12 @@
                                    (fn [e]
                                      (.preventDefault e)
                                      (rf/dispatch
-                                      [:set-moving-period false])))
+                                       [:set-moving-period false])))
         deselect                 (if (not is-moving-period)
                                    (fn [e]
                                      (.preventDefault e)
                                      (rf/dispatch
-                                      [:set-selected-period nil])))]
+                                       [:set-selected-period nil])))]
 
     (js/setTimeout clock-tick 1000)
 
@@ -586,14 +586,14 @@
      [ui/list
       (->> tasks
            (map
-            (fn [t]
-              [ui/list-item
-               {:key         (:id t)
-                :primaryText (:name t)
-                :onTouchTap  #(rf/dispatch
-                               [:set-selected-task (:id t)])
-                }
-               ])))]]]])
+             (fn [t]
+               [ui/list-item
+                {:key         (:id t)
+                 :primaryText (:name t)
+                 :onTouchTap  #(rf/dispatch
+                                 [:set-selected-task (:id t)])
+                 }
+                ])))]]]])
 
 (defn svg-mui-circle [color]
   [ui/svg-icon
@@ -609,42 +609,42 @@
       (str (string/join "" (take character-limit text)) " ...")
       text)
     (r/as-element
-     [:span {:style {:text-decoration "italic"
-                     :color           "grey"}}
-      if-empty-message]))
+      [:span {:style {:text-decoration "italic"
+                      :color           "grey"}}
+       if-empty-message]))
   )
 
 (defn queue [tasks selected]
   (let [periods-no-stamps (utils/filter-periods-no-stamps tasks)
         sel               (:current-selection selected)
-        period-selected (= :queue (:type-or-nil sel))
-        sel-id (:id-or-nil sel)
+        period-selected   (= :queue (:type-or-nil sel))
+        sel-id            (:id-or-nil sel)
         ]
     [ui/list {:style {:width "100%"}}
-        (->> periods-no-stamps
-             (map (fn [period]
-                    [ui/list-item
-                     {:style       (merge {:width "100%"}
-                                          (if (and (= :queue (:type-or-nil sel))
-                                                   (= (:id period) (:id-or-nil sel)))
-                                            {:backgroundColor (color :grey-300)}
-                                            {}))
-                      :key         (:id period)
-                      :leftIcon    (r/as-element
-                                    [ui/svg-icon [ic/action-list {:color (:color period)}]])
-                      :primaryText (concatonated-text (:description period) 10 "No period description ...")
-                      :onTouchTap  (if (and period-selected
-                                            (= sel-id (:id period)))
-                                     (fn [e]
-                                       (rf/dispatch [:set-active-page
-                                                     {:page-id :entity-forms
-                                                      :type :period
-                                                      :id (:id period)}]))
-                                       (fn [e]
-                                         (rf/dispatch
-                                          [:set-selected-queue (:id period)])
-                                         )
-                                       )}])))]))
+     (->> periods-no-stamps
+          (map (fn [period]
+                 [ui/list-item
+                  {:style       (merge {:width "100%"}
+                                       (if (and (= :queue (:type-or-nil sel))
+                                                (= (:id period) (:id-or-nil sel)))
+                                         {:backgroundColor (color :grey-300)}
+                                         {}))
+                   :key         (:id period)
+                   :leftIcon    (r/as-element
+                                  [ui/svg-icon [ic/action-list {:color (:color period)}]])
+                   :primaryText (concatonated-text (:description period) 10 "No period description ...")
+                   :onTouchTap  (if (and period-selected
+                                         (= sel-id (:id period)))
+                                  (fn [e]
+                                    (rf/dispatch [:set-active-page
+                                                  {:page-id :entity-forms
+                                                   :type    :period
+                                                   :id      (:id period)}]))
+                                  (fn [e]
+                                    (rf/dispatch
+                                      [:set-selected-queue (:id period)])
+                                    )
+                                  )}])))]))
 
 (def basic-button {:style {}})
 (def basic-mini-button {:mini             true
@@ -688,13 +688,13 @@
 
 (defn back-button []
   [ui/floating-action-button (merge
-                              basic-button
-                              {:secondary true
-                               :onTouchTap
-                               (fn [e]
-                                 (reset! margin-action-expanded -20)
-                                 (rf/dispatch
-                                  [:action-buttons-back]))})
+                               basic-button
+                               {:secondary true
+                                :onTouchTap
+                                           (fn [e]
+                                             (reset! margin-action-expanded -20)
+                                             (rf/dispatch
+                                               [:action-buttons-back]))})
    [ic/navigation-close basic-ic]])
 
 (defonce action-buttons-collapsed-click (r/atom false))
@@ -705,9 +705,9 @@
                   [ui/floating-action-button
                    (merge basic-button
                           {:backgroundColor (utils/color-gradient
-                                             (:primary app-theme)
-                                             (:secondary app-theme)
-                                             percent)})
+                                              (:primary app-theme)
+                                              (:secondary app-theme)
+                                              percent)})
                    (svg-mui-three-dots)])]
 
     (if @action-buttons-collapsed-click
@@ -728,13 +728,13 @@
 
       [ui/floating-action-button
        (merge
-        basic-button
-        {:onTouchTap
-         (fn [e]
-           (.stopPropagation e)
-           (.preventDefault e)
-           (reset! action-buttons-collapsed-click true))
-         })
+         basic-button
+         {:onTouchTap
+          (fn [e]
+            (.stopPropagation e)
+            (.preventDefault e)
+            (reset! action-buttons-collapsed-click true))
+          })
        (svg-mui-three-dots)]
       )
     )
@@ -773,7 +773,7 @@
 
     (if @action-buttons-collapsed-click
       (do (reset! action-buttons-collapsed-click false)
-          (reset! margin-action-expanded 20) ))
+          (reset! margin-action-expanded 20)))
 
     [:div expanded-buttons-style
 
@@ -810,7 +810,7 @@
 (defn action-buttons-period-selection [selected]
   (if @action-buttons-collapsed-click
     (do (reset! action-buttons-collapsed-click false)
-        (reset! margin-action-expanded 20) ))
+        (reset! margin-action-expanded 20)))
 
   [:div expanded-buttons-style
 
@@ -840,13 +840,13 @@
                                {:marginBottom "20"})
             :onTouchTap (fn [e]
                           (rf/dispatch
-                           [:set-active-page
-                            {:page-id :entity-forms
-                             :type    :period
-                             :id      (get-in
-                                       selected
-                                       [:current-selection
-                                        :id-or-nil])}]))})
+                            [:set-active-page
+                             {:page-id :entity-forms
+                              :type    :period
+                              :id      (get-in
+                                         selected
+                                         [:current-selection
+                                          :id-or-nil])}]))})
 
     [ic/editor-mode-edit basic-ic]]
 
@@ -857,7 +857,7 @@
 (defn action-buttons-queue-selection [selected]
   (if @action-buttons-collapsed-click
     (do (reset! action-buttons-collapsed-click false)
-        (reset! margin-action-expanded 20) ))
+        (reset! margin-action-expanded 20)))
 
   [:div expanded-buttons-style
 
@@ -875,13 +875,13 @@
                                {:marginBottom "20"})
             :onTouchTap (fn [e]
                           (rf/dispatch
-                           [:set-active-page
-                            {:page-id :entity-forms
-                             :type    :period
-                             :id      (get-in
-                                       selected
-                                       [:current-selection
-                                        :id-or-nil])}]))})
+                            [:set-active-page
+                             {:page-id :entity-forms
+                              :type    :period
+                              :id      (get-in
+                                         selected
+                                         [:current-selection
+                                          :id-or-nil])}]))})
     [ic/editor-mode-edit basic-ic]]
 
    (back-button)
@@ -967,9 +967,9 @@
                                        (rf/dispatch [:set-main-drawer false])
                                        (rf/dispatch [:set-active-page {:page-id :account}]))
                      :innerDivStyle {:display "flex" :align-items "center"}
-                     :disabled true}
+                     :disabled      true}
        [ic/social-person {:style {:marginRight "0.5em"
-                                  :color "grey"}}]
+                                  :color       "grey"}}]
        [:span "Account"]]
       ]]
     )
@@ -1203,7 +1203,7 @@
                            (rf/dispatch [:set-category-form-color
                                          {:blue (.ceil js/Math v)}]))}]
    ]
-   )
+  )
 
 (defn entity-form-chooser [type]
   [:div.entity-selection
@@ -1219,10 +1219,10 @@
                     ;;          :style {}}))
                     :onClick  (fn [e]
                                 (rf/dispatch
-                                 [:set-active-page
-                                  {:page-id :entity-forms
-                                   :type    :category
-                                   :id      nil}]))}]
+                                  [:set-active-page
+                                   {:page-id :entity-forms
+                                    :type    :category
+                                    :id      nil}]))}]
    [ui/flat-button {:label    "Task"
                     :disabled (= type :task)
                     :primary  (not= type :task)
@@ -1233,10 +1233,10 @@
                     ;;          :style {}}))
                     :onClick  (fn [e]
                                 (rf/dispatch
-                                 [:set-active-page
-                                  {:page-id :entity-forms
-                                   :type    :task
-                                   :id      nil}]))}]
+                                  [:set-active-page
+                                   {:page-id :entity-forms
+                                    :type    :task
+                                    :id      nil}]))}]
    [ui/flat-button {:label    "Period"
                     :disabled (= type :period)
                     :primary  (not= type :period)
@@ -1247,10 +1247,10 @@
                     ;;          :style {}}))
                     :onClick  (fn [e]
                                 (rf/dispatch
-                                 [:set-active-page
-                                  {:page-id :entity-forms
-                                   :type    :period
-                                   :id      nil}]))}]
+                                  [:set-active-page
+                                   {:page-id :entity-forms
+                                    :type    :period
+                                    :id      nil}]))}]
    ]
   )
 
@@ -1325,7 +1325,7 @@
       :value       id
       :primaryText (:name category)
       :leftIcon    (r/as-element
-                    (svg-mui-circle (:color category)) )}]
+                     (svg-mui-circle (:color category)))}]
     )
   )
 
@@ -1343,7 +1343,7 @@
       :value       (str id)
       :primaryText (:name task)
       :leftIcon    (r/as-element
-                    (svg-mui-circle (:color task)) )}]
+                     (svg-mui-circle (:color task)))}]
     )
   )
 
@@ -1372,9 +1372,9 @@
                      :value               name
                      :fullWidth           true
                      :onChange
-                     (fn [e v]
-                       (rf/dispatch [:set-task-form-name v])
-                       )}]
+                                          (fn [e v]
+                                            (rf/dispatch [:set-task-form-name v])
+                                            )}]
 
      [ui/text-field {:floating-label-text "Description"
                      :value               description
@@ -1382,9 +1382,9 @@
                      :multiLine           true
                      :rows                4
                      :onChange
-                     (fn [e v]
-                       (rf/dispatch [:set-task-form-description v])
-                       )}]
+                                          (fn [e v]
+                                            (rf/dispatch [:set-task-form-description v])
+                                            )}]
 
      [ui/select-field
       ;; select fields get a little strange with the parent entity id's
@@ -1398,8 +1398,8 @@
        :autoWidth         true
        :fullWidth         true
        :selectionRenderer (partial
-                           category-selection-render
-                           categories)
+                            category-selection-render
+                            categories)
        :onChange          (fn [e, i, v]
                             (rf/dispatch [:set-task-form-category-id (uuid v)]))
        }
@@ -1452,14 +1452,14 @@
      [ui/date-picker {:hintText "Start Date"
                       :value    start-d
                       :onChange
-                      (fn [_ new-d]
-                        (rf/dispatch [:set-period-form-date [new-d :start]]))}]
+                                (fn [_ new-d]
+                                  (rf/dispatch [:set-period-form-date [new-d :start]]))}]
 
      [ui/time-picker {:hintText "Start Time"
                       :value    start-d
                       :onChange
-                      (fn [_ new-s]
-                        (rf/dispatch [:set-period-form-time [new-s :start]]))}]
+                                (fn [_ new-s]
+                                  (rf/dispatch [:set-period-form-time [new-s :start]]))}]
 
      [ui/subheader "Stop"]
 
@@ -1470,14 +1470,14 @@
      [ui/date-picker {:hintText "Stop Date"
                       :value    stop-d
                       :onChange
-                      (fn [_ new-d]
-                        (rf/dispatch [:set-period-form-date [new-d :stop]]))}]
+                                (fn [_ new-d]
+                                  (rf/dispatch [:set-period-form-date [new-d :stop]]))}]
 
      [ui/time-picker {:hintText "Stop Time"
                       :value    stop-d
                       :onChange
-                      (fn [_ new-s]
-                        (rf/dispatch [:set-period-form-time [new-s :stop]]))}]
+                                (fn [_ new-s]
+                                  (rf/dispatch [:set-period-form-time [new-s :stop]]))}]
 
      [ui/text-field {:floating-label-text "Description"
                      :value               description
@@ -1485,9 +1485,9 @@
                      :multiLine           true
                      :rows                4
                      :onChange
-                     (fn [e v]
-                       (rf/dispatch [:set-period-form-description v])
-                       )}]
+                                          (fn [e v]
+                                            (rf/dispatch [:set-period-form-description v])
+                                            )}]
 
      [ui/select-field
       ;; select fields get a little strange with the parent entity id's
@@ -1502,8 +1502,8 @@
        :fullWidth         true
        :errorText         (if (= :no-task error) "Must Select Task")
        :selectionRenderer (partial
-                           task-selection-render
-                           tasks)
+                            task-selection-render
+                            tasks)
        :onChange          (fn [e, i, v]
                             (rf/dispatch [:set-period-form-task-id (uuid v)]))
        }
@@ -1529,8 +1529,8 @@
 
      (case page-value
        :category (category-form entity-id)
-       :task     (task-form entity-id)
-       :period   (period-form entity-id)
+       :task (task-form entity-id)
+       :period (period-form entity-id)
        [:div (str page-value " page value doesn't exist")]
        )
      ]
@@ -1546,131 +1546,131 @@
         is-child-selected false]
 
     (r/as-element
-     [ui/list-item
-      (merge {:key         id
-              :primaryText (concatonated-text description 10 "no description provided ...")
-              :style       (if is-selected {:backgroundColor "#dddddd"})
-              :onClick     (fn [e]
-                             (if is-selected
-                               (rf/dispatch [:set-active-page {:page-id :entity-forms
-                                                               :type :period
-                                                               :id id}])
-                               (rf/dispatch [:set-selected {:type :period :id id}])))}
+      [ui/list-item
+       (merge {:key         id
+               :primaryText (concatonated-text description 10 "no description provided ...")
+               :style       (if is-selected {:backgroundColor "#dddddd"})
+               :onClick     (fn [e]
+                              (if is-selected
+                                (rf/dispatch [:set-active-page {:page-id :entity-forms
+                                                                :type    :period
+                                                                :id      id}])
+                                (rf/dispatch [:set-selected {:type :period :id id}])))}
 
-             (if (and (some? (:start period))
-                      (some? (:stop period)))
+              (if (and (some? (:start period))
+                       (some? (:stop period)))
 
-               ;; if not queue render the arc
-               (let [start       (:start period)
-                     start-ms    (utils/get-ms start)
-                     start-angle (utils/ms-to-angle start-ms)
-                     stop        (:stop period)
-                     stop-ms     (utils/get-ms stop)
-                     stop-angle  (utils/ms-to-angle stop-ms)
+                ;; if not queue render the arc
+                (let [start                (:start period)
+                      start-ms             (utils/get-ms start)
+                      start-angle          (utils/ms-to-angle start-ms)
+                      stop                 (:stop period)
+                      stop-ms              (utils/get-ms stop)
+                      stop-angle           (utils/ms-to-angle stop-ms)
 
-                     angle-difference     (- stop-angle start-angle)
-                     minimum-angle        30
-                     factor-change        (- minimum-angle angle-difference)
-                     ;; adjustments seek to set the angle difference to minimum (no matter what it is)
-                     ;; catches when one side goes over edge with max & min
-                     start-angle-adjusted (.max js/Math
-                                                (- start-angle (/ factor-change 2))
-                                                1)
-                     stop-angle-adjusted  (.min js/Math
-                                                (+ stop-angle (/ factor-change 2))
-                                                359)
+                      angle-difference     (- stop-angle start-angle)
+                      minimum-angle        30
+                      factor-change        (- minimum-angle angle-difference)
+                      ;; adjustments seek to set the angle difference to minimum (no matter what it is)
+                      ;; catches when one side goes over edge with max & min
+                      start-angle-adjusted (.max js/Math
+                                                 (- start-angle (/ factor-change 2))
+                                                 1)
+                      stop-angle-adjusted  (.min js/Math
+                                                 (+ stop-angle (/ factor-change 2))
+                                                 359)
 
-                     use-adjustment (< angle-difference 20)
-                     start-used     (if use-adjustment
-                                      start-angle-adjusted
-                                      start-angle)
-                     stop-used      (if use-adjustment
-                                      stop-angle-adjusted
-                                      stop-angle)]
+                      use-adjustment       (< angle-difference 20)
+                      start-used           (if use-adjustment
+                                             start-angle-adjusted
+                                             start-angle)
+                      stop-used            (if use-adjustment
+                                             stop-angle-adjusted
+                                             stop-angle)]
 
-                 {:leftIcon (r/as-element
-                             [ui/svg-icon
-                              {:viewBox "0 0 24 24"}
-                              [:g
-                               [:circle {:cx           "12" :cy     "12" :r "11"
-                                         :stroke-width "2"  :stroke "#cdcdcd"
-                                         :fill         "transparent"}]
-                               [:path
-                                {:d            (describe-arc 12 12 11 start-used stop-used)
-                                 :stroke       color
-                                 :stroke-width "2"
-                                 :fill         "transparent"
-                                 }]]])})
+                  {:leftIcon (r/as-element
+                               [ui/svg-icon
+                                {:viewBox "0 0 24 24"}
+                                [:g
+                                 [:circle {:cx           "12" :cy "12" :r "11"
+                                           :stroke-width "2" :stroke "#cdcdcd"
+                                           :fill         "transparent"}]
+                                 [:path
+                                  {:d            (describe-arc 12 12 11 start-used stop-used)
+                                   :stroke       color
+                                   :stroke-width "2"
+                                   :fill         "transparent"
+                                   }]]])})
 
-               ;; otherwise render a queue indicator
-               {:leftIcon (r/as-element
-                           [ui/svg-icon [ic/action-list {:color color}]])}))])))
+                ;; otherwise render a queue indicator
+                {:leftIcon (r/as-element
+                             [ui/svg-icon [ic/action-list {:color color}]])}))])))
 
 (defn list-task [current-selection task]
   (let [{:keys [id name actual-periods complete planned-periods color]} task
 
-        periods (concat
-                 (map #(assoc % :type :actual) actual-periods)
-                 (map #(assoc % :type :planned) planned-periods))
+        periods            (concat
+                             (map #(assoc % :type :actual) actual-periods)
+                             (map #(assoc % :type :planned) planned-periods))
 
         periods-with-color (->> periods (map #(assoc % :color color)))
         periods-sorted     (reverse
-                            (sort-by #(if (some? (:start %))
-                                        (.valueOf (:start %))
-                                        0) periods-with-color))
-        sel-id      (:id-or-nil current-selection)
-        sel-cat     (:type-or-nil current-selection)
-        is-selected (and (= :task sel-cat)
-                         (= id sel-id))
-        is-child-selected (->> task
-                               ((fn [task] ;; pulls periods into one seq
-                                  (concat (:planned-periods task) (:actual-periods task))))
-                               (some #(if (= sel-id (:id %)) true nil))
-                               (some?))]
+                             (sort-by #(if (some? (:start %))
+                                         (.valueOf (:start %))
+                                         0) periods-with-color))
+        sel-id             (:id-or-nil current-selection)
+        sel-cat            (:type-or-nil current-selection)
+        is-selected        (and (= :task sel-cat)
+                                (= id sel-id))
+        is-child-selected  (->> task
+                                ((fn [task]                                                                             ;; pulls periods into one seq
+                                   (concat (:planned-periods task) (:actual-periods task))))
+                                (some #(if (= sel-id (:id %)) true nil))
+                                (some?))]
     (r/as-element
-     [ui/list-item
-      {:key         id
-       :primaryText (concatonated-text name 15 "no name entered ...")
-       :nestedItems (->> periods-sorted
-                         (map (partial list-period current-selection)))
-       :leftIcon    (r/as-element
-                     [ui/checkbox {:checked   complete
-                                   :iconStyle {:fill color}}])
-       :open        (or is-selected
-                        is-child-selected)
-       :style       (if is-selected {:backgroundColor "#dddddd"})
-       :onClick     (fn [e]
-                      (if is-selected
-                        (rf/dispatch [:set-active-page {:page-id :entity-forms
-                                                        :type :task
-                                                        :id id}])
-                        (rf/dispatch [:set-selected {:type :task :id id}])))
-       }])))
+      [ui/list-item
+       {:key         id
+        :primaryText (concatonated-text name 15 "no name entered ...")
+        :nestedItems (->> periods-sorted
+                          (map (partial list-period current-selection)))
+        :leftIcon    (r/as-element
+                       [ui/checkbox {:checked   complete
+                                     :iconStyle {:fill color}}])
+        :open        (or is-selected
+                         is-child-selected)
+        :style       (if is-selected {:backgroundColor "#dddddd"})
+        :onClick     (fn [e]
+                       (if is-selected
+                         (rf/dispatch [:set-active-page {:page-id :entity-forms
+                                                         :type    :task
+                                                         :id      id}])
+                         (rf/dispatch [:set-selected {:type :task :id id}])))
+        }])))
 
 (defn list-category [current-selection category]
   (let [{:keys [id name color tasks]} category
-        sel-id      (:id-or-nil current-selection)
-        sel-cat     (:type-or-nil current-selection)
-        is-selected (and (= :category sel-cat)
-                         (= id sel-id))
-        is-child-selected (->> category
-                               (:tasks)
-                               (some #(if (= sel-id (:id %)) true nil))
-                               (some?))
+        sel-id                 (:id-or-nil current-selection)
+        sel-cat                (:type-or-nil current-selection)
+        is-selected            (and (= :category sel-cat)
+                                    (= id sel-id))
+        is-child-selected      (->> category
+                                    (:tasks)
+                                    (some #(if (= sel-id (:id %)) true nil))
+                                    (some?))
         is-grandchild-selected (if is-child-selected
                                  (->> category
                                       (:tasks)
                                       (some #(if (= sel-id (:id %)) %))
-                                      ((fn [task] ;; pulls periods into one seq
+                                      ((fn [task]                                                                       ;; pulls periods into one seq
                                          (concat (:planned-periods task) (:actual-periods task))))
                                       (some #(if (= sel-id (:id %)) true nil))
                                       (some?)))
-        ordered-tasks (sort-by (fn [task]
-                                 (+ (if (:complete task) 100 0)
-                                    0 ;; TODO use first character alphabet value of name to provide a two level order
-                                      ;; using just sort by and no java comparator
-                                    ))
-                               tasks)]
+        ordered-tasks          (sort-by (fn [task]
+                                          (+ (if (:complete task) 100 0)
+                                             0                                                                          ;; TODO use first character alphabet value of name to provide a two level order
+                                             ;; using just sort by and no java comparator
+                                             ))
+                                        tasks)]
 
     [ui/list-item {:key         id
                    :primaryText (concatonated-text name 20
@@ -1686,14 +1686,14 @@
                    :onClick     (fn [e]
                                   (if is-selected
                                     (rf/dispatch [:set-active-page {:page-id :entity-forms
-                                                                    :type :category
-                                                                    :id id}])
+                                                                    :type    :category
+                                                                    :id      id}])
                                     (rf/dispatch [:set-selected {:type :category :id id}])))
                    }]))
 
 (defn list-page []
-  (let [categories @(rf/subscribe [:categories])
-        selected @(rf/subscribe [:selected])
+  (let [categories        @(rf/subscribe [:categories])
+        selected          @(rf/subscribe [:selected])
         current-selection (:current-selection selected)]
 
     [:div
@@ -1710,7 +1710,7 @@
 
     [:div
      (app-bar)
-     [ui/paper {:style {:width "100%"
+     [ui/paper {:style {:width   "100%"
                         :padding "1em"}}
       [ui/text-field {:floating-label-text "Name"
                       :fullWidth           true}]
@@ -1724,16 +1724,16 @@
         page-id   (:page-id this-page)]
     [ui/mui-theme-provider
      {:mui-theme (get-mui-theme
-                  {:palette
-                   {:primary1-color (:primary app-theme)
-                    :accent1-color  (:secondary app-theme)}
-                   })}
+                   {:palette
+                    {:primary1-color (:primary app-theme)
+                     :accent1-color  (:secondary app-theme)}
+                    })}
      [:div
       (case page-id
-        :home         (home-page)
+        :home (home-page)
         :entity-forms (entity-forms this-page)
-        :list         (list-page)
-        :account      (account-page)
+        :list (list-page)
+        :account (account-page)
         ;; default
         (home-page))]
      ]
@@ -1745,7 +1745,7 @@
 (secretary/set-config! :prefix "#")
 
 (secretary/defroute "/" []
-  (rf/dispatch [:set-active-page {:page-id :home}]))
+                    (rf/dispatch [:set-active-page {:page-id :home}]))
 
 ;; -------------------------
 ;; History
@@ -1753,9 +1753,9 @@
 (defn hook-browser-navigation! []
   (doto (History.)
     (events/listen
-     HistoryEventType/NAVIGATE
-     (fn [event]
-       (secretary/dispatch! (.-token event))))
+      HistoryEventType/NAVIGATE
+      (fn [event]
+        (secretary/dispatch! (.-token event))))
     (.setEnabled true)))
 
 ;; -------------------------
