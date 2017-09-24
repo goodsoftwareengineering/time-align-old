@@ -1038,8 +1038,10 @@
                :box-sizing "border-box"}}
       [ui/paper {:style {:width "100%"
                          :min-height "10em" ;; keeps the tabs above action
-                                           ;; and from tabs 'jumping' if there
-                                           ;; is no content in other tab
+                                            ;; and from tabs 'jumping' if there
+                                            ;; is no content in other tab
+                                            ;; at least on mobile
+                                            ;; TODO add breakpoint rules 
                          }}
 
        [ui/tabs {:tabItemContainerStyle {:backgroundColor "white"}
