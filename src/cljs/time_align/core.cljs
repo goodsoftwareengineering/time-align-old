@@ -16,6 +16,8 @@
             [time-align.subscriptions]
             [clojure.string :as string]
             [time-align.utilities :as utils]
+            [goog.string :as gstring]
+            [goog.string.format]
             [cljs.pprint :refer [pprint]])
   (:import goog.History))
 
@@ -975,12 +977,20 @@
   )
 
 (defn stats [selected]
-  (let []
+  (let [planned-time @(rf/subscribe [:planned-time])]
+
     [ui/table {:selectable false}
      [ui/table-body {:display-row-checkbox false}
       [ui/table-row
        [ui/table-row-column "time planned"]
-       [ui/table-row-column "123456"]
+       [ui/table-row-column (str
+                             (gstring/format "%.2f"
+                                             (-> planned-time
+                                                 (/ 1000)
+                                                 (/ 60)
+                                                 (/ 60)
+                                                 ))
+                             " hours")]
        ]
       [ui/table-row
        [ui/table-row-column "time accounted"]
