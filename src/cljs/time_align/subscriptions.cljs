@@ -1,6 +1,6 @@
 (ns time-align.subscriptions
   (:require [re-frame.core :refer [reg-sub]]
-            [time-align.utilities :as utils]
+            [time-align.client-utilities :as utils]
 
             [cljs.pprint :refer [pprint]]))
 

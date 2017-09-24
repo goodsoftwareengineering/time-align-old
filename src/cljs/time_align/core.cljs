@@ -18,6 +18,7 @@
             [time-align.utilities :as utils]
             [goog.string :as gstring]
             [goog.string.format]
+            [time-align.client-utilities :as utils]
             [cljs.pprint :refer [pprint]])
   (:import goog.History))
 

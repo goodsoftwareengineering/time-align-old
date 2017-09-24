@@ -1,7 +1,7 @@
 (ns time-align.handlers
   (:require [time-align.db :as db]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-            [time-align.utilities :as utils]
+            [time-align.client-utilities :as utils]
             ))
 
 (reg-event-db

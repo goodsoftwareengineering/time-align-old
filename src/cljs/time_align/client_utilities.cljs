@@ -1,4 +1,4 @@
-(ns time-align.utilities
+(ns time-align.client-utilities
   (:require
     [clojure.string :as string]))
 

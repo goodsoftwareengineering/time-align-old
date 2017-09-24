@@ -1,7 +1,7 @@
 (ns time-align.db
   (:require [clojure.spec :as s]
             [clojure.test.check.generators :as gen]
-            [time-align.utilities :as utils]
+            [time-align.client-utilities :as utils]
             [clojure.string :as string]
 
             [cljs.pprint :refer [pprint]]
