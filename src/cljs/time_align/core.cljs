@@ -565,9 +565,11 @@
        )
 
      [:polyline {:points "10,85 5,90 10,95"
+                 :fill "grey"
                  :onClick (fn [e]
                             (rf/dispatch [:iterate-displayed-day :prev]))}]
      [:polyline {:points "90,85 95,90 90,95"
+                 :fill "grey"
                  :onClick (fn [e]
                             (rf/dispatch [:iterate-displayed-day :next]))}]
      ]))
@@ -1025,7 +1027,8 @@
                :justify-content "center"
                :align-items "center"
                :flex-direction "column"}}
-      [:div.day-label (.toDateString displayed-day)]
+      [:div.day-label {:style {:color "grey"}}
+       (.toDateString displayed-day)]
       (day tasks selected displayed-day)]
 
      [:div.lower-container
