@@ -93,7 +93,7 @@
   (* (/ ms-in-day 360) angle))
 
 (defn get-ms
-  "takes a js/date and returns milliseconds since 00:00 that day"
+  "takes a js/date and returns milliseconds since 00:00 that day. Essentially relative ms for the day."
   [date]
   (let [h  (.getHours date)
         m  (.getMinutes date)
@@ -109,6 +109,33 @@
          (* 1000))
      (-> s (* 1000))
      ms)))
+
+(defn is-this-day-before-that-day? [this-day that-day]
+  (let [that-day-year  (.getFullYear that-day)
+        that-day-month (.getMonth that-day)
+        that-day-day   (.getDate that-day)
+
+        this-day-year  (.getFullYear this-day)
+        this-day-month (.getMonth this-day)
+        this-day-day   (.getDate this-day)]
+
+    (and (>= that-day-year this-day-year)
+         (>= that-day-month this-day-month)
+         (> that-day-day this-day-day)))
+  )
+
+(defn is-this-day-after-that-day? [this-day that-day]
+  (let [that-day-year  (.getFullYear that-day)
+        that-day-month (.getMonth that-day)
+        that-day-day   (.getDate that-day)
+
+        this-day-year  (.getFullYear this-day)
+        this-day-month (.getMonth this-day)
+        this-day-day   (.getDate this-day)]
+
+    (and (<= that-day-year this-day-year)
+         (<= that-day-month this-day-month)
+         (< that-day-day this-day-day))))
 
 (defn period-in-day [day period]
   (if (not (nil? period)) ;; TODO add spec here
@@ -130,8 +157,19 @@
           stop-str (str stop-y stop-m stop-d)]
 
       (or
+       ;; start or stop is on the day
        (= day-str start-str)
-       (= day-str stop-str)))
+       (= day-str stop-str)
+
+       ;; start and stop are on either side of the day
+       (and
+        ;; start is before day
+        (is-this-day-before-that-day? start day)
+
+        ;; stop is after day
+        (is-this-day-after-that-day? stop day)
+        )
+       ))
     false))
 
 (defn filter-out-stamps
@@ -384,3 +422,25 @@
     {:red r :green g :blue b }
     ))
 
+;; TODO would this function not work given utc dates?
+(defn before-today
+  "Given a date will return true when the day is before today. if the day is today or later will return false."
+  [day]
+  (is-this-day-before-that-day? day (new js/Date)))
+
+(defn after-today
+  "Given a date will return true when the day is after today. If the day is today or earlier will return false."
+  [day]
+  (is-this-day-after-that-day? day (new js/Date)))
+
+(defn straddles-this-date? [this-date start-date stop-date]
+  (let [this (.valueOf this-date)
+        start (.valueOf start-date)
+        stop (.valueOf stop-date)]
+
+    (and (> stop this)
+         (< start this))
+    ))
+
+(defn straddles-now? [start-date stop-date]
+  (straddles-this-date? (new js/Date) start-date stop-date))

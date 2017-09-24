@@ -77,12 +77,23 @@
 (defn period [selected curr-time is-moving-period type period]
   (let [id          (:id period)
         start-date  (:start period)
+        starts-yesterday (utils/before-today start-date)
         start-ms    (utils/get-ms start-date)
-        start-angle (utils/ms-to-angle start-ms)
+        start-angle (if starts-yesterday
+                      0.5
+                      (utils/ms-to-angle start-ms))
 
         stop-date  (:stop period)
+        stops-tomorrow (utils/after-today stop-date)
         stop-ms    (utils/get-ms stop-date)
-        stop-angle (utils/ms-to-angle stop-ms)
+        stop-angle (if stops-tomorrow
+                     359.5
+                     (utils/ms-to-angle stop-ms))
+
+        straddles-now (utils/straddles-now? start-date stop-date)
+        now-ms (utils/get-ms (new js/Date))
+        broken-stop-before-angle (utils/ms-to-angle now-ms)
+        broken-start-after-angle (utils/ms-to-angle now-ms)
 
         curr-time-ms (.valueOf curr-time)
         start-abs-ms (.valueOf start-date)
@@ -99,12 +110,12 @@
                                nil)
         this-period-selected (= selected-period id)
 
+        opacity-before "0.3"
+        opacity-after  "0.9"
         opacity (cond
-                  this-period-selected         "0.9"
-                  (> curr-time-ms stop-abs-ms) "0.2"
+                  this-period-selected         opacity-after
+                  (> curr-time-ms stop-abs-ms) opacity-before
                   :else                        "0.7")
-
-
 
         color        (cond
                        (or (nil? selected-period)
@@ -128,6 +139,13 @@
                          (- (/ period-width 2)))
 
         arc                      (describe-arc cx cy r start-angle stop-angle)
+        broken-arc-before        (describe-arc cx cy r
+                                               start-angle
+                                               broken-stop-before-angle)
+        broken-arc-after        (describe-arc cx cy r
+                                              broken-start-after-angle
+                                              stop-angle)
+
         touch-click-handler      (if (not is-period-selected)
                                    (fn [e]
                                      (.stopPropagation e)
@@ -140,18 +158,134 @@
                                      (.stopPropagation e)
                                      (rf/dispatch
                                       [:set-moving-period true]))
-                                   )]
+                                   )
+
+        yesterday-arrow-point     (utils/polar-to-cartesian cx cy r 1)
+        yesterday-arrow-point-bt  (utils/polar-to-cartesian
+                                   cx cy (+ r (* 0.7 (/ period-width 2))) 3)
+        yesterday-arrow-point-bb  (utils/polar-to-cartesian
+                                   cx cy (- r (* 0.7 (/ period-width 2))) 3)
+
+        yesterday-2-arrow-point     (utils/polar-to-cartesian cx cy r 3)
+        yesterday-2-arrow-point-bt  (utils/polar-to-cartesian
+                                     cx cy (+ r (* 0.7 (/ period-width 2))) 5)
+        yesterday-2-arrow-point-bb  (utils/polar-to-cartesian
+                                     cx cy (- r (* 0.7 (/ period-width 2))) 5)
+
+        tomorrow-arrow-point     (utils/polar-to-cartesian cx cy r 359)
+        tomorrow-arrow-point-bt  (utils/polar-to-cartesian
+                                   cx cy (+ r (* 0.7 (/ period-width 2))) 357)
+        tomorrow-arrow-point-bb  (utils/polar-to-cartesian
+                                   cx cy (- r (* 0.7 (/ period-width 2))) 357)
+
+        tomorrow-2-arrow-point     (utils/polar-to-cartesian cx cy r 357)
+        tomorrow-2-arrow-point-bt  (utils/polar-to-cartesian
+                                     cx cy (+ r (* 0.7 (/ period-width 2))) 355)
+        tomorrow-2-arrow-point-bb  (utils/polar-to-cartesian
+                                     cx cy (- r (* 0.7 (/ period-width 2))) 355)
+         ]
+
     [:g {:key (str id)}
-     [:path
-      {:d            arc
-       :stroke       color
-       :opacity      opacity
-       :stroke-width period-width
-       :fill         "transparent"
-       :onClick      touch-click-handler
-       :onTouchStart movement-trigger-handler
-       :onMouseDown  movement-trigger-handler
-       }]
+     (if straddles-now
+       [:g
+        [:path
+         {:d            broken-arc-before
+          :stroke       color
+          :opacity      opacity-before
+          :stroke-width period-width
+          :fill         "transparent"
+          :onClick      touch-click-handler
+          :onTouchStart movement-trigger-handler
+          :onMouseDown  movement-trigger-handler
+          }]
+        [:path
+         {:d            broken-arc-after
+          :stroke       color
+          :opacity      opacity-after
+          :stroke-width period-width
+          :fill         "transparent"
+          :onClick      touch-click-handler
+          :onTouchStart movement-trigger-handler
+          :onMouseDown  movement-trigger-handler
+          }]
+        ]
+       [:g
+        [:path
+         {:d            arc
+          :stroke       color
+          :opacity      opacity
+          :stroke-width period-width
+          :fill         "transparent"
+          :onClick      touch-click-handler
+          :onTouchStart movement-trigger-handler
+          :onMouseDown  movement-trigger-handler
+          }]
+        ])
+
+     (if starts-yesterday
+       [:g
+        [:polyline {:fill "transparent"
+                    :stroke "white"
+                    :stroke-width "0.5"
+                    :stroke-linecap "round"
+                    :points (str
+                             (:x yesterday-arrow-point-bt) ","
+                             (:y yesterday-arrow-point-bt) " "
+                             (:x yesterday-arrow-point) ","
+                             (:y yesterday-arrow-point) " "
+                             (:x yesterday-arrow-point-bb) ","
+                             (:y yesterday-arrow-point-bb) " "
+                             )
+
+                    }]
+        [:polyline {:fill "transparent"
+                    :stroke "white"
+                    :stroke-width "0.5"
+                    :stroke-linecap "round"
+                    :points (str
+                             (:x yesterday-2-arrow-point-bt) ","
+                             (:y yesterday-2-arrow-point-bt) " "
+                             (:x yesterday-2-arrow-point) ","
+                             (:y yesterday-2-arrow-point) " "
+                             (:x yesterday-2-arrow-point-bb) ","
+                             (:y yesterday-2-arrow-point-bb) " "
+                             )
+
+                    }]
+        ]
+       )
+
+     (if stops-tomorrow
+       [:g
+        [:polyline {:fill "transparent"
+                    :stroke "white"
+                    :stroke-width "0.5"
+                    :stroke-linecap "round"
+                    :points (str
+                             (:x tomorrow-arrow-point-bt) ","
+                             (:y tomorrow-arrow-point-bt) " "
+                             (:x tomorrow-arrow-point) ","
+                             (:y tomorrow-arrow-point) " "
+                             (:x tomorrow-arrow-point-bb) ","
+                             (:y tomorrow-arrow-point-bb) " "
+                             )
+
+                    }]
+        [:polyline {:fill "transparent"
+                    :stroke "white"
+                    :stroke-width "0.5"
+                    :stroke-linecap "round"
+                    :points (str
+                             (:x tomorrow-2-arrow-point-bt) ","
+                             (:y tomorrow-2-arrow-point-bt) " "
+                             (:x tomorrow-2-arrow-point) ","
+                             (:y tomorrow-2-arrow-point) " "
+                             (:x tomorrow-2-arrow-point-bb) ","
+                             (:y tomorrow-2-arrow-point-bb) " "
+                             )
+
+                    }]
+        ])
      ]
     ))
 
@@ -407,6 +541,8 @@
      [:circle (merge {:fill "#f1f1f1" :r (:inner-r svg-consts)}
                      (select-keys svg-consts [:cx :cy]))]
 
+     (periods filtered-periods selected is-moving-period curr-time)
+
      (if display-ticker
        [:g
         [:line {:fill         "transparent"
@@ -423,8 +559,6 @@
                         (select-keys svg-consts [:cx :cy]))]
         ]
        )
-
-     (periods filtered-periods selected is-moving-period curr-time)
      ]))
 
 (defn days [days tasks selected-period]
@@ -469,6 +603,8 @@
 (defn queue [tasks selected]
   (let [periods-no-stamps (utils/filter-periods-no-stamps tasks)
         sel               (:current-selection selected)
+        period-selected (= :queue (:type-or-nil sel))
+        sel-id (:id-or-nil sel)
         ]
     [ui/list {:style {:width "100%"}}
         (->> periods-no-stamps
@@ -483,10 +619,18 @@
                       :leftIcon    (r/as-element
                                     [ui/svg-icon [ic/action-list {:color (:color period)}]])
                       :primaryText (concatonated-text (:description period) 10 "No period description ...")
-                      :onTouchTap  (fn [e]
-                                     (rf/dispatch
-                                      [:set-selected-queue (:id period)])
-                                     )}])))]))
+                      :onTouchTap  (if (and period-selected
+                                            (= sel-id (:id period)))
+                                     (fn [e]
+                                       (rf/dispatch [:set-active-page
+                                                     {:page-id :entity-forms
+                                                      :type :period
+                                                      :id (:id period)}]))
+                                       (fn [e]
+                                         (rf/dispatch
+                                          [:set-selected-queue (:id period)])
+                                         )
+                                       )}])))]))
 
 (def basic-button {:style {}})
 (def basic-mini-button {:mini             true
@@ -790,28 +934,54 @@
                  :onRequestChange    (fn [new-state] (rf/dispatch [:set-main-drawer new-state]))}
       [ui/menu-item {:onTouchTap    #(do
                                        (rf/dispatch [:set-main-drawer false])
+                                       (rf/dispatch [:set-active-page {:page-id :home}]))
+                     :innerDivStyle {:display "flex" :align-items "center"}}
+       (svg-mui-time-align {:color "black"
+                            :style {:marginRight "0.5em"}})
+       [:span "Home"]]
+      [ui/menu-item {:onTouchTap    #(do
+                                       (rf/dispatch [:set-main-drawer false])
                                        (rf/dispatch [:set-active-page {:page-id :list}]))
                      :innerDivStyle {:display "flex" :align-items "center"}}
        (svg-mui-entity {:type :all :color "black" :style {:marginRight "0.5em"}})
        [:span "List"]]
       [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
                      :innerDivStyle {:display "flex" :align-items "center"}}
-       [ic/social-person {:style {:marginRight "0.5em"}}]
-       [:span "Account"]]
-      [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
-                     :innerDivStyle {:display "flex" :align-items "center"}}
        [ic/action-settings {:style {:marginRight "0.5em"}}]
        [:span "Settings"]]
       [ui/menu-item {:onTouchTap    #(do
                                        (rf/dispatch [:set-main-drawer false])
-                                       (rf/dispatch [:set-active-page {:page-id :home}]))
-                     :innerDivStyle {:display "flex" :align-items "center"}}
-       (svg-mui-time-align {:color "black"
-                            :style {:marginRight "0.5em"}})
-       [:span "Home"]]
+                                       (rf/dispatch [:set-active-page {:page-id :account}]))
+                     :innerDivStyle {:display "flex" :align-items "center"}
+                     :disabled true}
+       [ic/social-person {:style {:marginRight "0.5em"
+                                  :color "grey"}}]
+       [:span "Account"]]
       ]]
     )
   )
+
+(defn stats [selected]
+  [ui/table {:selectable false}
+   [ui/table-body {:display-row-checkbox false}
+    [ui/table-row
+     [ui/table-row-column "time planned"]
+     [ui/table-row-column "123456"]
+     ]
+    [ui/table-row
+     [ui/table-row-column "time accounted"]
+     [ui/table-row-column "123456"]
+     ]
+    [ui/table-row
+     [ui/table-row-column "queue items"]
+     [ui/table-row-column "123456"]
+     ]
+    [ui/table-row
+     [ui/table-row-column "incomplete tasks"]
+     [ui/table-row-column "123456"]
+     ]
+    ]
+   ])
 
 (defn home-page []
   (let [
@@ -839,13 +1009,29 @@
                :box-sizing "border-box"}}
       (day tasks selected (new js/Date))]
 
-     [:div.queue-container
+     [:div.lower-container
       {:style {:display    "flex"
                :flex       "1 0 100%"
                ;; :border "blue solid 0.1em"
                :box-sizing "border-box"}}
-      [ui/paper {:style {:width "100%"}}
-       (queue tasks selected)
+      [ui/paper {:style {:width "100%"
+                         :min-height "10em" ;; keeps the tabs above action
+                                           ;; and from tabs 'jumping' if there
+                                           ;; is no content in other tab
+                         }}
+
+       [ui/tabs {:tabItemContainerStyle {:backgroundColor "white"}
+                 :inkBarStyle           {:backgroundColor (:primary app-theme)}}
+        [ui/tab {:label "stats" :style {:color (:primary app-theme)}}
+         (stats selected)
+         ]
+        [ui/tab {:label "queue" :style {:color (:primary app-theme)}}
+         (queue tasks selected)
+         ]
+        [ui/tab {:label "agenda" :style {:color (:primary app-theme)}}
+         [:div "agenda here"]
+         ]
+        ]
        ]
       ]
 
@@ -1406,6 +1592,20 @@
       ]
      ]))
 
+(defn account-page []
+  (let []
+
+    [:div
+     (app-bar)
+     [ui/paper {:style {:width "100%"
+                        :padding "1em"}}
+      [ui/text-field {:floating-label-text "Name"
+                      :fullWidth           true}]
+      [ui/text-field {:floating-label-text "Email"
+                      :fullWidth           true}]]
+     ])
+  )
+
 (defn page []
   (let [this-page @(rf/subscribe [:page])
         page-id   (:page-id this-page)]
@@ -1420,6 +1620,7 @@
         :home         (home-page)
         :entity-forms (entity-forms this-page)
         :list         (list-page)
+        :account      (account-page)
         ;; default
         (home-page))]
      ]

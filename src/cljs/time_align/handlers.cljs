@@ -17,16 +17,17 @@
           type (:type params)
           id (:id params)
           view-page  (case page
-                       :home {:page-id page
-                              :type-or-nil nil
-                              :id-or-nil nil}
+                       ;; :home {:page-id page
+                       ;;        :type-or-nil nil
+                       ;;        :id-or-nil nil}
                        :entity-forms {:page-id page
                                       :type-or-nil type
                                       :id-or-nil id}
-                       :list {:page-id page
-                              :type-or-nil nil
-                              :id-or-nil nil}
-                       ;; default
+                       ;; :list {:page-id page
+                       ;;        :type-or-nil nil
+                       ;;        :id-or-nil nil}
+
+                       ;; default works for :home :account :list
                        {:page-id page
                         :type-or-nil nil
                         :id-or-nil nil})
@@ -307,8 +308,9 @@
  (fn [cofx [_ _]]
    (let [db (:db cofx)
          name (get-in db [:view :category-form :name])
-         id (if-let [id (get-in db [:view :category-form :id-or-nil])]
-              id
+         id-or-nil (get-in db [:view :category-form :id-or-nil])
+         id (if (some? id-or-nil)
+              id-or-nil
               (random-uuid))
          color (utils/color-255->hex (get-in db [:view :category-form :color-map]))
          categories (:categories db)
@@ -317,9 +319,12 @@
          tasks (:tasks this-category)
          ]
 
-     {:db (assoc db :categories (conj other-categories
-                                      (merge this-category {:name name :color color})))
-      :dispatch [:set-active-page {:page-id :home :type nil :id nil}]}
+     {:db (assoc-in
+           (assoc db :categories (conj other-categories
+                                       (merge this-category {:id id :name name :color color})))
+           [:view :category-form] {:id-or-nil nil :name "" :color-map {:red 0 :green 0 :blue 0}}) ;; TODO move to dispatch-n
+      :dispatch [:set-active-page {:page-id :home :type nil :id nil}]
+      }
      )))
 
 (reg-event-db
@@ -348,7 +353,7 @@
    (assoc-in db [:view :task-form :complete] comp)))
 
 (reg-event-fx
- :submit-task-form
+ :submit-task-form ;; TODO change this to "save" or others to "submit"
  (fn [cofx [_ _]]
    (let [db (:db cofx)
          task-form (get-in db [:view :task-form])
@@ -368,12 +373,19 @@
                     :complete (:complete task-form)
                     :actual-periods []
                     :planned-periods []}
-         new-db (merge db
-                       {:categories
-                        (conj other-categories
-                              (merge this-category
-                                     {:tasks
-                                      (conj other-tasks this-task)}))})]
+         new-db (assoc-in
+                 (merge db
+                        {:categories
+                         (conj other-categories
+                               (merge this-category
+                                      {:tasks
+                                       (conj other-tasks this-task)}))})
+                 [:view :task-form] {:id-or-nil nil
+                                     :name ""
+                                     :description ""
+                                     :complete false
+                                     :category-id nil
+                                     })]
 
      (if (some? category-id) ;; secondary, view should not dispatch when nil
        {:db new-db :dispatch [:set-active-page {:page-id :home}]}
