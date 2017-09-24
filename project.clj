@@ -12,7 +12,7 @@
                  [day8.re-frame/async-flow-fx "0.0.6"]
                  [funcool/struct "1.0.0"]
                  [luminus-immutant "0.2.3"]
-                 [luminus-migrations "0.3.0"]
+                 [luminus-migrations "0.4.2"]
                  [luminus-nrepl "0.1.4"]
                  [luminus/ring-ttl-session "0.3.2"]
                  [markdown-clj "0.9.98"]
@@ -24,6 +24,9 @@
                  [org.clojure/clojurescript "1.9.521" :scope "provided"]
                  [org.clojure/tools.cli "0.3.5"]
                  [org.clojure/tools.logging "0.3.1"]
+                 [cljsjs/moment-timezone "0.5.11-0"]
+                 [cljsjs/js-joda "1.5.0-0"]
+                 [clojure.java-time "0.3.0"]
                  [org.postgresql/postgresql "42.0.0"]
                  [org.webjars.bower/tether "1.4.0"]
                  [org.webjars/font-awesome "4.7.0"]
@@ -51,11 +54,11 @@
   :migratus {:store :database :db ~(get (System/getenv) "DATABASE_URL")}
 
   :plugins [[lein-cprop "1.0.1"]
-            [migratus-lein "0.4.4"]
+            [migratus-lein "0.5.2"]
             [lein-cljsbuild "1.1.5"]
             [lein-immutant "2.1.0"]]
   :clean-targets ^{:protect false}
-  [:target-path [:cljsbuild :builds :app :compiler :output-dir] [:cljsbuild :builds :app :compiler :output-to]]
+[:target-path [:cljsbuild :builds :app :compiler :output-dir] [:cljsbuild :builds :app :compiler :output-to]]
   :figwheel
   {:http-server-root "public"
    :nrepl-port 7002
