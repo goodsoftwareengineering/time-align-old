@@ -1,3 +1,5 @@
+CREATE EXTENSION pgcrypto;
+
 ALTER TABLE users
 ADD COLUMN uid uuid NOT NULL
 CONSTRAINT gen_uuid_for_id DEFAULT gen_random_uuid();

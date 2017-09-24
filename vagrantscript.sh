@@ -30,7 +30,9 @@ chmod a+x /usr/local/bin/lein
 sudo -u postgres psql -c "CREATE DATABASE time_align_dev WITH ENCODING 'UTF8' TEMPLATE template0"
 sudo -u postgres psql -c "CREATE DATABASE time_align_test ENCODING 'UTF8' TEMPLATE template0"
 sudo -u postgres psql -c "CREATE USER dev WITH PASSWORD 'dev';"
+sudo -u postgres psql -c "ALTER ROLE dev superuser;"
 sudo -u postgres psql -c "CREATE USER test WITH PASSWORD 'test';"
+sudo -u postgres psql -c "ALTER ROLE test superuser;"
 sudo -u postgres psql -c "ALTER DATABASE time_align_dev OWNER TO dev;"
 sudo -u postgres psql -c "ALTER DATABASE time_align_test OWNER TO test;"
 

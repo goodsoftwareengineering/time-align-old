@@ -1,3 +1,4 @@
+
 ALTER TABLE users ADD COLUMN id SERIAL NOT NULL;
 
 ALTER TABLE users 
@@ -27,3 +28,5 @@ ALTER TABLE tasks
 DROP COLUMN user_uid;
 
 ALTER TABLE users ADD CONSTRAINT "pk_users" PRIMARY KEY ("id");
+
+drop extension pgcrypto;
