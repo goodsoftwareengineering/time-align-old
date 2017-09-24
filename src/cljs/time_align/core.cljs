@@ -15,10 +15,10 @@
             [time-align.handlers]
             [time-align.subscriptions]
             [clojure.string :as string]
-            [time-align.utilities :as utils]
-            [goog.string :as gstring]
+            [time-align.client-utilities :as cutils]
             [goog.string.format]
-            [time-align.client-utilities :as utils]
+            [goog.string :as gstring]
+            [time-align.utilities :as utils]
             [cljs.pprint :refer [pprint]])
   (:import goog.History))
 
@@ -69,23 +69,23 @@
 
 (defn describe-arc [cx cy r start stop]
   (let [
-        p-start        (utils/polar-to-cartesian cx cy r start)
-        p-stop         (utils/polar-to-cartesian cx cy r stop)
+        p-start        (cutils/polar-to-cartesian cx cy r start)
+        p-stop         (cutils/polar-to-cartesian cx cy r stop)
 
         large-arc-flag (if (<= (- stop start) 180) "0" "1")]
 
     (string/join " " ["M" (:x p-start) (:y p-start)
                       "A" r r 0 large-arc-flag 1 (:x p-stop) (:y p-stop)])))
 
-(defn period [selected curr-time is-moving-period type period displayed-day]
-  (let [id          (:id period)
-        start-date  (:start period)
+(defn period [selected curr-time is-moving-period type period]
+  (let [id                         (:id period)
+        start-date                 (:start period)
         starts-yesterday (utils/is-this-day-before-that-day?
                           start-date displayed-day)
-        start-ms    (utils/get-ms start-date)
-        start-angle (if starts-yesterday
-                      0.5
-                      (utils/ms-to-angle start-ms))
+        start-ms                   (utils/get-ms start-date)
+        start-angle                (if starts-yesterday
+                                     0.5
+                                     (cutils/ms-to-angle start-ms))
 
         stop-date  (:stop period)
         stops-tomorrow (utils/is-this-day-after-that-day?
@@ -93,12 +93,12 @@
         stop-ms    (utils/get-ms stop-date)
         stop-angle (if stops-tomorrow
                      359.5
-                     (utils/ms-to-angle stop-ms))
+                                     (cutils/ms-to-angle stop-ms))
 
         straddles-now              (utils/straddles-now? start-date stop-date)
         now-ms                     (utils/get-ms (new js/Date))
-        broken-stop-before-angle   (utils/ms-to-angle now-ms)
-        broken-start-after-angle   (utils/ms-to-angle now-ms)
+        broken-stop-before-angle   (cutils/ms-to-angle now-ms)
+        broken-start-after-angle   (cutils/ms-to-angle now-ms)
 
         curr-time-ms               (.valueOf curr-time)
         start-abs-ms               (.valueOf start-date)
@@ -165,28 +165,28 @@
                                          [:set-moving-period true]))
                                      )
 
-        yesterday-arrow-point      (utils/polar-to-cartesian cx cy r 1)
-        yesterday-arrow-point-bt   (utils/polar-to-cartesian
+        yesterday-arrow-point      (cutils/polar-to-cartesian cx cy r 1)
+        yesterday-arrow-point-bt   (cutils/polar-to-cartesian
                                      cx cy (+ r (* 0.7 (/ period-width 2))) 3)
-        yesterday-arrow-point-bb   (utils/polar-to-cartesian
+        yesterday-arrow-point-bb   (cutils/polar-to-cartesian
                                      cx cy (- r (* 0.7 (/ period-width 2))) 3)
 
-        yesterday-2-arrow-point    (utils/polar-to-cartesian cx cy r 3)
-        yesterday-2-arrow-point-bt (utils/polar-to-cartesian
+        yesterday-2-arrow-point    (cutils/polar-to-cartesian cx cy r 3)
+        yesterday-2-arrow-point-bt (cutils/polar-to-cartesian
                                      cx cy (+ r (* 0.7 (/ period-width 2))) 5)
-        yesterday-2-arrow-point-bb (utils/polar-to-cartesian
+        yesterday-2-arrow-point-bb (cutils/polar-to-cartesian
                                      cx cy (- r (* 0.7 (/ period-width 2))) 5)
 
-        tomorrow-arrow-point       (utils/polar-to-cartesian cx cy r 359)
-        tomorrow-arrow-point-bt    (utils/polar-to-cartesian
+        tomorrow-arrow-point       (cutils/polar-to-cartesian cx cy r 359)
+        tomorrow-arrow-point-bt    (cutils/polar-to-cartesian
                                      cx cy (+ r (* 0.7 (/ period-width 2))) 357)
-        tomorrow-arrow-point-bb    (utils/polar-to-cartesian
+        tomorrow-arrow-point-bb    (cutils/polar-to-cartesian
                                      cx cy (- r (* 0.7 (/ period-width 2))) 357)
 
-        tomorrow-2-arrow-point     (utils/polar-to-cartesian cx cy r 357)
-        tomorrow-2-arrow-point-bt  (utils/polar-to-cartesian
+        tomorrow-2-arrow-point     (cutils/polar-to-cartesian cx cy r 357)
+        tomorrow-2-arrow-point-bt  (cutils/polar-to-cartesian
                                      cx cy (+ r (* 0.7 (/ period-width 2))) 355)
-        tomorrow-2-arrow-point-bb  (utils/polar-to-cartesian
+        tomorrow-2-arrow-point-bb  (cutils/polar-to-cartesian
                                      cx cy (- r (* 0.7 (/ period-width 2))) 355)
         ]
 
@@ -321,11 +321,11 @@
 (defn handle-period-move [id type evt]
   (let [cx                (js/parseInt (:cx svg-consts))
         cy                (js/parseInt (:cy svg-consts))
-        pos               (utils/client-to-view-box id evt type)
-        pos-t             (utils/point-to-centered-circle
+        pos               (cutils/client-to-view-box id evt type)
+        pos-t             (cutils/point-to-centered-circle
                             (merge pos {:cx cx :cy cy}))
-        angle             (utils/point-to-angle pos-t)
-        mid-point-time-ms (utils/angle-to-ms angle)]
+        angle             (cutils/point-to-angle pos-t)
+        mid-point-time-ms (cutils/angle-to-ms angle)]
 
     (rf/dispatch [:move-selected-period mid-point-time-ms])))
 
@@ -486,14 +486,14 @@
         display-ticker           (= (.valueOf (utils/zero-in-day day))
                                     (.valueOf (utils/zero-in-day curr-time)))
         ticker-ms                (utils/get-ms curr-time)
-        ticker-angle             (utils/ms-to-angle ticker-ms)
-        ticker-pos               (utils/polar-to-cartesian
+        ticker-angle             (cutils/ms-to-angle ticker-ms)
+        ticker-pos               (cutils/polar-to-cartesian
                                    (:cx svg-consts)
                                    (:cy svg-consts)
                                    (:r svg-consts)
                                    ticker-angle)
         zoom                     @(rf/subscribe [:zoom])
-        filtered-periods         (utils/filter-periods-for-day day tasks)
+        filtered-periods         (cutils/filter-periods-for-day day tasks)
         selected-period          (if (= :period
                                         (get-in
                                           selected
@@ -616,7 +616,7 @@
   )
 
 (defn queue [tasks selected]
-  (let [periods-no-stamps (utils/filter-periods-no-stamps tasks)
+  (let [periods-no-stamps (cutils/filter-periods-no-stamps tasks)
         sel               (:current-selection selected)
         period-selected   (= :queue (:type-or-nil sel))
         sel-id            (:id-or-nil sel)
@@ -705,7 +705,7 @@
   (let [element (fn [percent]
                   [ui/floating-action-button
                    (merge basic-button
-                          {:backgroundColor (utils/color-gradient
+                          {:backgroundColor (cutils/color-gradient
                                               (:primary app-theme)
                                               (:secondary app-theme)
                                               percent)})
@@ -1179,7 +1179,7 @@
                                       :backgroundColor c}
                             :onClick (fn [e]
                                        (rf/dispatch [:set-category-form-color
-                                                     (utils/color-hex->255 c)]))}]))
+                                                     (cutils/color-hex->255 c)]))}]))
         )
    ])
 
@@ -1301,7 +1301,7 @@
                                 :align-items     "center"
                                 :justify-content "space-around"}}
       [ui/svg-icon {:viewBox "0 0 1000 1000" :style {:margin-left "0.5em"}}
-       [:circle {:cx "500" :cy "500" :r "500" :fill (utils/color-255->hex color)}]]
+       [:circle {:cx "500" :cy "500" :r "500" :fill (cutils/color-255->hex color)}]]
       [ui/subheader "Color"]]
 
      [ui/tabs {:tabItemContainerStyle {:backgroundColor "white"}
@@ -1564,10 +1564,10 @@
                 ;; if not queue render the arc
                 (let [start                (:start period)
                       start-ms             (utils/get-ms start)
-                      start-angle          (utils/ms-to-angle start-ms)
+                      start-angle          (cutils/ms-to-angle start-ms)
                       stop                 (:stop period)
                       stop-ms              (utils/get-ms stop)
-                      stop-angle           (utils/ms-to-angle stop-ms)
+                      stop-angle           (cutils/ms-to-angle stop-ms)
 
                       angle-difference     (- stop-angle start-angle)
                       minimum-angle        30

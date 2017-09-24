@@ -1,75 +1,7 @@
 (ns time-align.client-utilities
   (:require
-    [clojure.string :as string]))
-
-(def week-ms
-  (->> 1
-       (* 7)
-       (* 24)
-       (* 60)
-       (* 60)
-       (* 1000)))
-
-(def day-ms
-  (->> 1
-       (* 24)
-       (* 60)
-       (* 60)
-       (* 1000)))
-
-(def hour-ms
-  (->> 1
-       (* 60)
-       (* 60)
-       (* 1000)))
-
-(def ms-in-day
-  (->> 1
-       (* 24)
-       (* 60)
-       (* 60)
-       (* 1000)))
-
-(defn one-week-ago []
-  (.valueOf
-    (new js/Date (- (.valueOf (new js/Date)) week-ms))))
-
-(defn one-week-from-now []
-  (.valueOf
-    (new js/Date (+ (.valueOf (new js/Date)) week-ms))))
-
-(defn start-of-today []
-  (-> (new js/Date)
-      (.setHours 0)))
-
-(defn end-of-today []
-  (-> (new js/Date)
-      (.setHours 20)))
-
-;; (def time-range
-;;   (range (one-week-ago) (one-week-from-now) hour-ms))
-
-(def time-range
-  (range (start-of-today) (end-of-today) hour-ms))
-
-(def time-set
-  (set (->> time-range
-            (map #(new js/Date %)))))
-
-(defn date-string
-  "creates a string in yyyy-mm-dd format from a js date obj"
-  [date]
-  (str (.getFullYear date) "-"
-       (+ 1 (.getMonth date)) "-"
-       (.getDate date)))
-
-(defn zero-in-day
-  "taking a date obj, or string, will return a new date object with Hours, Minutes, Seconds, and Milliseconds set to 0"
-  [date]
-  (let [d (if (string? date)
-            (clojure.string/replace date #"-" "/")          ;; sql needs "-" but js/Date does wierd time zone stuff unless the string uses "/"
-            date)]
-    (new js/Date (date-string (new js/Date d)))))
+    [clojure.string :as string]
+    [time-align.utilities :as utils]))
 
 (defn polar-to-cartesian [cx cy r angle]
   (let [cx-float (js/parseFloat cx)
@@ -82,60 +14,18 @@
     {:x (+ cx-float (* r-float (.cos js/Math angle-in-radians)))
      :y (+ cy-float (* r-float (.sin js/Math angle-in-radians)))}))
 
+
 (defn ms-to-angle
   "takes milliseconds and returns angle in degrees"
   [ms]
-  (* (/ 360 ms-in-day) ms))
+  (* (/ 360 utils/ms-in-day) ms))
+
 
 (defn angle-to-ms
   ;; takes angle in degrees and returns milliseconds
   [angle]
-  (* (/ ms-in-day 360) angle))
+  (* (/ utils/ms-in-day 360) angle))
 
-(defn get-ms
-  "takes a js/date and returns milliseconds since 00:00 that day. Essentially relative ms for the day."
-  [date]
-  (let [h (.getHours date)
-        m (.getMinutes date)
-        s (.getSeconds date)
-        ms (.getMilliseconds date)]
-    (+
-      (-> h
-          (* 60)
-          (* 60)
-          (* 1000))
-      (-> m
-          (* 60)
-          (* 1000))
-      (-> s (* 1000))
-      ms)))
-
-(defn is-this-day-before-that-day? [this-day that-day]
-  (let [that-day-year (.getFullYear that-day)
-        that-day-month (.getMonth that-day)
-        that-day-day (.getDate that-day)
-
-        this-day-year (.getFullYear this-day)
-        this-day-month (.getMonth this-day)
-        this-day-day (.getDate this-day)]
-
-    (and (>= that-day-year this-day-year)
-         (>= that-day-month this-day-month)
-         (> that-day-day this-day-day)))
-  )
-
-(defn is-this-day-after-that-day? [this-day that-day]
-  (let [that-day-year (.getFullYear that-day)
-        that-day-month (.getMonth that-day)
-        that-day-day (.getDate that-day)
-
-        this-day-year (.getFullYear this-day)
-        this-day-month (.getMonth this-day)
-        this-day-day (.getDate this-day)]
-
-    (and (<= that-day-year this-day-year)
-         (<= that-day-month this-day-month)
-         (< that-day-day this-day-day))))
 
 (defn period-has-stamps [period]
   (if (and (contains? period :start)
@@ -150,22 +40,22 @@
 
     (let [day-y   (.getFullYear day)
           day-m   (.getMonth day)
-          day-d   (.getDate day)
           day-str (str day-y day-m day-d)
+          day-d   (.getDate day)
 
           start (:start period)
           start-y (.getFullYear start)
-          start-m (.getMonth start)
           start-d (.getDate start)
+          start-m (.getMonth start)
+
           start-str (str start-y start-m start-d)
-
-          stop (:stop period)
           stop-y (.getFullYear stop)
-          stop-m (.getMonth stop)
+          stop (:stop period)
           stop-d (.getDate stop)
+          stop-m (.getMonth stop)
           stop-str (str stop-y stop-m stop-d)]
-
       (or
+
         ;; start or stop is on the day
         (= day-str start-str)
         (= day-str stop-str)
@@ -193,6 +83,7 @@
                         (dissoc task type)
                         (merge task {type periods}))))))
 
+
 (defn filter-periods-with-stamps
   "Takes a list of tasks and returns a list of tasks with only periods that have stamps."
   [tasks]
@@ -203,6 +94,7 @@
        (map (partial filter-out-stamps :planned-periods))
        )
   )
+
 
 (defn filter-periods-no-stamps
   "Takes a list of tasks and returns a list of modified periods."
@@ -222,6 +114,7 @@
              (flatten))]
     periods))
 
+
 (defn modify-and-pull-periods
   "Takes a keyword indicating period type, and the task containing periods. Returns a collection of periods with parent task info."
   [type tasks]
@@ -236,19 +129,21 @@
        (flatten))
   )
 
+
 (defn filter-periods-for-day
   "Takes a day and a list of tasks and returns a list of modified periods."
   [day tasks]
   (let [new-tasks (filter-periods-with-stamps tasks)
         actual-periods (modify-and-pull-periods :actual-periods new-tasks)
         actual-filtered (->> actual-periods
-                             (filter (partial period-in-day day)))
+                             (filter (partial utils/period-in-day day)))
         planned-periods (modify-and-pull-periods :planned-periods new-tasks)
         planned-filtered (->> planned-periods
-                              (filter (partial period-in-day day)))]
+                              (filter (partial utils/period-in-day day)))]
 
     {:actual-periods  actual-filtered
      :planned-periods planned-filtered}))
+
 
 (defn client-to-view-box [id evt type]
   (let [pt (-> (.getElementById js/document id)
@@ -273,6 +168,7 @@
     (let [trans-pt (.matrixTransform pt (.inverse ctm))]
       {:x (.-x trans-pt) :y (.-y trans-pt)})))
 
+
 (defn point-to-centered-circle
   "converts an x,y coordinate from svg viewbox where (0,0) is at the top left
   to a coordinate where (0,0) would be in the center"
@@ -282,6 +178,7 @@
              (- 0 (- y cy))
              (- cy y))]
     {:x xt :y yt}))
+
 
 (defn point-to-angle
   "expects map {:x number :y number}
@@ -315,17 +212,6 @@
 
     (/ (* angle-in-radians 180) pi)))
 
-(defn pull-tasks [db]
-  (->> (:categories db)
-       (map (fn [category]
-              (let [color (:color category)
-                    category-id (:id category)]
-                (->>
-                  (:tasks category)
-                  (map (fn [task] (merge task {:color color :category-id category-id})))))))
-       (flatten)
-       (remove nil?)
-       (remove empty?)))
 
 (defn modify-periods [category-id task-id color type periods]
   (->> periods
@@ -335,37 +221,46 @@
                              :task-id     task-id
                              :type        type})))))
 
+
+(defn pull-tasks [db]
+ (->> (:categories db)
+      (map (fn [category]
+             (let [color       (:color category)
+                   category-id (:id category)]
+               (->>
+                (:tasks category)
+                (map (fn [task] (merge task {:color color :category-id category-id})))))))
+      (flatten)
+      (remove nil?)
+      (remove empty?)))
+
+
 (defn pull-periods [db]
-  (->> (:categories db)
-       (map (fn [category]
-              (let [color (:color category)
-                    category-id (:id category)]
-                (->>
-                  (:tasks category)
-                  (map (fn [task]
-                         (let [task-id (:id task)
-                               actual (modify-periods
-                                        category-id
-                                        task-id
-                                        color
-                                        :actual
-                                        (:actual-periods task))
-                               planned (modify-periods
-                                         category-id
-                                         task-id
-                                         color
-                                         :planned
-                                         (:planned-periods task))]
-                           (concat actual planned)
-                           ))))
-                )
-              )
-            )
-       (flatten)
-       (remove empty?)
-       (remove nil?)
-       )
-  )
+ (->> (:categories db)
+      (map (fn [category]
+             (let [color       (:color category)
+                   category-id (:id category)]
+               (->>
+                (:tasks category)
+                (map (fn [task]
+                       (let [task-id (:id task)
+                             actual  (modify-periods
+                                      category-id
+                                      task-id
+                                      color
+                                      :actual
+                                      (:actual-periods task))
+                             planned (modify-periods
+                                      category-id
+                                      task-id
+                                      color
+                                      :planned
+                                      (:planned-periods task))]
+                         (concat actual planned))))))))
+      (flatten)
+      (remove empty?)
+      (remove nil?)))
+
 
 (defn pad-one-b-16
   "given a base 10 number it will convert to a base 16 string and pad one zero if necessary"
@@ -375,6 +270,7 @@
         (#(if (= 1 (count n))
             (str "0" n)
             n))))
+
 
 (defn color-gradient
   "given two hex string (\"#ffaabb\") colors and a percent as decimal (0.25), will return a hex string color that is at percent along a color gradient."
@@ -413,6 +309,7 @@
                      (pad-one-b-16 b-n)
                      ])))
 
+
 (defn color-255->hex [{:keys [red blue green]}]
   (let [red-hx (pad-one-b-16 red)
         blue-hx (pad-one-b-16 blue)
@@ -420,6 +317,7 @@
     (str "#" red-hx green-hx blue-hx)
     )
   )
+
 
 (defn color-hex->255 [hex-str]
   (let [value (string/join (rest hex-str))
@@ -431,26 +329,3 @@
 
     {:red r :green g :blue b}
     ))
-
-;; TODO would this function not work given utc dates?
-(defn before-today
-  "Given a date will return true when the day is before today. if the day is today or later will return false."
-  [day]
-  (is-this-day-before-that-day? day (new js/Date)))
-
-(defn after-today
-  "Given a date will return true when the day is after today. If the day is today or earlier will return false."
-  [day]
-  (is-this-day-after-that-day? day (new js/Date)))
-
-(defn straddles-this-date? [this-date start-date stop-date]
-  (let [this (.valueOf this-date)
-        start (.valueOf start-date)
-        stop (.valueOf stop-date)]
-
-    (and (> stop this)
-         (< start this))
-    ))
-
-(defn straddles-now? [start-date stop-date]
-  (straddles-this-date? (new js/Date) start-date stop-date))

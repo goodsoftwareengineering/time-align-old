@@ -1,7 +1,7 @@
 (ns time-align.subscriptions
   (:require [re-frame.core :refer [reg-sub]]
-            [time-align.client-utilities :as utils]
-
+            [time-align.utilities :as utils]
+            [time-align.client-utilities :as cutils]
             [cljs.pprint :refer [pprint]]))
 
 (reg-sub
@@ -17,7 +17,7 @@
 (reg-sub
   :tasks
   (fn [db _]
-    (utils/pull-tasks db)))
+    (cutils/pull-tasks db)))
 
 (reg-sub
   :is-moving-period
@@ -38,9 +38,9 @@
   :visible-days
   (fn [db _]
     (let [start-inst (get-in db [:view :range :start])
-          start-ms (.valueOf (utils/zero-in-day start-inst))
-          stop-inst (get-in db [:view :range :stop])
-          stop-ms (.valueOf (utils/zero-in-day stop-inst))
+          start-ms   (.valueOf (utils/zero-in-day start-inst))
+          stop-inst  (get-in db [:view :range :stop])
+          stop-ms    (.valueOf (utils/zero-in-day stop-inst))
           days-in-ms (range start-ms
                             stop-ms
                             utils/day-ms)]

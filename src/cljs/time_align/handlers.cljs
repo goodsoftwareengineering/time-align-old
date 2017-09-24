@@ -1,8 +1,10 @@
 (ns time-align.handlers
   (:require [time-align.db :as db]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
-            [time-align.client-utilities :as utils]
+            [time-align.utilities :as utils]
+            [time-align.client-utilities :as cutils]
             ))
+
 
 (reg-event-db
   :initialize-db
@@ -40,9 +42,11 @@
       (merge {:db (assoc-in db [:view :page] view-page)}
              (if (some? id)
                {:dispatch to-load}
-               {}))
-      )
-    ))
+               {})))))
+
+
+
+
 
 (reg-event-db
   :load-category-entity-form
@@ -50,7 +54,7 @@
     (let [categories (:categories db)
           this-category (some #(if (= id (:id %)) %) categories)
           name (:name this-category)
-          color (utils/color-hex->255 (:color this-category))]
+          color (cutils/color-hex->255 (:color this-category))]
       (assoc-in db [:view :category-form]
                 {:id-or-nil id
                  :name      name
@@ -59,7 +63,7 @@
 (reg-event-db
   :load-task-entity-form
   (fn [db [_ id]]
-    (let [tasks (utils/pull-tasks db)
+    (let [tasks (cutils/pull-tasks db)
           this-task (some #(if (= id (:id %)) %) tasks)
           id (:id this-task)
           name (str (:name this-task))
@@ -77,7 +81,7 @@
 (reg-event-db
   :load-period-entity-form
   (fn [db [_ id]]
-    (let [periods (utils/pull-periods db)
+    (let [periods (cutils/pull-periods db)
           this-period (some #(if (= id (:id %)) %)
                             periods)
           is-planned (= :planned (:type this-period))
@@ -96,6 +100,8 @@
                  :description  description})
       )))
 
+
+
 (reg-event-db
   :set-zoom
   (fn [db [_ quadrant]]
@@ -112,7 +118,7 @@
   :set-view-range-week
   (fn [db [_ _]]
     (assoc-in db [:view :range]
-              {:start (utils/one-week-ago)
+              {:start (utils/one-week-ago (js/Date.))
                :stop  (new js/Date)})))
 
 (reg-event-db
@@ -173,6 +179,8 @@
       )
     ))
 
+
+
 ;; not using this yet VVV
 (reg-event-fx
   :set-selected-task
@@ -185,6 +193,8 @@
        :dispatch [:action-buttons-back]}
       )
     ))
+
+
 
 (reg-event-db
   :action-buttons-expand
@@ -210,6 +220,7 @@
       (assoc-in db [:view :action-buttons] new-state)
       )))
 
+
 (reg-event-db
   :set-moving-period
   (fn [db [_ is-moving-bool]]
@@ -217,7 +228,7 @@
               is-moving-bool)))
 
 (defn fell-tree-with-period-id [db p-id]
-  (let [periods (utils/pull-periods db)
+  (let [periods (cutils/pull-periods db)
         period (->> periods
                     (filter #(= p-id (:id %)))
                     (first))
@@ -307,6 +318,8 @@
                      color))
     ))
 
+
+
 (reg-event-fx
   :save-category-form
   (fn [cofx [_ _]]
@@ -316,7 +329,7 @@
           id (if (some? id-or-nil)
                id-or-nil
                (random-uuid))
-          color (utils/color-255->hex (get-in db [:view :category-form :color-map]))
+          color (cutils/color-255->hex (get-in db [:view :category-form :color-map]))
           categories (:categories db)
           other-categories (filter #(not (= id (:id %))) categories)
           this-category (some #(if (= id (:id %)) %) categories)
@@ -330,6 +343,8 @@
        :dispatch [:set-active-page {:page-id :home :type nil :id nil}]
        }
       )))
+
+
 
 (reg-event-db
   :set-category-form-name
@@ -396,6 +411,7 @@
         {:db db                                             ;; TODO display some sort of error
          }))))
 
+
 (reg-event-db
   :set-period-form-date
   (fn [db [_ [new-d start-or-stop]]]
@@ -411,6 +427,8 @@
         (assoc-in db [:view :period-form start-or-stop] new-d))
       )
     ))
+
+
 
 (reg-event-db
   :set-period-form-time
@@ -435,17 +453,24 @@
       )
     ))
 
+
+
+
+
+
 (reg-event-db
   :set-period-form-description
   (fn [db [_ desc]]
     (assoc-in db [:view :period-form :description] desc)
     ))
 
+
 (reg-event-db
   :set-period-form-task-id
   (fn [db [_ task-id]]
     (assoc-in db [:view :period-form :task-id] task-id))
   )
+
 
 (reg-event-fx
   :save-period-form
@@ -464,7 +489,7 @@
                    (.valueOf stop))
 
           task-id (:task-id period-form)
-          tasks (utils/pull-tasks db)
+          tasks (cutils/pull-tasks db)
 
           category-id (->> tasks
                            (some #(if (= task-id (:id %)) %))
@@ -572,7 +597,7 @@
     (let [db (:db cofx)
           task-id (get-in db [:view :task-form :id-or-nil])
           this-task (->> db
-                         (utils/pull-tasks)
+                         cutils/pull-tasks
                          (some #(if (= task-id (:id %)) %)))
           category-id (:category-id this-task)
           categories (:categories db)
@@ -591,12 +616,13 @@
        :dispatch [:set-active-page {:page-id :home}]}
       )))
 
+
 (reg-event-fx
   :delete-period-form-entity
   (fn [cofx [_ _]]
     (let [db (:db cofx)
           period-id (get-in db [:view :period-form :id-or-nil])
-          periods (utils/pull-periods db)
+          periods (cutils/pull-periods db)
           this-period (some #(if (= period-id (:id %)) %) periods)
           type (:type this-period)
           is-actual (= type :actual)
@@ -616,7 +642,7 @@
                             (map #(dissoc % :type :category-id :task-id :color))
                             )
 
-          tasks (utils/pull-tasks db)
+          tasks (cutils/pull-tasks db)
           other-tasks (->> tasks
                            (filter
                              #(and (= category-id (:category-id %))

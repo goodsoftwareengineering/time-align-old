@@ -4,6 +4,3 @@
             [reagent.core :as reagent :refer [atom]]
             [time-align.core :as rc]))
 
-(deftest test-home
-         (is (= true true)))
-
