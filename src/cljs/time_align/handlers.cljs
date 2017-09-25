@@ -262,21 +262,28 @@
            period-length-ms (- (.valueOf (:stop period))
                                (.valueOf (:start period)))
 
-           new-start-ms          (.max js/Math
-                                       (- mid-point-time-ms (/ period-length-ms 2))
-                                       0) ;; handles part of the tricky divisor
+           new-start-ms          (- mid-point-time-ms (/ period-length-ms 2))
            new-stop-ms           (+ new-start-ms period-length-ms)
-           zero-day              (utils/zero-in-day (:start period))
-           new-start             (->> zero-day
+
+           this-day              (utils/zero-in-day (get-in db [:view :displayed-day]))
+
+           ;; straddled task could have negative `new-stop-ms`
+           ;; + ing the time to this-day zeroed in will account for that
+           ;; same for straddling the other direction
+
+           new-start             (->> this-day
                                       (.valueOf)
                                       (+ new-start-ms)
                                       (new js/Date))
-           new-stop              (->> zero-day
+           new-stop              (->> this-day
                                       (.valueOf)
                                       (+ new-stop-ms)
                                       (new js/Date))
            new-period            (merge period
                                         {:start new-start :stop new-stop})
+
+           ;; TODO if we don't user specter this is preferred to the massive
+           ;; nested cons/merge mess in other places
            new-periods           (cons new-period other-periods)
            new-task              (merge task {type-coll new-periods})
            new-tasks             (cons new-task other-tasks)
@@ -284,12 +291,9 @@
            new-categories        (cons new-category other-categories)
            ]
 
-       (if (>= (+ new-stop-ms) ;; handles other part of tricky divisor
-               (- utils/ms-in-day 1))
-         (do (.log js/console "must split task can't straddle")
-             db)
-         (merge db {:categories new-categories}))
+       (merge db {:categories new-categories})
        )
+
      (do (.log js/console "no period selected")
          db)
      )

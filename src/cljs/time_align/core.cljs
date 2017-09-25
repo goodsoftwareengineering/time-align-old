@@ -326,7 +326,6 @@
         angle             (utils/point-to-angle pos-t)
         mid-point-time-ms (utils/angle-to-ms angle)]
 
-    (println (str "moved " type))
     (rf/dispatch [:move-selected-period mid-point-time-ms])))
 
 (defn x-svg [{:keys [cx cy r fill stroke shadow click] }]
