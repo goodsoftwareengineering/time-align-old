@@ -975,33 +975,42 @@
     )
   )
 
+(defn duration-ms-to-string [time]
+  (str
+   (gstring/format "%.2f"
+                   (-> time
+                       (/ 1000)
+                       (/ 60)
+                       (/ 60)))
+   " hours"))
+
 (defn stats [selected]
-  (let [planned-time @(rf/subscribe [:planned-time])]
+  (let [planned-time @(rf/subscribe [:planned-time :selected-day])
+        accounted-time @(rf/subscribe [:accounted-time :selected-day])
+        tasks @(rf/subscribe [:tasks])
+        queue-items (utils/filter-periods-no-stamps tasks)
+        queue-count (count queue-items)
+        incomplete-tasks (filter #(:complete %) tasks)
+        incomplete-count (count incomplete-tasks)
+        ]
 
     [ui/table {:selectable false}
      [ui/table-body {:display-row-checkbox false}
       [ui/table-row
-       [ui/table-row-column "time planned"]
-       [ui/table-row-column (str
-                             (gstring/format "%.2f"
-                                             (-> planned-time
-                                                 (/ 1000)
-                                                 (/ 60)
-                                                 (/ 60)
-                                                 ))
-                             " hours")]
+       [ui/table-row-column "planned"]
+       [ui/table-row-column (duration-ms-to-string planned-time)]
        ]
       [ui/table-row
-       [ui/table-row-column "time accounted"]
-       [ui/table-row-column "123456"]
+       [ui/table-row-column "accounted"]
+       [ui/table-row-column (duration-ms-to-string accounted-time)]
        ]
       [ui/table-row
        [ui/table-row-column "queue items"]
-       [ui/table-row-column "123456"]
+       [ui/table-row-column queue-count]
        ]
       [ui/table-row
        [ui/table-row-column "incomplete tasks"]
-       [ui/table-row-column "123456"]
+       [ui/table-row-column incomplete-count]
        ]
       ]
      ]
