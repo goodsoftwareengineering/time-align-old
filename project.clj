@@ -100,7 +100,7 @@
                                     [doo "0.1.7"]
                                     [figwheel-sidecar "0.5.10"]
                                     [org.clojure/test.check "0.9.0"]
-                                    [re-frisk "0.4.5"]]
+                                    [re-frisk "0.5.0"]]
 
                    :plugins        [[com.jakemccrary/lein-test-refresh "0.19.0"]
                                     [lein-doo "0.1.7"]
@@ -115,6 +115,7 @@
                                                      :asset-path    "/js/out"
                                                      :output-to     "target/cljsbuild/public/js/app.js"
                                                      :output-dir    "target/cljsbuild/public/js/out"
+                                                     :preloads      [re-frisk.preload]
                                                      :source-map    true
                                                      :optimizations :none
                                                      :pretty-print  true}}}}
