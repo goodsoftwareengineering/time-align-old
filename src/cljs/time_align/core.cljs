@@ -984,7 +984,7 @@
                        (/ 60)))
    " hours"))
 
-(defn stats [selected]
+(defn stats-no-selection []
   (let [planned-time @(rf/subscribe [:planned-time :selected-day])
         accounted-time @(rf/subscribe [:accounted-time :selected-day])
         tasks @(rf/subscribe [:tasks])
@@ -1017,12 +1017,42 @@
     )
   )
 
+(defn stats-selection [selected periods tasks]
+  (let [id (->> selected
+                (:current-selection)
+                (:id-or-nil))
+        period (some #(if (= id (:id %)) %) periods)
+        task-id (:task-id period)
+        task (some #(if (= task-id (:id %)) %) tasks)
+        ]
+    [:div
+     [ui/table {:selectable false}
+      [ui/table-body {:display-row-checkbox false}
+       [ui/table-row
+        [ui/table-row-column "task"]
+        [ui/table-row-column (:name task)]
+        ]
+       [ui/table-row
+        [ui/table-row-column "start"]
+        [ui/table-row-column (.toTimeString (:start period))]
+        ]
+       [ui/table-row
+        [ui/table-row-column "stop"]
+        [ui/table-row-column (.toTimeString (:stop period))]
+        ]
+       ]
+      ]
+     [:p {:style {:padding "0.25em"}} (:description period)]
+     ]
+    ))
+
 (defn home-page []
   (let [
         tasks               @(rf/subscribe [:tasks])
         selected            @(rf/subscribe [:selected])
         action-button-state @(rf/subscribe [:action-buttons])
         displayed-day       @(rf/subscribe [:displayed-day])
+        periods             @(rf/subscribe [:periods])
         ]
 
     [:div.app-container
@@ -1065,7 +1095,10 @@
        [ui/tabs {:tabItemContainerStyle {:backgroundColor "white"}
                  :inkBarStyle           {:backgroundColor (:primary app-theme)}}
         [ui/tab {:label "stats" :style {:color (:primary app-theme)}}
-         (stats selected)
+         (if (= :period (get-in selected [:current-selection :type-or-nil]))
+           (stats-selection selected periods tasks)
+           (stats-no-selection)
+           )
          ]
         [ui/tab {:label "queue" :style {:color (:primary app-theme)}}
          (queue tasks selected)

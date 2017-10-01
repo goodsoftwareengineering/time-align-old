@@ -177,3 +177,8 @@
                      0 periods)]
      total-time)))
 
+
+(reg-sub
+ :periods
+ (fn [db _]
+   (utils/pull-periods db)))
