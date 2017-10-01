@@ -21,10 +21,22 @@ generated using Luminus version "2.9.11.46"
 - run in nrepl `(cljs)` (starts a clojurescript repl in your browser that will connect automagically when you open localhost:3000)
 
 ## sequence of events
-- finish mvp-a
-- analytics back end
-- analytics integration into spa
-- launch alpha SPA (2017/10/31)
+- finish cards _in progress_
+- pair program and merge branches
+- *more iteratively* finish all cards labeled purple
+- user exp reports and review
+- use the review workflow and paired sessions to merge and code review
+- manual soft launch
+- figure out CI/CD
+- start using, show to friends and family
+- add all of the stuff to show to public
+  - responsive design supporting desktop
+  - analytics back end
+  - analytics integration into spa
+- final launch before sharing with strangers alpha SPA (2017/10/31)
+
+... iterate new features and refactoring
+
 - [refactor](#first-great-refactor) skeleton to be readable and maintainable without changing any functionality
 - figure out mvp-b
 - finish mvp-b (2018/07/01)
