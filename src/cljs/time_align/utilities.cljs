@@ -137,8 +137,17 @@
          (<= that-day-month this-day-month)
          (< that-day-day this-day-day))))
 
+(defn period-has-stamps [period]
+  (if (and (contains? period :start)
+           (contains? period :stop))
+    (not (or (nil? (:start period))
+             (nil? (:stop period))))))
+
 (defn period-in-day [day period]
-  (if (not (nil? period)) ;; TODO add spec here
+  (if (and
+       (not (nil? period))
+       (period-has-stamps period)) ;; TODO add spec here
+
     (let [day-y   (.getFullYear day)
           day-m   (.getMonth day)
           day-d   (.getDate day)
@@ -177,6 +186,7 @@
   [type task]
   (->> (type task)
        (filter
+        ;; TODO use period-has-stamps
         (fn [period] (and (contains? period :start)
                           (contains? period :stop))))
        ((fn [periods] (if (empty? periods)

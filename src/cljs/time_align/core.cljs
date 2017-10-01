@@ -16,6 +16,8 @@
             [time-align.subscriptions]
             [clojure.string :as string]
             [time-align.utilities :as utils]
+            [goog.string :as gstring]
+            [goog.string.format]
             [cljs.pprint :refer [pprint]])
   (:import goog.History))
 
@@ -74,17 +76,19 @@
     (string/join " " ["M" (:x p-start) (:y p-start)
                       "A" r r 0 large-arc-flag 1 (:x p-stop) (:y p-stop)])))
 
-(defn period [selected curr-time is-moving-period type period]
+(defn period [selected curr-time is-moving-period type period displayed-day]
   (let [id          (:id period)
         start-date  (:start period)
-        starts-yesterday (utils/before-today start-date)
+        starts-yesterday (utils/is-this-day-before-that-day?
+                          start-date displayed-day)
         start-ms    (utils/get-ms start-date)
         start-angle (if starts-yesterday
                       0.5
                       (utils/ms-to-angle start-ms))
 
         stop-date  (:stop period)
-        stops-tomorrow (utils/after-today stop-date)
+        stops-tomorrow (utils/is-this-day-after-that-day?
+                        stop-date displayed-day)
         stop-ms    (utils/get-ms stop-date)
         stop-angle (if stops-tomorrow
                      359.5
@@ -289,7 +293,7 @@
      ]
     ))
 
-(defn periods [periods selected is-moving-period curr-time]
+(defn periods [periods selected is-moving-period curr-time displayed-day]
   (let [actual  (:actual-periods periods)
         planned (:planned-periods periods)]
     [:g
@@ -300,7 +304,8 @@
                                               curr-time
                                               is-moving-period
                                               :actual
-                                              actual-period)))))]
+                                              actual-period
+                                              displayed-day)))))]
      [:g
       (if (some? planned)
         (->> planned
@@ -308,7 +313,8 @@
                                                curr-time
                                                is-moving-period
                                                :planned
-                                               planned-period))))
+                                               planned-period
+                                               displayed-day))))
         )]]))
 
 (defn handle-period-move [id type evt]
@@ -320,7 +326,6 @@
         angle             (utils/point-to-angle pos-t)
         mid-point-time-ms (utils/angle-to-ms angle)]
 
-    (println (str "moved " type))
     (rf/dispatch [:move-selected-period mid-point-time-ms])))
 
 (defn x-svg [{:keys [cx cy r fill stroke shadow click] }]
@@ -541,7 +546,7 @@
      [:circle (merge {:fill "#f1f1f1" :r (:inner-r svg-consts)}
                      (select-keys svg-consts [:cx :cy]))]
 
-     (periods filtered-periods selected is-moving-period curr-time)
+     (periods filtered-periods selected is-moving-period curr-time day)
 
      (if display-ticker
        [:g
@@ -559,6 +564,15 @@
                         (select-keys svg-consts [:cx :cy]))]
         ]
        )
+
+     [:polyline {:points "10,85 5,90 10,95"
+                 :fill "grey"
+                 :onClick (fn [e]
+                            (rf/dispatch [:iterate-displayed-day :prev]))}]
+     [:polyline {:points "90,85 95,90 90,95"
+                 :fill "grey"
+                 :onClick (fn [e]
+                            (rf/dispatch [:iterate-displayed-day :next]))}]
      ]))
 
 (defn days [days tasks selected-period]
@@ -961,33 +975,122 @@
     )
   )
 
-(defn stats [selected]
-  [ui/table {:selectable false}
-   [ui/table-body {:display-row-checkbox false}
-    [ui/table-row
-     [ui/table-row-column "time planned"]
-     [ui/table-row-column "123456"]
+(defn duration-ms-to-string [time]
+  (str
+   (gstring/format "%.2f"
+                   (-> time
+                       (/ 1000)
+                       (/ 60)
+                       (/ 60)))
+   " hours"))
+
+(defn stats-no-selection []
+  (let [planned-time @(rf/subscribe [:planned-time :selected-day])
+        accounted-time @(rf/subscribe [:accounted-time :selected-day])
+        tasks @(rf/subscribe [:tasks])
+        queue-items (utils/filter-periods-no-stamps tasks)
+        queue-count (count queue-items)
+        incomplete-tasks (filter #(:complete %) tasks)
+        incomplete-count (count incomplete-tasks)
+        ]
+
+    [ui/table {:selectable false}
+     [ui/table-body {:display-row-checkbox false}
+      [ui/table-row
+       [ui/table-row-column "planned"]
+       [ui/table-row-column (duration-ms-to-string planned-time)]
+       ]
+      [ui/table-row
+       [ui/table-row-column "accounted"]
+       [ui/table-row-column (duration-ms-to-string accounted-time)]
+       ]
+      [ui/table-row
+       [ui/table-row-column "queue items"]
+       [ui/table-row-column queue-count]
+       ]
+      [ui/table-row
+       [ui/table-row-column "incomplete tasks"]
+       [ui/table-row-column incomplete-count]
+       ]
+      ]
      ]
-    [ui/table-row
-     [ui/table-row-column "time accounted"]
-     [ui/table-row-column "123456"]
+    )
+  )
+
+(defn stats-selection [selected periods tasks]
+  (let [id (->> selected
+                (:current-selection)
+                (:id-or-nil))
+        period (some #(if (= id (:id %)) %) periods)
+        task-id (:task-id period)
+        task (some #(if (= task-id (:id %)) %) tasks)
+        ]
+    [:div
+     [ui/table {:selectable false}
+      [ui/table-body {:display-row-checkbox false}
+       [ui/table-row
+        [ui/table-row-column "task"]
+        [ui/table-row-column (:name task)]
+        ]
+       [ui/table-row
+        [ui/table-row-column "start"]
+        [ui/table-row-column (.toTimeString (:start period))]
+        ]
+       [ui/table-row
+        [ui/table-row-column "stop"]
+        [ui/table-row-column (.toTimeString (:stop period))]
+        ]
+       ]
+      ]
+     [:p {:style {:padding "0.25em"}} (:description period)]
      ]
-    [ui/table-row
-     [ui/table-row-column "queue items"]
-     [ui/table-row-column "123456"]
-     ]
-    [ui/table-row
-     [ui/table-row-column "incomplete tasks"]
-     [ui/table-row-column "123456"]
-     ]
-    ]
-   ])
+    ))
+
+(defn agenda [selected periods]
+  (let [planned-periods (filter #(and (= :planned (:type %))
+                                      (some? (:start %)))
+                                periods)
+        planned-periods-sorted (sort-by #(.valueOf (:start %))
+                                         planned-periods)
+        period-selected (= :period
+                           (get-in selected [:current-selection :type-or-nil]))
+        selected-id (get-in selected [:current-selection :id-or-nil])]
+    [ui/list {:style {:width "100%"}}
+        (->> planned-periods-sorted
+             (map (fn [period]
+                    [ui/list-item
+                     {:style       (merge {:width "100%"}
+                                          (if (and period-selected
+                                                   (= (:id period)
+                                                      selected-id))
+                                            {:backgroundColor (color :grey-300)}
+                                            {}))
+                      :key         (:id period)
+                      :leftIcon    (r/as-element
+                                    (svg-mui-circle (:color period)))
+                      :primaryText (concatonated-text (:description period)
+                                                      10 "No period description ...")
+                      :onTouchTap  (if (and period-selected
+                                            (= selected-id (:id period)))
+                                     (fn [e]
+                                       (rf/dispatch [:set-active-page
+                                                     {:page-id :entity-forms
+                                                      :type :period
+                                                      :id (:id period)}]))
+                                       (fn [e]
+                                         (rf/dispatch
+                                          [:set-selected-period (:id period)])
+                                         )
+                                       )}])))])
+  )
 
 (defn home-page []
   (let [
         tasks               @(rf/subscribe [:tasks])
         selected            @(rf/subscribe [:selected])
         action-button-state @(rf/subscribe [:action-buttons])
+        displayed-day       @(rf/subscribe [:displayed-day])
+        periods             @(rf/subscribe [:periods])
         ]
 
     [:div.app-container
@@ -1006,8 +1109,13 @@
                :flex       "1 0 100%"
                :max-height "60%"
                ;; :border "red solid 0.1em"
-               :box-sizing "border-box"}}
-      (day tasks selected (new js/Date))]
+               :box-sizing "border-box"
+               :justify-content "center"
+               :align-items "center"
+               :flex-direction "column"}}
+      [:div.day-label {:style {:color "grey"}}
+       (.toDateString displayed-day)]
+      (day tasks selected displayed-day)]
 
      [:div.lower-container
       {:style {:display    "flex"
@@ -1016,20 +1124,25 @@
                :box-sizing "border-box"}}
       [ui/paper {:style {:width "100%"
                          :min-height "10em" ;; keeps the tabs above action
-                                           ;; and from tabs 'jumping' if there
-                                           ;; is no content in other tab
+                                            ;; and from tabs 'jumping' if there
+                                            ;; is no content in other tab
+                                            ;; at least on mobile
+                                            ;; TODO add breakpoint rules 
                          }}
 
        [ui/tabs {:tabItemContainerStyle {:backgroundColor "white"}
                  :inkBarStyle           {:backgroundColor (:primary app-theme)}}
-        [ui/tab {:label "stats" :style {:color (:primary app-theme)}}
-         (stats selected)
+        [ui/tab {:label "agenda" :style {:color (:primary app-theme)}}
+         (agenda selected periods)
          ]
         [ui/tab {:label "queue" :style {:color (:primary app-theme)}}
          (queue tasks selected)
          ]
-        [ui/tab {:label "agenda" :style {:color (:primary app-theme)}}
-         [:div "agenda here"]
+        [ui/tab {:label "stats" :style {:color (:primary app-theme)}}
+         (if (= :period (get-in selected [:current-selection :type-or-nil]))
+           (stats-selection selected periods tasks)
+           (stats-no-selection)
+           )
          ]
         ]
        ]

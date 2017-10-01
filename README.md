@@ -21,10 +21,22 @@ generated using Luminus version "2.9.11.46"
 - run in nrepl `(cljs)` (starts a clojurescript repl in your browser that will connect automagically when you open localhost:3000)
 
 ## sequence of events
-- finish mvp-a
-- analytics back end
-- analytics integration into spa
-- launch alpha SPA (2017/10/31)
+- finish cards _in progress_
+- pair program and merge branches
+- *more iteratively* finish all cards labeled purple
+- user exp reports and review
+- use the review workflow and paired sessions to merge and code review
+- manual soft launch
+- figure out CI/CD
+- start using, show to friends and family
+- add all of the stuff to show to public
+  - responsive design supporting desktop
+  - analytics back end
+  - analytics integration into spa
+- final launch before sharing with strangers alpha SPA (2017/10/31)
+
+... iterate new features and refactoring
+
 - [refactor](#first-great-refactor) skeleton to be readable and maintainable without changing any functionality
 - figure out mvp-b
 - finish mvp-b (2018/07/01)
@@ -44,7 +56,7 @@ generated using Luminus version "2.9.11.46"
 ### 1.0
 ios + android + webapp
 
-## mvp-a
+## mvp-alpha
 - CRUD on all entities
   - categories
   - tasks
@@ -100,8 +112,9 @@ ios + android + webapp
 - queue needs two options (tabs)
   - queue of tasks with no stamps
   - queue of upcoming planned tasks
-### actionable
 
+### actionable
+...
 
 ## bugs to fix later
 - firefox moving periods
@@ -114,6 +127,7 @@ ios + android + webapp
 - routing and pretty urls
 
 ## license
+MIT
 Copyright 2017 Justin Good
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:

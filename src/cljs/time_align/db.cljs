@@ -160,6 +160,8 @@
                                      :error-or-nil nil
                                      :planned false})
                        ))
+(s/def ::displayed-day (s/with-gen inst?
+                         #(gen/return (new js/Date))))
 (s/def ::view (s/and (s/keys :req-un [::page
                                       ::selected
                                       ::continous-action
@@ -169,6 +171,7 @@
                                       ::category-form
                                       ::task-form
                                       ::period-form
+                                      ::displayed-day
                                       ])
                      (fn [view]
                        (if (get-in
