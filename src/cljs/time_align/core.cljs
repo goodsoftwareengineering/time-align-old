@@ -1046,6 +1046,44 @@
      ]
     ))
 
+(defn agenda [selected periods]
+  (let [planned-periods (filter #(and (= :planned (:type %))
+                                      (some? (:start %)))
+                                periods)
+        planned-periods-sorted (sort-by #(.valueOf (:start %))
+                                         planned-periods)
+        period-selected (= :period
+                           (get-in selected [:current-selection :type-or-nil]))
+        selected-id (get-in selected [:current-selection :id-or-nil])]
+    [ui/list {:style {:width "100%"}}
+        (->> planned-periods-sorted
+             (map (fn [period]
+                    [ui/list-item
+                     {:style       (merge {:width "100%"}
+                                          (if (and period-selected
+                                                   (= (:id period)
+                                                      selected-id))
+                                            {:backgroundColor (color :grey-300)}
+                                            {}))
+                      :key         (:id period)
+                      :leftIcon    (r/as-element
+                                    (svg-mui-circle (:color period)))
+                      :primaryText (concatonated-text (:description period)
+                                                      10 "No period description ...")
+                      :onTouchTap  (if (and period-selected
+                                            (= selected-id (:id period)))
+                                     (fn [e]
+                                       (rf/dispatch [:set-active-page
+                                                     {:page-id :entity-forms
+                                                      :type :period
+                                                      :id (:id period)}]))
+                                       (fn [e]
+                                         (rf/dispatch
+                                          [:set-selected-period (:id period)])
+                                         )
+                                       )}])))])
+  )
+
 (defn home-page []
   (let [
         tasks               @(rf/subscribe [:tasks])
@@ -1094,17 +1132,17 @@
 
        [ui/tabs {:tabItemContainerStyle {:backgroundColor "white"}
                  :inkBarStyle           {:backgroundColor (:primary app-theme)}}
+        [ui/tab {:label "agenda" :style {:color (:primary app-theme)}}
+         (agenda selected periods)
+         ]
+        [ui/tab {:label "queue" :style {:color (:primary app-theme)}}
+         (queue tasks selected)
+         ]
         [ui/tab {:label "stats" :style {:color (:primary app-theme)}}
          (if (= :period (get-in selected [:current-selection :type-or-nil]))
            (stats-selection selected periods tasks)
            (stats-no-selection)
            )
-         ]
-        [ui/tab {:label "queue" :style {:color (:primary app-theme)}}
-         (queue tasks selected)
-         ]
-        [ui/tab {:label "agenda" :style {:color (:primary app-theme)}}
-         [:div "agenda here"]
          ]
         ]
        ]
