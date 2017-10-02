@@ -40,6 +40,8 @@
                  [ring/ring-defaults "0.2.3"]
                  [reanimated "0.5.1"]
                  [secretary "1.2.3"]
+                 [alandipert/storage-atom "2.0.1"]
+                 [com.cognitect/transit-cljs "0.8.239"]
                  [selmer "1.10.7"]]
 
 
@@ -63,7 +65,8 @@
   {:http-server-root "public"
    :nrepl-port       7002
    :css-dirs         ["resources/public/css"]
-   :hawk-options     {:watcher :polling}
+   :hawk-options     {:watcher :polling
+                      :sensitivity :high}
    :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
 
 

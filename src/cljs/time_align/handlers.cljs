@@ -1,18 +1,38 @@
 (ns time-align.handlers
   (:require [time-align.db :as db]
-            [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]
+            [re-frame.core :refer [dispatch
+                                   reg-event-db
+                                   reg-event-fx
+                                   reg-fx
+                                   ->interceptor]]
             [time-align.utilities :as utils]
             [time-align.client-utilities :as cutils]
-            ))
+            [time-align.storage :as store]
+            [alandipert.storage-atom :refer [local-storage remove-local-storage!]]))
 
+(def persist-ls
+  (->interceptor
+    :id :persist-to-localstorage
+    :after (fn [context]
+             (remove-local-storage! :app-db)
+             (local-storage (atom (get-in context [:effects :db])) :app-db)
+             context)))
 
 (reg-event-db
   :initialize-db
+  [persist-ls]
   (fn [_ _]
-    db/default-db))
+    (let [hot-garbage-let-var (if (some #(= :app-db %) (store/store->keys))
+                                (->> :app-db
+                                     store/key->transit-str
+                                     (.getItem js/localStorage)
+                                     store/transit-json->map)
+                                db/default-db)]
+      hot-garbage-let-var)))
 
 (reg-event-fx
   :set-active-page
+  [persist-ls]
   (fn [cofx [_ params]]
     (let [db (:db cofx)
           page (:page-id params)
@@ -50,6 +70,7 @@
 
 (reg-event-db
   :load-category-entity-form
+  [persist-ls]
   (fn [db [_ id]]
     (let [categories (:categories db)
           this-category (some #(if (= id (:id %)) %) categories)
@@ -62,6 +83,7 @@
 
 (reg-event-db
   :load-task-entity-form
+  [persist-ls]
   (fn [db [_ id]]
     (let [tasks (cutils/pull-tasks db)
           this-task (some #(if (= id (:id %)) %) tasks)
@@ -80,6 +102,7 @@
 
 (reg-event-db
   :load-period-entity-form
+  [persist-ls]
   (fn [db [_ id]]
     (let [periods (cutils/pull-periods db)
           this-period (some #(if (= id (:id %)) %)
@@ -104,11 +127,13 @@
 
 (reg-event-db
   :set-zoom
+  [persist-ls]
   (fn [db [_ quadrant]]
     (assoc-in db [:view :zoom] quadrant)))
 
 (reg-event-db
   :set-view-range-day
+  [persist-ls]
   (fn [db [_ _]]
     (assoc-in db [:view :range]
               {:start (new js/Date)
@@ -116,6 +141,7 @@
 
 (reg-event-db
   :set-view-range-week
+  [persist-ls]
   (fn [db [_ _]]
     (assoc-in db [:view :range]
               {:start (utils/one-week-ago (js/Date.))
@@ -123,21 +149,25 @@
 
 (reg-event-db
   :set-view-range-custom
+  [persist-ls]
   (fn [db [_ range]]
     (assoc-in db [:view :range] range)))
 
 (reg-event-db
   :toggle-main-drawer
+  [persist-ls]
   (fn [db [_ _]]
     (update-in db [:view :main-drawer] not)))
 
 (reg-event-db
   :set-main-drawer
+  [persist-ls]
   (fn [db [_ new-state]]
     (assoc-in db [:view :main-drawer] new-state)))
 
 (reg-event-fx
   :set-selected-period
+  [persist-ls]
   (fn [cofx [_ period-id]]
     (let [
           db (:db cofx)
@@ -155,6 +185,7 @@
 
 (reg-event-db
   :set-selected
+  [persist-ls]
   (fn [db [_ {:keys [type id]}]]
     (assoc-in db [:view :selected]
               {:current-selection  {:type-or-nil type
@@ -163,6 +194,7 @@
 
 (reg-event-fx
   :set-selected-queue
+  [persist-ls]
   (fn [cofx [_ period-id]]
     ;; TODO might need to set action-button state on nil to auto collapse
     (let [
@@ -184,6 +216,7 @@
 ;; not using this yet VVV
 (reg-event-fx
   :set-selected-task
+  [persist-ls]
   (fn [cofx [_ task-id]]
     (let [db (:db cofx)]
 
@@ -198,6 +231,7 @@
 
 (reg-event-db
   :action-buttons-expand
+  [persist-ls]
   (fn [db [_ _]]
     (let [selection (get-in db [:view :selected :current-selection])
           s-type (:type-or-nil selection)
@@ -211,6 +245,7 @@
 
 (reg-event-db
   :action-buttons-back
+  [persist-ls]
   (fn [db [_ _]]
     (let [cur-state (get-in db [:view :action-buttons])
           new-state
@@ -223,6 +258,7 @@
 
 (reg-event-db
   :set-moving-period
+  [persist-ls]
   (fn [db [_ is-moving-bool]]
     (assoc-in db [:view :continous-action :moving-period]
               is-moving-bool)))
@@ -249,6 +285,7 @@
 
 (reg-event-db
   :move-selected-period
+  [persist-ls]
   (fn [db [_ mid-point-time-ms]]
     (if (period-selected? db)
       (let [
@@ -312,6 +349,7 @@
 
 (reg-event-db
   :set-category-form-color
+  [persist-ls]
   (fn [db [_ color]]
     (assoc-in db [:view :category-form :color-map]
               (merge (get-in db [:view :category-form :color-map])
@@ -322,6 +360,7 @@
 
 (reg-event-fx
   :save-category-form
+  [persist-ls]
   (fn [cofx [_ _]]
     (let [db (:db cofx)
           name (get-in db [:view :category-form :name])
@@ -348,31 +387,37 @@
 
 (reg-event-db
   :set-category-form-name
+  [persist-ls]
   (fn [db [_ name]]
     (assoc-in db [:view :category-form :name] name)))
 
 (reg-event-db
   :set-task-form-category-id
+  [persist-ls]
   (fn [db [_ category-id]]
     (assoc-in db [:view :task-form :category-id] category-id)))
 
 (reg-event-db
   :set-task-form-name
+  [persist-ls]
   (fn [db [_ name]]
     (assoc-in db [:view :task-form :name] name)))
 
 (reg-event-db
   :set-task-form-description
+  [persist-ls]
   (fn [db [_ desc]]
     (assoc-in db [:view :task-form :description] desc)))
 
 (reg-event-db
   :set-task-form-complete
+  [persist-ls]
   (fn [db [_ comp]]
     (assoc-in db [:view :task-form :complete] comp)))
 
 (reg-event-fx
   :submit-task-form                                         ;; TODO change this to "save" or others to "submit"
+  [persist-ls]
   (fn [cofx [_ _]]
     (let [db (:db cofx)
           task-form (get-in db [:view :task-form])
@@ -414,6 +459,7 @@
 
 (reg-event-db
   :set-period-form-date
+  [persist-ls]
   (fn [db [_ [new-d start-or-stop]]]
     (let [o (get-in db [:view :period-form start-or-stop])]
       (if (some? o)
@@ -432,6 +478,7 @@
 
 (reg-event-db
   :set-period-form-time
+  [persist-ls]
   (fn [db [_ [new-s start-or-stop]]]
     (let [o (get-in db [:view :period-form start-or-stop])]
       (if (some? o)
@@ -460,6 +507,7 @@
 
 (reg-event-db
   :set-period-form-description
+  [persist-ls]
   (fn [db [_ desc]]
     (assoc-in db [:view :period-form :description] desc)
     ))
@@ -467,6 +515,7 @@
 
 (reg-event-db
   :set-period-form-task-id
+  [persist-ls]
   (fn [db [_ task-id]]
     (assoc-in db [:view :period-form :task-id] task-id))
   )
@@ -474,6 +523,7 @@
 
 (reg-event-fx
   :save-period-form
+  [persist-ls]
   (fn [cofx [_ _]]
     (let [db (:db cofx)
 
@@ -580,6 +630,7 @@
 
 (reg-event-fx
   :delete-category-form-entity
+  [persist-ls]
   (fn [cofx [_ _]]
     (let [db (:db cofx)
           category-id (get-in db [:view :category-form :id-or-nil])
@@ -675,6 +726,7 @@
 
 (reg-event-db
   :set-period-form-planned
+  [persist-ls]
   (fn [db [_ is-planned]]
     (assoc-in db [:view :period-form :planned] is-planned)))
 
