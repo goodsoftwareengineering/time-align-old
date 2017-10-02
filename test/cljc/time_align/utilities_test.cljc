@@ -8,14 +8,14 @@
 
 (deftest test-utils
   (testing "One week from now should add 604800000"
-    (is (= (rc/one-week-from-now (rc/make-date 1970 1 1))
-           604800000
+    (is (= 604800000
+           (rc/one-week-from-now (rc/make-date 1970 1 1))
            rc/week-ms)))
 
 
   (testing "One week ago should subtract 604800000"
-    (is (= (rc/one-week-ago (rc/make-date 1970 1 8))
-           0)))
+    (is (= 0
+          (rc/one-week-ago (rc/make-date 1970 1 8)))))
 
 
   (testing "Start of today should respect timezones"
