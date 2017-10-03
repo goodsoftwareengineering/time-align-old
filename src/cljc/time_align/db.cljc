@@ -1,18 +1,23 @@
 (ns time-align.db
-  (:require [clojure.spec :as s]
+  (:require #?(:clj  [clojure.spec.alpha :as s]
+               :cljs [cljs.spec :as s])
+            #?(:clj  [clojure.pprint :refer [pprint]]
+               :cljs [cljs.pprint :refer [pprint]])
+            #?(:clj  [java-time :as t])
             [clojure.test.check.generators :as gen]
             [time-align.utilities :as utils]
-            [clojure.string :as string]
+            [clojure.string :as string])
+  #?(:clj (:import java.util.UUID)))
 
-            [cljs.pprint :refer [pprint]]
-            ))
+
+#?(:clj (defn random-uuid [](java.util.UUID/randomUUID)))
 
 (s/def ::name (s/and string? #(> 256 (count %))))
 (s/def ::description string?)
 (s/def ::email string?)
 (s/def ::id uuid?)
-(s/def ::moment (s/with-gen inst?
-                  #(s/gen utils/time-set)))
+(s/def ::moment #?(:cljs (s/with-gen inst? #(s/gen utils/time-set))
+                   :clj  (s/with-gen t/zoned-date-time? #(s/gen utils/time-set))))
 (s/def ::start ::moment)
 (s/def ::stop ::moment)
 (s/def ::priority int?)
@@ -25,9 +30,9 @@
                                     (contains? period :stop))
                                  (> (.valueOf (:stop period))
                                     (.valueOf (:start period)))
-                                 true
-                                 ))
-                             )
+                                 true)))
+
+
 
                   ;; generator uses a generated moment and adds a random amount of time to it
                   ;; < 2 hrs
@@ -39,8 +44,8 @@
                                                        (+ (rand-int (* 2 utils/hour-ms))))
                                      stamps       (if queue-chance
                                                     {}
-                                                    {:start (new js/Date start)
-                                                     :stop  (new js/Date stop)})
+                                                    #?(:cljs {:start (new js/Date start)
+                                                              :stop (new js/Date stop)}))
                                      desc         (if desc-chance
                                                     {:description (gen/generate (s/gen ::description))}
                                                     {})]
@@ -117,13 +122,13 @@
                           #{:collapsed
                             :period
                             :queue
-                            :no-selection ;; depends on zoom
-                            }
+                            :no-selection} ;; depends on zoom
+
                           #(gen/return :collapsed)))
 (s/def ::color-255 (s/with-gen (s/and int?
                                       (fn [i]
                                         (and (> 256 i)
-                                             (<= 0 i) )))
+                                             (<= 0 i))))
                      #(gen/return 0)))
 (s/def ::red ::color-255)
 (s/def ::blue ::color-255)
@@ -141,10 +146,10 @@
                                    :name ""
                                    :description ""
                                    :complete false
-                                   :category-id nil
+                                   :category-id nil})))
                                    ;; TODO figure out a better default for category-id
-                                   })
-                     ))
+
+
 (s/def ::task-id ::id-or-nil)
 (s/def ::error #{:time-mismatch})
 (s/def ::error-or-nil (s/with-gen
@@ -158,10 +163,12 @@
                        #(gen/return {:id-or-nil nil
                                      :task-id nil
                                      :error-or-nil nil
-                                     :planned false})
-                       ))
+                                     :planned false})))
+
 (s/def ::displayed-day (s/with-gen inst?
-                         #(gen/return (new js/Date))))
+                        #?(:cljs #(gen/return (new js/Date))
+                           :clj #(gen/return (t/zoned-date-time)))))
+
 (s/def ::view (s/and (s/keys :req-un [::page
                                       ::selected
                                       ::continous-action
@@ -186,5 +193,6 @@
                               :type-or-nil]))
                          true))))
 (s/def ::db (s/keys :req-un [::user ::view ::categories]))
+
 (def default-db (gen/generate (s/gen ::db)))
 

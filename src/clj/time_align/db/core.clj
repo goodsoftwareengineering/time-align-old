@@ -16,8 +16,8 @@
             PreparedStatement]))
 
 (defstate ^:dynamic *db*
-           :start (conman/connect! {:jdbc-url (env :database-url)})
-           :stop (conman/disconnect! *db*))
+          :start (conman/connect! {:jdbc-url (env :database-url)})
+          :stop (conman/disconnect! *db*))
 
 (conman/bind-connection *db* "sql/queries.sql")
 
@@ -36,7 +36,7 @@
 
   PGobject
   (result-set-read-column [pgobj _metadata _index]
-    (let [type  (.getType pgobj)
+    (let [type (.getType pgobj)
           value (.getValue pgobj)]
       (case type
         "json" (parse-string value true)
@@ -50,15 +50,15 @@
     (.setTimestamp stmt idx (Timestamp. (.getTime v)))))
 
 (defn to-pg-json [value]
-      (doto (PGobject.)
-            (.setType "jsonb")
-            (.setValue (generate-string value))))
+  (doto (PGobject.)
+    (.setType "jsonb")
+    (.setValue (generate-string value))))
 
 (extend-type clojure.lang.IPersistentVector
   jdbc/ISQLParameter
   (set-parameter [v ^java.sql.PreparedStatement stmt ^long idx]
-    (let [conn      (.getConnection stmt)
-          meta      (.getParameterMetaData stmt)
+    (let [conn (.getConnection stmt)
+          meta (.getParameterMetaData stmt)
           type-name (.getParameterTypeName meta idx)]
       (if-let [elem-type (when (= (first type-name) \_) (apply str (rest type-name)))]
         (.setObject stmt idx (.createArrayOf conn elem-type (to-array v)))

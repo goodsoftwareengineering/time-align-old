@@ -10,8 +10,6 @@
   :websocket-url "ws://localhost:3449/figwheel-ws"
   :on-jsload core/mount-components)
 
-(enable-re-frisk!)
-
 (devtools/install!)
 
 (core/init!)

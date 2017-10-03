@@ -1,3 +1,3 @@
 #!/bin/bash
 echo "Starting the repl, this might take a minute or two...."
-lein update-in :dependencies conj "[org.clojure/tools.nrepl \"0.2.12\"]" -- update-in :plugins conj "[refactor-nrepl \"2.4.0-SNAPSHOT\"]" -- update-in :plugins conj "[cider/cider-nrepl \"0.16.0-SNAPSHOT\"]" -- repl :headless :port 7000
+lein update-in :dependencies conj "[org.clojure/tools.nrepl \"0.2.13\"]" -- update-in :plugins conj "[refactor-nrepl \"2.4.0-SNAPSHOT\"]" -- update-in :plugins conj "[cider/cider-nrepl \"0.16.0-SNAPSHOT\"]" -- repl :headless :port 7000

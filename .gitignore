@@ -16,3 +16,6 @@ GRTAGS
 GSYMS
 GTAGS
 \.idea/
+/out/
+
+\.floo

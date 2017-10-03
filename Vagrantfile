@@ -20,4 +20,7 @@ Vagrant.configure(2) do |config|
       v.memory = 3072
     end
 
+    config.vm.provider "docker" do |d|
+      d.image = "ubuntu"
+    end
 end
