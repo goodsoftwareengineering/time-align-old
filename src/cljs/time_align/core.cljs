@@ -77,7 +77,7 @@
     (string/join " " ["M" (:x p-start) (:y p-start)
                       "A" r r 0 large-arc-flag 1 (:x p-stop) (:y p-stop)])))
 
-(defn period [selected curr-time is-moving-period type period]
+(defn period [selected curr-time is-moving-period type period displayed-day]
   (let [id                         (:id period)
         start-date                 (:start period)
         starts-yesterday (utils/is-this-day-before-that-day?
@@ -989,7 +989,7 @@
   (let [planned-time @(rf/subscribe [:planned-time :selected-day])
         accounted-time @(rf/subscribe [:accounted-time :selected-day])
         tasks @(rf/subscribe [:tasks])
-        queue-items (utils/filter-periods-no-stamps tasks)
+        queue-items (cutils/filter-periods-no-stamps tasks)
         queue-count (count queue-items)
         incomplete-tasks (filter #(:complete %) tasks)
         incomplete-count (count incomplete-tasks)
@@ -1128,7 +1128,7 @@
                                             ;; and from tabs 'jumping' if there
                                             ;; is no content in other tab
                                             ;; at least on mobile
-                                            ;; TODO add breakpoint rules 
+                                            ;; TODO add breakpoint rules
                          }}
 
        [ui/tabs {:tabItemContainerStyle {:backgroundColor "white"}

@@ -190,42 +190,6 @@
                 (< that-day-day this-day-day)))))
 
 
-(defn period-in-day [day period]
-  #?(:cljs (if (not (nil? period))                                                                                              ;; TODO add spec here
-             (let [day-y     (.getFullYear day)
-                   day-m     (.getMonth day)
-                   day-d     (.getDate day)
-                   day-str   (str day-y day-m day-d)
-
-                   start     (:start period)
-                   start-y   (.getFullYear start)
-                   start-m   (.getMonth start)
-                   start-d   (.getDate start)
-                   start-str (str start-y start-m start-d)
-
-                   stop      (:stop period)
-                   stop-y    (.getFullYear stop)
-                   stop-m    (.getMonth stop)
-                   stop-d    (.getDate stop)
-                   stop-str  (str stop-y stop-m stop-d)]
-
-               (or
-                 ;; start or stop is on the day
-                 (= day-str start-str)
-                 (= day-str stop-str)
-
-                 ;; start and stop are on either side of the day
-                 (and
-                   ;; start is before day
-                   (is-this-day-before-that-day? start day)
-
-                   ;; stop is after day
-                   (is-this-day-after-that-day? stop day)
-                   )
-                 ))
-             false)))
-
-
 ;; TODO would this function not work given utc dates?
 (defn before-today
   "Given a date will return true when the day is before today. if the day is today or later will return false."

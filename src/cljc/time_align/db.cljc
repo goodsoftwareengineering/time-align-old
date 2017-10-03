@@ -1,14 +1,16 @@
 (ns time-align.db
   (:require #?(:clj  [clojure.spec.alpha :as s]
-               :cljs [clojure.spec :as s])
+               :cljs [cljs.spec :as s])
             #?(:clj  [clojure.pprint :refer [pprint]]
                :cljs [cljs.pprint :refer [pprint]])
             #?(:clj  [java-time :as t])
             [clojure.test.check.generators :as gen]
             [time-align.utilities :as utils]
-            [clojure.string :as string]))
+            [clojure.string :as string])
+  #?(:clj (:import java.util.UUID)))
 
 
+#?(:clj (defn random-uuid [](java.util.UUID/randomUUID)))
 
 (s/def ::name (s/and string? #(> 256 (count %))))
 (s/def ::description string?)
@@ -163,6 +165,10 @@
                                      :error-or-nil nil
                                      :planned false})))
 
+(s/def ::displayed-day (s/with-gen inst?
+                        #?(:cljs #(gen/return (new js/Date))
+                           :clj #(gen/return (t/zoned-date-time)))))
+
 (s/def ::view (s/and (s/keys :req-un [::page
                                       ::selected
                                       ::continous-action
@@ -171,8 +177,9 @@
                                       ::action-buttons
                                       ::category-form
                                       ::task-form
-                                      ::period-form])
-
+                                      ::period-form
+                                      ::displayed-day
+                                      ])
                      (fn [view]
                        (if (get-in
                             view
@@ -186,5 +193,6 @@
                               :type-or-nil]))
                          true))))
 (s/def ::db (s/keys :req-un [::user ::view ::categories]))
+
 (def default-db (gen/generate (s/gen ::db)))
 

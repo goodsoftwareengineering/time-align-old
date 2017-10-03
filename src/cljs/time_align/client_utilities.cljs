@@ -27,6 +27,7 @@
   (* (/ utils/ms-in-day 360) angle))
 
 
+
 (defn period-has-stamps [period]
   (if (and (contains? period :start)
            (contains? period :stop))
@@ -40,19 +41,19 @@
 
     (let [day-y   (.getFullYear day)
           day-m   (.getMonth day)
-          day-str (str day-y day-m day-d)
           day-d   (.getDate day)
+          day-str (str day-y day-m day-d)
 
           start (:start period)
           start-y (.getFullYear start)
-          start-d (.getDate start)
           start-m (.getMonth start)
-
+          start-d (.getDate start)
           start-str (str start-y start-m start-d)
-          stop-y (.getFullYear stop)
+
           stop (:stop period)
-          stop-d (.getDate stop)
+          stop-y (.getFullYear stop)
           stop-m (.getMonth stop)
+          stop-d (.getDate stop)
           stop-str (str stop-y stop-m stop-d)]
       (or
 
@@ -63,13 +64,14 @@
         ;; start and stop are on either side of the day
         (and
           ;; start is before day
-          (is-this-day-before-that-day? start day)
+          (utils/is-this-day-before-that-day? start day)
 
           ;; stop is after day
-          (is-this-day-after-that-day? stop day)
+          (utils/is-this-day-after-that-day? stop day)
           )
         ))
     false))
+
 
 (defn filter-out-stamps
   "Takes a keyword indicating type of period and the task. If the task contains periods of that type it will filter out the those types of periods with no stamps and return the task with that type of period collection modified."
@@ -136,10 +138,10 @@
   (let [new-tasks (filter-periods-with-stamps tasks)
         actual-periods (modify-and-pull-periods :actual-periods new-tasks)
         actual-filtered (->> actual-periods
-                             (filter (partial utils/period-in-day day)))
+                             (filter (partial period-in-day day)))
         planned-periods (modify-and-pull-periods :planned-periods new-tasks)
         planned-filtered (->> planned-periods
-                              (filter (partial utils/period-in-day day)))]
+                              (filter (partial period-in-day day)))]
 
     {:actual-periods  actual-filtered
      :planned-periods planned-filtered}))

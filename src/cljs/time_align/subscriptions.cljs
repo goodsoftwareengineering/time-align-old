@@ -119,7 +119,7 @@
   (fn [db _]
     ;; (let [period-id (get-in db [:view :period-form :id-or-nil])]
     ;;   (if (some? period-id)
-    ;;     (let [all-periods (utils/pull-periods db)
+    ;;     (let [all-periods (cutils/pull-periods db)
     ;;           this-period (->> all-periods
     ;;                            (some #(if (= (:id %) period-id) %)))
     ;;           is-planned (= :planned (:type this-period))]
@@ -139,10 +139,10 @@
  (fn [db _]
    (let [day (get-in db [:view :displayed-day])
          periods (->> db
-                      (utils/pull-periods)
+                      (cutils/pull-periods)
                       ;; only shows periods for the currently selected day
                       ;; TODO another subscription or an option here for all planned past _this_ moment
-                      (filter (fn [period] (utils/period-in-day day period)))
+                      (filter (fn [period] (cutils/period-in-day day period)))
                       (filter (fn [period] (= :planned (:type period))))
                       )
          total-time (reduce
@@ -162,8 +162,8 @@
  (fn [db _]
    (let [day (get-in db [:view :displayed-day])
          periods (->> db
-                      (utils/pull-periods)
-                      (filter (fn [period] (utils/period-in-day day period)))
+                      (cutils/pull-periods)
+                      (filter (fn [period] (cutils/period-in-day day period)))
                       (filter (fn [period] (= :actual (:type period)))))
 
          total-time (reduce
@@ -181,4 +181,274 @@
 (reg-sub
  :periods
  (fn [db _]
-   (utils/pull-periods db)))
+   (cutils/pull-periods db)))
+
+(reg-sub
+ :displayed-day
+ (fn [db _]
+   (get-in db [:view :displayed-day])))
+
+(reg-sub
+ :planned-time
+ (fn [db _]
+   (let [day (get-in db [:view :displayed-day])
+         periods (->> db
+                      (cutils/pull-periods)
+                      ;; only shows periods for the currently selected day
+                      ;; TODO another subscription or an option here for all planned past _this_ moment
+                      (filter (fn [period] (cutils/period-in-day day period)))
+                      (filter (fn [period] (= :planned (:type period))))
+                      )
+         total-time (reduce
+                     (fn [running-total period]
+                       (let [start (.valueOf (:start period))
+                             stop (.valueOf (:stop period))
+                             total (- stop start)]
+                         (+ running-total total)
+                         ;; TODO doesn't account for tasks that straddle a day
+                         ))
+                     0 periods)]
+
+     total-time)))
+
+(reg-sub
+ :accounted-time
+ (fn [db _]
+   (let [day (get-in db [:view :displayed-day])
+         periods (->> db
+                      (cutils/pull-periods)
+                      (filter (fn [period] (cutils/period-in-day day period)))
+                      (filter (fn [period] (= :actual (:type period)))))
+
+         total-time (reduce
+                     (fn [running-total period]
+                       (let [start (.valueOf (:start period))
+                             stop (.valueOf (:stop period))
+                             total (- stop start)]
+                         (+ running-total total)
+                         ;; TODO doesn't account for tasks that straddle a day
+                         ))
+                     0 periods)]
+     total-time)))
+
+
+(reg-sub
+ :periods
+ (fn [db _]
+   (cutils/pull-periods db)))
+
+(reg-sub
+ :displayed-day
+ (fn [db _]
+   (get-in db [:view :displayed-day])))
+
+(reg-sub
+ :planned-time
+ (fn [db _]
+   (let [day (get-in db [:view :displayed-day])
+         periods (->> db
+                      (cutils/pull-periods)
+                      ;; only shows periods for the currently selected day
+                      ;; TODO another subscription or an option here for all planned past _this_ moment
+                      (filter (fn [period] (cutils/period-in-day day period)))
+                      (filter (fn [period] (= :planned (:type period))))
+                      )
+         total-time (reduce
+                     (fn [running-total period]
+                       (let [start (.valueOf (:start period))
+                             stop (.valueOf (:stop period))
+                             total (- stop start)]
+                         (+ running-total total)
+                         ;; TODO doesn't account for tasks that straddle a day
+                         ))
+                     0 periods)]
+
+     total-time)))
+
+(reg-sub
+ :accounted-time
+ (fn [db _]
+   (let [day (get-in db [:view :displayed-day])
+         periods (->> db
+                      (cutils/pull-periods)
+                      (filter (fn [period] (cutils/period-in-day day period)))
+                      (filter (fn [period] (= :actual (:type period)))))
+
+         total-time (reduce
+                     (fn [running-total period]
+                       (let [start (.valueOf (:start period))
+                             stop (.valueOf (:stop period))
+                             total (- stop start)]
+                         (+ running-total total)
+                         ;; TODO doesn't account for tasks that straddle a day
+                         ))
+                     0 periods)]
+     total-time)))
+
+
+(reg-sub
+ :periods
+ (fn [db _]
+   (cutils/pull-periods db)))
+
+(reg-sub
+ :displayed-day
+ (fn [db _]
+   (get-in db [:view :displayed-day])))
+
+(reg-sub
+ :planned-time
+ (fn [db _]
+   (let [day (get-in db [:view :displayed-day])
+         periods (->> db
+                      (cutils/pull-periods)
+                      ;; only shows periods for the currently selected day
+                      ;; TODO another subscription or an option here for all planned past _this_ moment
+                      (filter (fn [period] (cutils/period-in-day day period)))
+                      (filter (fn [period] (= :planned (:type period))))
+                      )
+         total-time (reduce
+                     (fn [running-total period]
+                       (let [start (.valueOf (:start period))
+                             stop (.valueOf (:stop period))
+                             total (- stop start)]
+                         (+ running-total total)
+                         ;; TODO doesn't account for tasks that straddle a day
+                         ))
+                     0 periods)]
+
+     total-time)))
+
+(reg-sub
+ :accounted-time
+ (fn [db _]
+   (let [day (get-in db [:view :displayed-day])
+         periods (->> db
+                      (cutils/pull-periods)
+                      (filter (fn [period] (cutils/period-in-day day period)))
+                      (filter (fn [period] (= :actual (:type period)))))
+
+         total-time (reduce
+                     (fn [running-total period]
+                       (let [start (.valueOf (:start period))
+                             stop (.valueOf (:stop period))
+                             total (- stop start)]
+                         (+ running-total total)
+                         ;; TODO doesn't account for tasks that straddle a day
+                         ))
+                     0 periods)]
+     total-time)))
+
+
+(reg-sub
+ :periods
+ (fn [db _]
+   (cutils/pull-periods db)))
+
+(reg-sub
+ :displayed-day
+ (fn [db _]
+   (get-in db [:view :displayed-day])))
+
+(reg-sub
+ :planned-time
+ (fn [db _]
+   (let [day (get-in db [:view :displayed-day])
+         periods (->> db
+                      (cutils/pull-periods)
+                      ;; only shows periods for the currently selected day
+                      ;; TODO another subscription or an option here for all planned past _this_ moment
+                      (filter (fn [period] (cutils/period-in-day day period)))
+                      (filter (fn [period] (= :planned (:type period))))
+                      )
+         total-time (reduce
+                     (fn [running-total period]
+                       (let [start (.valueOf (:start period))
+                             stop (.valueOf (:stop period))
+                             total (- stop start)]
+                         (+ running-total total)
+                         ;; TODO doesn't account for tasks that straddle a day
+                         ))
+                     0 periods)]
+
+     total-time)))
+
+(reg-sub
+ :accounted-time
+ (fn [db _]
+   (let [day (get-in db [:view :displayed-day])
+         periods (->> db
+                      (cutils/pull-periods)
+                      (filter (fn [period] (cutils/period-in-day day period)))
+                      (filter (fn [period] (= :actual (:type period)))))
+
+         total-time (reduce
+                     (fn [running-total period]
+                       (let [start (.valueOf (:start period))
+                             stop (.valueOf (:stop period))
+                             total (- stop start)]
+                         (+ running-total total)
+                         ;; TODO doesn't account for tasks that straddle a day
+                         ))
+                     0 periods)]
+     total-time)))
+
+
+(reg-sub
+ :periods
+ (fn [db _]
+   (cutils/pull-periods db)))
+
+(reg-sub
+ :displayed-day
+ (fn [db _]
+   (get-in db [:view :displayed-day])))
+
+(reg-sub
+ :planned-time
+ (fn [db _]
+   (let [day (get-in db [:view :displayed-day])
+         periods (->> db
+                      (cutils/pull-periods)
+                      ;; only shows periods for the currently selected day
+                      ;; TODO another subscription or an option here for all planned past _this_ moment
+                      (filter (fn [period] (cutils/period-in-day day period)))
+                      (filter (fn [period] (= :planned (:type period))))
+                      )
+         total-time (reduce
+                     (fn [running-total period]
+                       (let [start (.valueOf (:start period))
+                             stop (.valueOf (:stop period))
+                             total (- stop start)]
+                         (+ running-total total)
+                         ;; TODO doesn't account for tasks that straddle a day
+                         ))
+                     0 periods)]
+
+     total-time)))
+
+(reg-sub
+ :accounted-time
+ (fn [db _]
+   (let [day (get-in db [:view :displayed-day])
+         periods (->> db
+                      (cutils/pull-periods)
+                      (filter (fn [period] (cutils/period-in-day day period)))
+                      (filter (fn [period] (= :actual (:type period)))))
+
+         total-time (reduce
+                     (fn [running-total period]
+                       (let [start (.valueOf (:start period))
+                             stop (.valueOf (:stop period))
+                             total (- stop start)]
+                         (+ running-total total)
+                         ;; TODO doesn't account for tasks that straddle a day
+                         ))
+                     0 periods)]
+     total-time)))
+
+
+(reg-sub
+ :periods
+ (fn [db _]
+   (cutils/pull-periods db)))
