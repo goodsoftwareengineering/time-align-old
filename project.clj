@@ -65,7 +65,6 @@
   {:http-server-root "public"
    :nrepl-port       7002
    :css-dirs         ["resources/public/css"]
-   :hawk-options     {:watcher :polling}
    :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
 
 

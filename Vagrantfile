@@ -7,7 +7,8 @@
 # you're doing.
 Vagrant.configure(2) do |config|
     config.ssh.insert_key = false
-    config.vm.synced_folder ".", "/home/vagrant/time-align"
+    config.vm.synced_folder ".", "/home/vagrant/time-align", fsnotify: true, type: 'rsync',
+                            rsync__exclude: [".git/", "target/", "out/", "log/"]
     config.vm.synced_folder "~/.m2", "/home/vagrant/.m2"
     config.vm.network "forwarded_port", guest: 3000, host: 3000
     config.vm.network "forwarded_port", guest: 3449, host: 3449
@@ -18,6 +19,7 @@ Vagrant.configure(2) do |config|
     config.vm.provider "virtualbox" do |v,override|
       override.vm.box = "ubuntu/trusty64"
       v.memory = 3072
+      v.cpus = 4
     end
 
     config.vm.provider "docker" do |d|
