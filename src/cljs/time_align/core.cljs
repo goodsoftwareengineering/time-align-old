@@ -960,10 +960,30 @@
                      :innerDivStyle {:display "flex" :align-items "center"}}
        (svg-mui-entity {:type :all :color "black" :style {:marginRight "0.5em"}})
        [:span "List"]]
-      [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
+
+      [ui/menu-item {:onTouchTap    #(do
+                                       (rf/dispatch [:set-main-drawer false])
+                                       (rf/dispatch [:set-active-page {:page-id :agenda}]))
                      :innerDivStyle {:display "flex" :align-items "center"}}
+
+       [ic/action-view-agenda {:style {:marginRight "0.5em"}}]
+       [:span "Agenda"]]
+
+      [ui/menu-item {:onTouchTap    #(do
+                                       (rf/dispatch [:set-main-drawer false])
+                                       (rf/dispatch [:set-active-page {:page-id :queue}]))
+                     :innerDivStyle {:display "flex" :align-items "center"}}
+
+       [ic/action-toc {:style {:marginRight "0.5em"}}]
+       [:span "Queue"]]
+
+      [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
+                     :innerDivStyle {:display "flex" :align-items "center"}
+                     :disabled      true}
+
        [ic/action-settings {:style {:marginRight "0.5em"}}]
        [:span "Settings"]]
+
       [ui/menu-item {:onTouchTap    #(do
                                        (rf/dispatch [:set-main-drawer false])
                                        (rf/dispatch [:set-active-page {:page-id :account}]))
@@ -1706,6 +1726,25 @@
       ]
      ]))
 
+(defn agenda-page []
+  (let [selected            @(rf/subscribe [:selected])
+        periods             @(rf/subscribe [:periods]) ]
+    [:div
+     (app-bar)
+     [ui/paper {:style {:width "100%"}}
+      (agenda selected periods)]]))
+
+
+(defn queue-page []
+  (let [tasks     @(rf/subscribe [:tasks])
+        selected  @(rf/subscribe [:selected])]
+    [:div
+     (app-bar)
+     [ui/paper {:style {:width "100%"}}
+      (queue tasks selected)]]))
+
+
+
 (defn account-page []
   (let []
 
@@ -1735,6 +1774,8 @@
         :entity-forms (entity-forms this-page)
         :list (list-page)
         :account (account-page)
+        :agenda (agenda-page)
+        :queue (queue-page)
         ;; default
         (home-page))]
      ]

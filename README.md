@@ -7,12 +7,14 @@ generated using Luminus version "2.9.11.46"
 
 ## prerequisites to dev
 - [Vagrant](https://www.vagrantup.com/)
+- [Rsync](https://www.vagrantup.com/docs/synced-folders/rsync.html)
 - [VirtualBox](https://www.virtualbox.org/wiki/VirtualBox)
 - [nRepl enabled editor](https://cb.codes/what-editor-ide-to-use-for-clojure/)
 
 ## running dev
 - clone repo
 - run `vagrant up` (in a command line environment)
+- run `vagrant rsync-auto` in the background or another terminal window
 - run `bash start.sh` or `start.bat` (will open an ssh connection to vm)
 - run `./cider-deps-repl` (in vm, will start an nrepl)
 - connect to nrepl at port 7000 (using nrepl enabled editor)
