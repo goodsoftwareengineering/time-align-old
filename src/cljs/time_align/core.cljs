@@ -450,8 +450,6 @@
      ])
   )
 
-(rf/dispatch [:set-zoom :q4])
-
 (defn zoomed-in-buttons []
   (let [
         basics {:stroke "#b2b2b2"
