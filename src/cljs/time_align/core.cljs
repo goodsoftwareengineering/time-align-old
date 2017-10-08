@@ -991,47 +991,37 @@
                  :open               main-drawer-state
                  :disableSwipeToOpen true
                  :onRequestChange    (fn [new-state] (rf/dispatch [:set-main-drawer new-state]))}
-      [ui/menu-item {:onTouchTap    #(do
-                                       (rf/dispatch [:set-main-drawer false])
-                                       (rf/dispatch [:set-active-page {:page-id :home}]))
-                     :innerDivStyle {:display "flex" :align-items "center"}}
-       (svg-mui-time-align {:color "black"
-                            :style {:marginRight "0.5em"}})
-       [:span "Home"]]
-      [ui/menu-item {:onTouchTap    #(do
-                                       (rf/dispatch [:set-main-drawer false])
-                                       (rf/dispatch [:set-active-page {:page-id :list}]))
-                     :innerDivStyle {:display "flex" :align-items "center"}}
-       (svg-mui-entity {:type :all :color "black" :style {:marginRight "0.5em"}})
-       [:span "List"]]
 
-      [ui/menu-item {:onTouchTap    #(do
-                                       (rf/dispatch [:set-main-drawer false])
-                                       (rf/dispatch [:set-active-page {:page-id :agenda}]))
-                     :innerDivStyle {:display "flex" :align-items "center"}}
+      [:a {:href "/"}
+       [ui/menu-item {:onTouchTap    #(do
+                                        (rf/dispatch [:set-main-drawer false])
+                                        (rf/dispatch [:set-active-page {:page-id :home}]))
+                      :innerDivStyle {:display "flex" :align-items "center"}}
+        (svg-mui-time-align {:color "black"
+                             :style {:marginRight "0.5em"}})
+        [:span "Home"]]]
 
-       [ic/action-view-agenda {:style {:marginRight "0.5em"}}]
-       [:span "Agenda"]]
+      [:a {:href "#/list"}
+       [ui/menu-item {:innerDivStyle {:display "flex" :align-items "center"}}
+        (svg-mui-entity {:type :all :color "black" :style {:marginRight "0.5em"}})
+        [:span "List"]]]
 
-      [ui/menu-item {:onTouchTap    #(do
-                                       (rf/dispatch [:set-main-drawer false])
-                                       (rf/dispatch [:set-active-page {:page-id :queue}]))
-                     :innerDivStyle {:display "flex" :align-items "center"}}
+      [:a {:href "#/agenda"}
+       [ui/menu-item {:innerDivStyle {:display "flex" :align-items "center"}}
+        [ic/action-view-agenda {:style {:marginRight "0.5em"}}]
+        [:span "Agenda"]]]
 
-       [ic/action-toc {:style {:marginRight "0.5em"}}]
-       [:span "Queue"]]
+      [:a {:href "#/queue"}
+       [ui/menu-item {:innerDivStyle {:display "flex" :align-items "center"}}
+        [ic/action-toc {:style {:marginRight "0.5em"}}]
+        [:span "Queue"]]]
 
-      [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
-                     :innerDivStyle {:display "flex" :align-items "center"}
+      [ui/menu-item {:innerDivStyle {:display "flex" :align-items "center"}
                      :disabled      true}
-
        [ic/action-settings {:style {:marginRight "0.5em"}}]
        [:span "Settings"]]
 
-      [ui/menu-item {:onTouchTap    #(do
-                                       (rf/dispatch [:set-main-drawer false])
-                                       (rf/dispatch [:set-active-page {:page-id :account}]))
-                     :innerDivStyle {:display "flex" :align-items "center"}
+      [ui/menu-item {:innerDivStyle {:display "flex" :align-items "center"}
                      :disabled      true}
        [ic/social-person {:style {:marginRight "0.5em"
                                   :color       "grey"}}]
@@ -1142,8 +1132,8 @@
                                                      {:page-id :entity-forms
                                                       :type :period
                                                       :id (:id period)}]))
-                                       (fn [e]
-                                         (rf/dispatch
+                                     (fn [e]
+                                       (rf/dispatch
                                           [:set-selected-period (:id period)])
                                          )
                                        )}])))])
@@ -1772,7 +1762,7 @@
 
 (defn agenda-page []
   (let [selected            @(rf/subscribe [:selected])
-        periods             @(rf/subscribe [:periods]) ]
+        periods             @(rf/subscribe [:periods])]
     [:div
      (app-bar)
      [ui/paper {:style {:width "100%"}}
@@ -1830,8 +1820,20 @@
 ;; Routes
 (secretary/set-config! :prefix "#")
 
-(secretary/defroute "/" []
-                    (rf/dispatch [:set-active-page {:page-id :home}]))
+(secretary/defroute home-route "/" []
+  (rf/dispatch [:set-active-page {:page-id :home}]))
+
+(secretary/defroute agenda-route "/agenda" []
+  (rf/dispatch [:set-main-drawer false])
+  (rf/dispatch [:set-active-page {:page-id :agenda}]))
+
+(secretary/defroute list-route "/list" []
+  (rf/dispatch [:set-main-drawer false])
+  (rf/dispatch [:set-active-page {:page-id :list}]))
+
+(secretary/defroute queue-route "/queue" []
+  (rf/dispatch [:set-main-drawer false])
+  (rf/dispatch [:set-active-page {:page-id :list}]))
 
 ;; -------------------------
 ;; History
