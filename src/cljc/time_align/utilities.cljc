@@ -163,7 +163,7 @@
 
 
 (defn is-this-day-before-that-day? [this-day that-day]
-  (:cljs (let [that-day-year  (.getFullYear that-day)
+  #?(:cljs (let [that-day-year  (.getFullYear that-day)
                that-day-month (.getMonth that-day)
                that-day-day   (.getDate that-day)
 
@@ -177,7 +177,7 @@
 
 
 (defn is-this-day-after-that-day? [this-day that-day]
-  (:cljs (let [that-day-year  (.getFullYear that-day)
+  #?(:cljs (let [that-day-year  (.getFullYear that-day)
                that-day-month (.getMonth that-day)
                that-day-day   (.getDate that-day)
 
