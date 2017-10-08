@@ -23,14 +23,12 @@ generated using Luminus version "2.9.11.46"
 - run in nrepl `(cljs)` (starts a clojurescript repl in your browser that will connect automagically when you open localhost:3000)
 
 ## sequence of events
-- finish cards _in progress_
-- pair program and merge branches
-- *more iteratively* finish all cards labeled purple
+- *more iteratively* finish all cards before experience reports
 - user exp reports and review
 - use the review workflow and paired sessions to merge and code review
 - manual soft launch
 - figure out CI/CD
-- start using, show to friends and family
+- start using 
 - add all of the stuff to show to public
   - responsive design supporting desktop
   - analytics back end
@@ -127,6 +125,7 @@ ios + android + webapp
 - responsive design
   - https://github.com/Jarzka/stylefy
 - routing and pretty urls
+  - treat urls as _windows_ to look at teh state. The state doesn't care what window a user is peering through. Form ids are passed in and dispatched as load events from secratary handlers.
 
 ## license
 MIT

@@ -422,30 +422,59 @@
                    {:d (str "M " x3 " " y3 " " "L " x4 " " y4 " ")})]
      ]))
 
-(defn zoom-in-buttons []
-  (let [basics {:fill   "#c2c2c2"
-                :stroke "#b2b2b2"
-                :shadow false
-                :r      5
-                }]
+(defn zoom-mv-arrows-svg [quadrant styles click-top click-bottom]
+  (let [generic   {:fill           "transparent"
+                   :stroke-width   "1"
+                   }
+
+        q1 {:top "90,2.5 85,5 90,7.5"    :bottom "92.5,10 95,15 97.5,10"}
+        q2 {:top "10,2.5 15,5 10,7.5"    :bottom "7.5,10 5,15 2.5,10"}
+        q3 {:top "7.5,90 5,85 2.5,90"    :bottom "10,97.5 15,95 10,92.5"}
+        q4 {:top "92.5,90 95,85 97.5,90" :bottom "90,97.5 85,95 90,92.5"}
+
+        points (case quadrant
+                     :q1 q1
+                     :q2 q2
+                     :q3 q3
+                     :q4 q4
+                     "")
+        ]
+
     [:g
-     (+-svg (merge basics
-                   {:cx    10 :cy 10
-                    :click (fn [e]
-                             (rf/dispatch [:set-zoom :q1]))}))
-     (+-svg (merge basics
-                   {:cx    90 :cy 10
-                    :click (fn [e]
-                             (rf/dispatch [:set-zoom :q2]))}))
-     (+-svg (merge basics
-                   {:cx    10 :cy 90
-                    :click (fn [e]
-                             (rf/dispatch [:set-zoom :q3]))}))
-     (+-svg (merge basics
-                   {:cx    90 :cy 90
-                    :click (fn [e]
-                             (rf/dispatch [:set-zoom :q4]))}))
-     ]))
+     [:polyline (merge generic styles
+                       {:points (:top points)
+                        :onClick click-top})]
+     [:polyline (merge generic styles
+                       {:points (:bottom points)
+                        :onClick click-bottom})]
+     ])
+  )
+
+(defn zoomed-in-buttons []
+  (let [
+        basics {:stroke "#b2b2b2"
+                :fill "#b2b2b1"}
+        ]
+
+    [:g
+     (zoom-mv-arrows-svg
+      :q1 basics
+      (fn [e] (println "q2")(rf/dispatch [:set-zoom :q2]))
+      (fn [e] (rf/dispatch [:set-zoom :q4])))
+     (zoom-mv-arrows-svg
+      :q2 basics
+      (fn [e] (rf/dispatch [:set-zoom :q1]))
+      (fn [e] (rf/dispatch [:set-zoom :q3])))
+     (zoom-mv-arrows-svg
+      :q3 basics
+      (fn [e] (rf/dispatch [:set-zoom :q2]))
+      (fn [e] (rf/dispatch [:set-zoom :q4])))
+     (zoom-mv-arrows-svg
+      :q4 basics
+      (fn [e] (rf/dispatch [:set-zoom :q1]))
+      (fn [e] (rf/dispatch [:set-zoom :q3])))
+       ]
+  ))
 
 (defn zoom-out-buttons []
   (let [basics {:fill   "#d2d2d2"
@@ -535,12 +564,15 @@
                   :onClick     deselect
                   }
                  (case zoom
-                   :q1 {:viewBox "0 0 60 60"}
-                   :q2 {:viewBox "40 0 60 60"}
+                   :q1 {:viewBox "40 0 60 60"}
+                   :q2 {:viewBox "0 0 60 60"}
                    :q3 {:viewBox "0 40 60 60"}
                    :q4 {:viewBox "40 40 60 60"}
                    (select-keys svg-consts [:viewBox])
                    ))
+
+     (if (some? zoom) (zoomed-in-buttons))
+
      shadow-filter
      [:circle (merge {:fill "#e8e8e8" :filter "url(#shadow-2dp)"}
                      (select-keys svg-consts [:cx :cy :r]))]
@@ -566,14 +598,19 @@
         ]
        )
 
-     [:polyline {:points "10,85 5,90 10,95"
-                 :fill "grey"
-                 :onClick (fn [e]
-                            (rf/dispatch [:iterate-displayed-day :prev]))}]
-     [:polyline {:points "90,85 95,90 90,95"
-                 :fill "grey"
-                 :onClick (fn [e]
-                            (rf/dispatch [:iterate-displayed-day :next]))}]
+     (if (nil? zoom)
+       [:g
+        [:polyline {:points "10,85 5,90 10,95"
+                    :fill "grey"
+                    :onClick (fn [e]
+                               (rf/dispatch [:iterate-displayed-day :prev]))}]
+        [:polyline {:points "90,85 95,90 90,95"
+                    :fill "grey"
+                    :onClick (fn [e]
+                               (rf/dispatch [:iterate-displayed-day :next]))}]
+
+        ]
+       )
      ]))
 
 (defn days [days tasks selected-period]
@@ -767,6 +804,9 @@
             :stroke-width "2"}]
     ]])
 
+(defn current-quadrant []
+  :q1)
+
 (defn action-buttons-no-selection []
   (let [zoom @(rf/subscribe [:zoom])
         ;; spring @mae-spring
@@ -794,13 +834,17 @@
        [ui/floating-action-button
         (merge basic-mini-button
                {:style (merge (:style basic-mini-button)
-                              {:marginBottom "20"})})
+                              {:marginBottom "20"})
+                :onClick (fn [e]
+                           (rf/dispatch [:set-zoom nil]))})
         [ic/action-zoom-out basic-ic]]
 
        [ui/floating-action-button
         (merge basic-mini-button
                {:style (merge (:style basic-mini-button)
-                              {:marginBottom "20"})})
+                              {:marginBottom "20"})
+                :onClick (fn [e]
+                           (rf/dispatch [:set-zoom (current-quadrant)]))})
         [ic/action-zoom-in basic-ic]])
 
      (back-button)
