@@ -447,6 +447,7 @@
                              (rf/dispatch [:set-zoom :q4]))}))
      ]))
 
+     (zoom-mv-arrows-svg
 (defn zoom-out-buttons []
   (let [basics {:fill   "#d2d2d2"
                 :stroke "#a2a2a2"
@@ -1066,6 +1067,48 @@
      [:p {:style {:padding "0.25em"}} (:description period)]
      ]
     ))
+(defn mini-arc [period]
+  (let [
+        {:keys [id description color]} period
+        start                (:start period)
+        start-ms             (utils/get-ms start)
+        start-angle          (cutils/ms-to-angle start-ms)
+        stop                 (:stop period)
+        stop-ms              (utils/get-ms stop)
+        stop-angle           (cutils/ms-to-angle stop-ms)
+
+        angle-difference     (- stop-angle start-angle)
+        minimum-angle        30
+        factor-change        (- minimum-angle angle-difference)
+        ;; adjustments seek to set the angle difference to minimum (no matter what it is)
+        ;; catches when one side goes over edge with max & min
+        start-angle-adjusted (.max js/Math
+                                   (- start-angle (/ factor-change 2))
+                                   1)
+        stop-angle-adjusted  (.min js/Math
+                                   (+ stop-angle (/ factor-change 2))
+                                   359)
+
+        use-adjustment       (< angle-difference 20)
+        start-used           (if use-adjustment
+                               start-angle-adjusted
+                               start-angle)
+        stop-used            (if use-adjustment
+                               stop-angle-adjusted
+                               stop-angle)]
+    [ui/svg-icon
+     {:viewBox "0 0 24 24"}
+     [:g
+      [:circle {:cx           "12" :cy "12" :r "11"
+                :stroke-width "2" :stroke "#cdcdcd"
+                :fill         "transparent"}]
+      [:path
+       {:d            (describe-arc 12 12 11 start-used stop-used)
+        :stroke       color
+        :stroke-width "2"
+        :fill         "transparent"
+        }]]]
+    ))
 
 (defn agenda [selected periods]
   (let [planned-periods (filter #(and (= :planned (:type %))
@@ -1087,8 +1130,7 @@
                                             {:backgroundColor (color :grey-300)}
                                             {}))
                       :key         (:id period)
-                      :leftIcon    (r/as-element
-                                    (svg-mui-circle (:color period)))
+                      :leftIcon    (r/as-element (mini-arc period))
                       :primaryText (concatonated-text (:description period)
                                                       10 "No period description ...")
                       :onTouchTap  (if (and period-selected
@@ -1100,10 +1142,7 @@
                                                       :id (:id period)}]))
                                        (fn [e]
                                          (rf/dispatch
-                                          [:set-selected-period (:id period)])
-                                         )
-                                       )}])))])
-  )
+                                          [:set-selected-period (:id period)])))}])))]))
 
 (defn home-page []
   (let [
@@ -1552,11 +1591,7 @@
        :category (category-form entity-id)
        :task (task-form entity-id)
        :period (period-form entity-id)
-       [:div (str page-value " page value doesn't exist")]
-       )
-     ]
-    )
-  )
+       [:div (str page-value " page value doesn't exist")])]))
 
 (defn list-period [current-selection period]
   (let [{:keys [id description color]} period
@@ -1567,10 +1602,10 @@
         is-child-selected false]
 
     (r/as-element
-      [ui/list-item
-       (merge {:key         id
-               :primaryText (concatonated-text description 10 "no description provided ...")
-               :style       (if is-selected {:backgroundColor "#dddddd"})
+     [ui/list-item
+      (merge {:key         id
+              :primaryText (concatonated-text description 10 "no description provided ...")
+              :style       (if is-selected {:backgroundColor "#dddddd"})
                :onClick     (fn [e]
                               (if is-selected
                                 (rf/dispatch [:set-active-page {:page-id :entity-forms
@@ -1582,46 +1617,7 @@
                        (some? (:stop period)))
 
                 ;; if not queue render the arc
-                (let [start                (:start period)
-                      start-ms             (utils/get-ms start)
-                      start-angle          (cutils/ms-to-angle start-ms)
-                      stop                 (:stop period)
-                      stop-ms              (utils/get-ms stop)
-                      stop-angle           (cutils/ms-to-angle stop-ms)
-
-                      angle-difference     (- stop-angle start-angle)
-                      minimum-angle        30
-                      factor-change        (- minimum-angle angle-difference)
-                      ;; adjustments seek to set the angle difference to minimum (no matter what it is)
-                      ;; catches when one side goes over edge with max & min
-                      start-angle-adjusted (.max js/Math
-                                                 (- start-angle (/ factor-change 2))
-                                                 1)
-                      stop-angle-adjusted  (.min js/Math
-                                                 (+ stop-angle (/ factor-change 2))
-                                                 359)
-
-                      use-adjustment       (< angle-difference 20)
-                      start-used           (if use-adjustment
-                                             start-angle-adjusted
-                                             start-angle)
-                      stop-used            (if use-adjustment
-                                             stop-angle-adjusted
-                                             stop-angle)]
-
-                  {:leftIcon (r/as-element
-                               [ui/svg-icon
-                                {:viewBox "0 0 24 24"}
-                                [:g
-                                 [:circle {:cx           "12" :cy "12" :r "11"
-                                           :stroke-width "2" :stroke "#cdcdcd"
-                                           :fill         "transparent"}]
-                                 [:path
-                                  {:d            (describe-arc 12 12 11 start-used stop-used)
-                                   :stroke       color
-                                   :stroke-width "2"
-                                   :fill         "transparent"
-                                   }]]])})
+                {:leftIcon (r/as-element (mini-arc period))}
 
                 ;; otherwise render a queue indicator
                 {:leftIcon (r/as-element
