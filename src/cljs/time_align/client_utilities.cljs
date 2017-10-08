@@ -14,19 +14,15 @@
     {:x (+ cx-float (* r-float (.cos js/Math angle-in-radians)))
      :y (+ cy-float (* r-float (.sin js/Math angle-in-radians)))}))
 
-
 (defn ms-to-angle
   "takes milliseconds and returns angle in degrees"
   [ms]
   (* (/ 360 utils/ms-in-day) ms))
 
-
 (defn angle-to-ms
   ;; takes angle in degrees and returns milliseconds
   [angle]
   (* (/ utils/ms-in-day 360) angle))
-
-
 
 (defn period-has-stamps [period]
   (if (and (contains? period :start)
@@ -72,7 +68,6 @@
         ))
     false))
 
-
 (defn filter-out-stamps
   "Takes a keyword indicating type of period and the task. If the task contains periods of that type it will filter out the those types of periods with no stamps and return the task with that type of period collection modified."
   [type task]
@@ -85,7 +80,6 @@
                         (dissoc task type)
                         (merge task {type periods}))))))
 
-
 (defn filter-periods-with-stamps
   "Takes a list of tasks and returns a list of tasks with only periods that have stamps."
   [tasks]
@@ -96,7 +90,6 @@
        (map (partial filter-out-stamps :planned-periods))
        )
   )
-
 
 (defn filter-periods-no-stamps
   "Takes a list of tasks and returns a list of modified periods."
@@ -116,7 +109,6 @@
              (flatten))]
     periods))
 
-
 (defn modify-and-pull-periods
   "Takes a keyword indicating period type, and the task containing periods. Returns a collection of periods with parent task info."
   [type tasks]
@@ -130,7 +122,6 @@
                   (map #(assoc % :task-id id :color color))))))
        (flatten))
   )
-
 
 (defn filter-periods-for-day
   "Takes a day and a list of tasks and returns a list of modified periods."
