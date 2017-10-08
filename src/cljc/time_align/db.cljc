@@ -195,4 +195,4 @@
 (s/def ::db (s/keys :req-un [::user ::view ::categories]))
 
 (def default-db (gen/generate (s/gen ::db)))
-
+;; TODO use conform to keep convienance keys from modify periods from polluting app-db
