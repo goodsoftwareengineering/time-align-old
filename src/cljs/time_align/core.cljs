@@ -992,7 +992,7 @@
                  :disableSwipeToOpen true
                  :onRequestChange    (fn [new-state] (rf/dispatch [:set-main-drawer new-state]))}
 
-      [:a {:href "/"}
+      [:a {:href "/#"}
        [ui/menu-item {:onTouchTap    #(do
                                         (rf/dispatch [:set-main-drawer false])
                                         (rf/dispatch [:set-active-page {:page-id :home}]))
