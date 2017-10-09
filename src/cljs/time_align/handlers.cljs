@@ -834,3 +834,9 @@
        ;; no playing period
        db)
      )))
+
+(reg-event-db
+ :pause-period-play
+ (fn [db _]
+   ;; TODO update currently playing task to end `now`
+   (assoc-in db [:view :period-in-play] nil)))
