@@ -768,7 +768,7 @@
                              {:tasks (conj other-tasks new-task)})
          new-db (merge db
                        {:categories (conj other-categories new-category)
-                        :period-in-play new-id})
+                        :view (assoc (:view db) :period-in-play new-id)})
          ]
      new-db
      )
@@ -778,3 +778,59 @@
  :play-actual-or-planned-period
  (fn [db [_ id]]
    ))
+
+(reg-event-db
+ :update-period-in-play
+ (fn [db [_ _]]
+   (let [playing-period (get-in db [:view :period-in-play])
+         is-playing (some? playing-period)
+         ]
+     (if is-playing
+       (let [id playing-period
+             periods (cutils/pull-periods db)
+             all-actual-periods (filter #(= (:type %) :actual) periods)
+             this-period (some #(if (= (:id %) id) %) all-actual-periods)
+             old-stop (:stop this-period)
+             now (new js/Date)
+             new-stop (if (> (.valueOf old-stop)
+                             (.valueOf now))
+                        old-stop
+                        now)
+             new-this-period (merge this-period
+                                    {:stop new-stop}) ;; this is the whole point
+
+             ;; all the extra stuff to put it back in
+             category-id (:category-id this-period)
+             task-id (:task-id this-period)
+
+             all-categories (:categories db)
+             this-category (some #(if (= (:id %) category-id) %)
+                                 all-categories)
+             other-categories (filter #(not (= (:id %) category-id))
+                                      all-categories)
+             all-tasks (:tasks this-category)
+             this-task (some #(if (= (:id %) task-id) %)
+                             all-tasks)
+             other-tasks (filter #(not (= (:id %) task-id))
+                                 all-tasks)
+             other-actual-periods (->> this-task
+                                       (:actual-periods)
+                                       (filter #(not (= (:id %) id))))
+
+             new-task (merge this-task
+                             {:actual-periods (conj other-actual-periods
+                                                    new-this-period)})
+             new-category (merge this-category
+                                 {:tasks (conj other-tasks new-task)})
+             new-db (merge db
+                           {:categories (conj other-categories new-category)})
+             ]
+
+         new-db
+
+
+         )
+
+       ;; no playing period
+       db)
+     )))
