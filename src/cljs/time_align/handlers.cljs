@@ -59,10 +59,6 @@
                {:dispatch to-load}
                {})))))
 
-
-
-
-
 (reg-event-db
   :load-category-entity-form
   [persist-ls]
@@ -117,8 +113,6 @@
                  :planned      is-planned
                  :description  description})
       )))
-
-
 
 (reg-event-db
   :set-zoom
@@ -206,8 +200,6 @@
       )
     ))
 
-
-
 ;; not using this yet VVV
 (reg-event-fx
   :set-selected-task
@@ -221,8 +213,6 @@
        :dispatch [:action-buttons-back]}
       )
     ))
-
-
 
 (reg-event-db
   :action-buttons-expand
@@ -249,7 +239,6 @@
             :else :collapsed)]
       (assoc-in db [:view :action-buttons] new-state)
       )))
-
 
 (reg-event-db
   :set-moving-period
@@ -351,8 +340,6 @@
                      color))
     ))
 
-
-
 (reg-event-fx
   :save-category-form
   [persist-ls]
@@ -377,8 +364,6 @@
        :dispatch [:set-active-page {:page-id :home :type nil :id nil}]
        }
       )))
-
-
 
 (reg-event-db
   :set-category-form-name
@@ -451,7 +436,6 @@
         {:db db                                             ;; TODO display some sort of error
          }))))
 
-
 (reg-event-db
   :set-period-form-date
   [persist-ls]
@@ -468,8 +452,6 @@
         (assoc-in db [:view :period-form start-or-stop] new-d))
       )
     ))
-
-
 
 (reg-event-db
   :set-period-form-time
@@ -495,11 +477,6 @@
       )
     ))
 
-
-
-
-
-
 (reg-event-db
   :set-period-form-description
   [persist-ls]
@@ -507,14 +484,12 @@
     (assoc-in db [:view :period-form :description] desc)
     ))
 
-
 (reg-event-db
   :set-period-form-task-id
   [persist-ls]
   (fn [db [_ task-id]]
     (assoc-in db [:view :period-form :task-id] task-id))
   )
-
 
 (reg-event-fx
   :save-period-form
@@ -662,7 +637,6 @@
        :dispatch [:set-active-page {:page-id :home}]}
       )))
 
-
 (reg-event-fx
   :delete-period-form-entity
   (fn [cofx [_ _]]
@@ -743,3 +717,64 @@
 
      (assoc-in db [:view :displayed-day]
                new))))
+
+(reg-event-db
+ :play-queue-period
+ (fn [db [_ id]]
+   (let [
+         ;; find the period
+         periods (cutils/pull-periods db)
+         queue-periods (filter #(and
+                                 (not (cutils/period-has-stamps %))
+                                 (= (:type %) :planned))
+                               periods)
+         this-queue-period (some #(if (= (:id %) id) %) queue-periods)
+
+         ;; copy the period
+         new-id (random-uuid)
+         start (new js/Date)
+         stop  (as-> (new js/Date) d
+                 (.setMinutes d (+ 15 (.getMinutes d))) ;; TODO adjustable increment
+                 (new js/Date d)
+                 );; TODO we need to abstract out this mutative toxin
+
+         new-actual-period (merge
+                            (select-keys this-queue-period
+                                         [:description])
+                            {:id new-id
+                             :start start
+                             :stop stop})
+         ;; TODO uuid gen funciton that checks for taken? or should that only be handled on the back end?
+
+         ;; set up to place
+         category-id (:category-id this-queue-period)
+         task-id (:task-id this-queue-period)
+         all-categories (:categories db)
+         this-category (some #(if (= (:id %) category-id) %)
+                             all-categories)
+         other-categories (filter #(not (= (:id %) category-id))
+                                  all-categories)
+         all-tasks (:tasks this-category)
+         this-task (some #(if (= (:id %) task-id) %)
+                         all-tasks)
+         other-tasks (filter #(not (= (:id %) task-id))
+                             all-tasks)
+         all-actual-periods (:actual-periods this-task)
+
+         ;; place
+         new-task (merge this-task
+                         {:actual-periods (conj all-actual-periods new-actual-period)})
+         new-category (merge this-category
+                             {:tasks (conj other-tasks new-task)})
+         new-db (merge db
+                       {:categories (conj other-categories new-category)
+                        :period-in-play new-id})
+         ]
+     new-db
+     )
+   ))
+
+(reg-event-db
+ :play-actual-or-planned-period
+ (fn [db [_ id]]
+   ))

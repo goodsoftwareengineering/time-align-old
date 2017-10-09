@@ -908,7 +908,14 @@
    [ui/floating-action-button
     (merge basic-mini-button
            {:style (merge (:style basic-mini-button)
-                          {:marginBottom "20"})})
+                          {:marginBottom "20"})
+            :onTouchTap (fn [e]
+                          (rf/dispatch
+                           [:play-queue-period
+                            ;; TODO can we be reasonably sure a queue item is selected?
+                            (:id-or-nil (:current-selection selected))
+                            ]))
+            })
     [ic/av-play-arrow basic-ic]]
 
    [ui/floating-action-button

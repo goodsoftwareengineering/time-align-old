@@ -28,7 +28,8 @@
   (if (and (contains? period :start)
            (contains? period :stop))
     (not (or (nil? (:start period))
-             (nil? (:stop period))))))
+             (nil? (:stop period))))
+    false))
 
 (defn period-in-day [day period]
   (if (and
