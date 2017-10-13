@@ -15,6 +15,21 @@
     (migrations/migrate ["migrate"] (select-keys env [:database-url]))
     (f)))
 
+(deftest test-users
+  (jdbc/with-db-transaction
+    [t-conn *db*]
+    (jdbc/db-set-rollback-only! t-conn)
+    (is (= 1
+           (db/create-user! t-conn
+                            {:name      "Sam"
+                             :email     "sam.smith@example.com"
+                             :hash_pass "pass"})))
+    (is (= {:name      "Sam"
+            :email     "sam.smith@example.com"
+            :hash_pass "pass"}
+           (-> (db/get-user-by-name t-conn {:name_like "Sam"})
+               (dissoc :uid))))))
+
 (deftest test-analytics
   (jdbc/with-db-transaction
     [t-conn *db*]
