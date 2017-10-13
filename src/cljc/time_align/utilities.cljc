@@ -1,7 +1,15 @@
 (ns time-align.utilities
   (:require [clojure.string :as string]
             #?(:cljs [cljsjs.moment-timezone])
-            #?(:clj [java-time :as t])))
+            #?(:clj [java-time :as t])
+            [clojure.pprint :refer [pprint]]
+            ))
+(defn thread-friendly-pprint!
+  [to-prn]
+  (pprint to-prn)
+  (println "TEST")
+  to-prn)
+
 
 (defn make-date
   ([] #?(:cljs (js/moment.tz (js/Date.) "UTC")
