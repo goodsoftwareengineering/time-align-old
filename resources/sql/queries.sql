@@ -20,3 +20,18 @@ WHERE id = :id
 -- :doc delete a user given the id
 DELETE FROM users
 WHERE id = :id
+
+-- :name create-analytic! :! :n
+-- :doc creates an analytic
+INSERT INTO analytics
+(dispatch_key, payload)
+VALUES (:dispatch_key, :payload);
+
+-- :name get-analytic-by-id :? :1
+-- :doc retrieve a row in the analytic by id
+SELECT * FROM analytics
+WHERE id = :id;
+
+-- :name get-analytics :? :*
+-- :doc retrieve all analytics in table
+SELECT * FROM analytics;
