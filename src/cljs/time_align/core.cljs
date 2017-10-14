@@ -761,7 +761,6 @@
        ;; (element 0.99)
        ;; 50
        (fn []
-         (println "dispatching")
          ;; (reset! action-buttons-collapsed-click false)
          (rf/dispatch [:action-buttons-expand])
          )]
@@ -1780,7 +1779,6 @@
      (app-bar)
      [ui/paper {:style {:width "100%"}}
       (agenda selected periods)]]))
-
 
 (defn queue-page []
   (let [tasks     @(rf/subscribe [:tasks])

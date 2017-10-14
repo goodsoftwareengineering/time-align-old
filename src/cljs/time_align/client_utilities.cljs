@@ -183,7 +183,7 @@
   (let [pi (.-PI js/Math)
         xa (.abs js/Math x)
         ya (.abs js/Math y)
-        quadrant (cond
+        quadrant (cond ;; these are clockwise (zoom is counter clockwise)
                    (and (> x 0) (> y 0)) 1
                    (and (> x 0) (< y 0)) 2
                    (and (< x 0) (< y 0)) 3

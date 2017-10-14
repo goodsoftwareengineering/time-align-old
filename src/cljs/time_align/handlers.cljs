@@ -840,7 +840,7 @@
      )))
 
 (reg-event-db
- :pause-period-play
+ :pause-period-play ;; TODO should probably be called stop
  (fn [db _]
    ;; TODO update currently playing task to end `now`
    (assoc-in db [:view :period-in-play] nil)))
