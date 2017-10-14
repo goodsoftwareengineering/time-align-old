@@ -297,7 +297,11 @@
            new-start-ms          (- mid-point-time-ms (/ period-length-ms 2))
            new-stop-ms           (+ new-start-ms period-length-ms)
 
-           this-day              (utils/zero-in-day (get-in db [:view :displayed-day]))
+            this-day              (as-> (get-in db [:view :displayed-day]) d
+                                       (new js/Date
+                                            (.getFullYear d)
+                                            (.getMonth d)
+                                            (.getDate d)))
 
            ;; straddled task could have negative `new-stop-ms`
            ;; + ing the time to this-day zeroed in will account for that
