@@ -163,12 +163,17 @@
           type (if (nil? period-id) nil :period)
           prev (get-in db [:view :selected :current-selection])
           curr {:type-or-nil type :id-or-nil period-id}
+          in-play-id (get-in db [:view :period-in-play])
           ]
 
       {:db       (assoc-in db [:view :selected]
                            {:current-selection  curr
                             :previous-selection prev})
-       :dispatch [:action-buttons-back]}
+       :dispatch-n (list [:action-buttons-back] ;; TODO this throws an error but really shouldn't
+                         (when (and (some? in-play-id)
+                                    (= in-play-id period-id))
+                           [:pause-period-play]))
+       }
       )
     ))
 
