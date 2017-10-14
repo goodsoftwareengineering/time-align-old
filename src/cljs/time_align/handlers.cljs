@@ -169,10 +169,11 @@
       {:db       (assoc-in db [:view :selected]
                            {:current-selection  curr
                             :previous-selection prev})
-       :dispatch-n (list [:action-buttons-back] ;; TODO this throws an error but really shouldn't
+       :dispatch-n (list  ;; TODO this throws an error but really shouldn't
                          (when (and (some? in-play-id)
                                     (= in-play-id period-id))
-                           [:pause-period-play]))
+                           [:pause-period-play])
+                         [:action-buttons-back])
        }
       )
     ))
@@ -728,16 +729,12 @@
                new))))
 
 (reg-event-db
- :play-queue-period
+ :play-period
  (fn [db [_ id]]
    (let [
          ;; find the period
          periods (cutils/pull-periods db)
-         queue-periods (filter #(and
-                                 (not (cutils/period-has-stamps %))
-                                 (= (:type %) :planned))
-                               periods)
-         this-queue-period (some #(if (= (:id %) id) %) queue-periods)
+         this-period (some #(if (= (:id %) id) %) periods)
 
          ;; copy the period
          new-id (random-uuid)
@@ -748,7 +745,7 @@
                  );; TODO we need to abstract out this mutative toxin
 
          new-actual-period (merge
-                            (select-keys this-queue-period
+                            (select-keys this-period
                                          [:description])
                             {:id new-id
                              :start start
@@ -756,8 +753,8 @@
          ;; TODO uuid gen funciton that checks for taken? or should that only be handled on the back end?
 
          ;; set up to place
-         category-id (:category-id this-queue-period)
-         task-id (:task-id this-queue-period)
+         category-id (:category-id this-period)
+         task-id (:task-id this-period)
          all-categories (:categories db)
          this-category (some #(if (= (:id %) category-id) %)
                              all-categories)
@@ -786,6 +783,7 @@
 (reg-event-db
  :play-actual-or-planned-period
  (fn [db [_ id]]
+
    ))
 
 (reg-event-db

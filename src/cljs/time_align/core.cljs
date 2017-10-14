@@ -849,20 +849,36 @@
     )
   )
 
-(defn action-buttons-period-selection [selected]
+(defn action-buttons-period-selection [selected period-in-play]
   (if @action-buttons-collapsed-click
     (do (reset! action-buttons-collapsed-click false)
         (reset! margin-action-expanded 20)))
 
   [:div expanded-buttons-style
 
-   ;; TODO this switches with pause depending on play state
-   ;; shouldn't be too bad, the ticker makes the
-   [ui/floating-action-button
-    (merge basic-mini-button
-           {:style (merge (:style basic-mini-button)
-                          {:marginBottom "20"})})
-    [ic/av-play-arrow basic-ic]]
+   (if (some? period-in-play)
+     [ui/floating-action-button
+      (merge basic-mini-button
+             {:style (merge (:style basic-mini-button)
+                            {:marginBottom "20"})
+              :onTouchTap (fn [e]
+                            (rf/dispatch
+                             [:pause-period-play]))
+              })
+      [ic/av-pause basic-ic]]
+
+     [ui/floating-action-button
+      (merge basic-mini-button
+             {:style (merge (:style basic-mini-button)
+                            {:marginBottom "20"})
+              :onTouchTap (fn [e]
+                            (rf/dispatch
+                             [:play-period
+                              (:id-or-nil (:current-selection selected))
+                              ]))
+              })
+      [ic/av-play-arrow basic-ic]]
+     )
 
    [ui/floating-action-button
     (merge basic-mini-button
@@ -920,8 +936,7 @@
                             {:marginBottom "20"})
               :onTouchTap (fn [e]
                             (rf/dispatch
-                             [:play-queue-period
-                              ;; TODO can we be reasonably sure a queue item is selected?
+                             [:play-period
                               (:id-or-nil (:current-selection selected))
                               ]))
               })
@@ -955,7 +970,7 @@
       :no-selection
       (action-buttons-no-selection)
       :period
-      (action-buttons-period-selection selected)
+      (action-buttons-period-selection selected period-in-play)
       :queue
       (action-buttons-queue-selection selected period-in-play)
       [:div "no buttons!"]
