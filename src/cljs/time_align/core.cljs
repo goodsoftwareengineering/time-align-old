@@ -923,18 +923,6 @@
 
    [ui/floating-action-button
     (merge basic-mini-button
-           {:style (merge (:style basic-mini-button)
-                          {:marginBottom "20"})})
-    (svg-mui-stretch)]
-
-   [ui/floating-action-button
-    (merge basic-mini-button
-           {:style (merge (:style basic-mini-button)
-                          {:marginBottom "20"})})
-    (svg-mui-shrink)]
-
-   [ui/floating-action-button
-    (merge basic-mini-button
            {:style      (merge (:style basic-mini-button)
                                {:marginBottom "20"})
             :onTouchTap (fn [e]
