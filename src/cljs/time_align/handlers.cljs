@@ -169,11 +169,11 @@
       {:db       (assoc-in db [:view :selected]
                            {:current-selection  curr
                             :previous-selection prev})
-       :dispatch-n (list  ;; TODO this throws an error but really shouldn't
-                         (when (and (some? in-play-id)
-                                    (= in-play-id period-id))
-                           [:pause-period-play])
-                         [:action-buttons-back])
+       :dispatch-n (filter some? (list ;; TODO upgrade re-frame and remove filter
+                                  (when (and (some? in-play-id)
+                                             (= in-play-id period-id))
+                                    [:pause-period-play])
+                                  [:action-buttons-back]))
        }
       )
     ))
@@ -740,7 +740,7 @@
          new-id (random-uuid)
          start (new js/Date)
          stop  (as-> (new js/Date) d
-                 (.setMinutes d (+ 15 (.getMinutes d))) ;; TODO adjustable increment
+                 (.setMinutes d (+ 1 (.getMinutes d))) ;; TODO adjustable increment
                  (new js/Date d)
                  );; TODO we need to abstract out this mutative toxin
 
@@ -799,8 +799,8 @@
              this-period (some #(if (= (:id %) id) %) all-actual-periods)
              old-stop (:stop this-period)
              now (new js/Date)
-             new-stop (if (> (.valueOf old-stop)
-                             (.valueOf now))
+             new-stop (if  (> (.valueOf old-stop) ;; TODO probably remove
+                              (.valueOf now))
                         old-stop
                         now)
              new-this-period (merge this-period
@@ -845,5 +845,5 @@
 (reg-event-db
  :pause-period-play ;; TODO should probably be called stop
  (fn [db _]
-   ;; TODO update currently playing task to end `now`
-   (assoc-in db [:view :period-in-play] nil)))
+   (assoc-in db [:view :period-in-play] nil) ;; TODO after specter add in an adjust selected period stop time
+   ))

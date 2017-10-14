@@ -451,3 +451,13 @@
  :period-in-play
  (fn [db _]
    (get-in db [:view :period-in-play])))
+
+(reg-sub
+ :period-in-play-color
+ (fn [db _]
+   (let [id (get-in db [:view :period-in-play])]
+     (if (some? id)
+       (let [period (some #(if (= id (:id %)) %)
+                          (cutils/pull-periods db))
+             color (:color period)]
+         color)))))

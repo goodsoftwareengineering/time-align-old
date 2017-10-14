@@ -535,6 +535,8 @@
                                            [:current-selection :id-or-nil])
                                    nil)
         is-moving-period         @(rf/subscribe [:is-moving-period])
+        period-in-play           @(rf/subscribe [:period-in-play])
+        period-in-play-color     @(rf/subscribe [:period-in-play-color])
         stop-touch-click-handler (if is-moving-period
                                    (fn [e]
                                      (.preventDefault e)
@@ -587,16 +589,55 @@
        [:g
         [:line {:fill         "transparent"
                 :stroke-width "1"
-                :stroke       "white"
+                :stroke       (if (some? period-in-play)
+                                period-in-play-color
+                                "white")
+                :opacity      "0.5"
                 :filter       "url(#shadow-2dp)"
                 :x1           (:cx svg-consts)
                 :y1           (:cy svg-consts)
                 :x2           (:x ticker-pos)
                 :y2           (:y ticker-pos)}]
-        [:circle (merge {:fill   "white"
+        [:circle (merge {:fill  (if (some? period-in-play)
+                                  period-in-play-color
+                                  "white")
                          :filter "url(#shadow-2dp)"
                          :r      (:ticker-r svg-consts)}
                         (select-keys svg-consts [:cx :cy]))]
+
+        (when (some? period-in-play)
+          (let [cx (:cx svg-consts)
+                cy (:cy svg-consts)
+                r  (:ticker-r svg-consts)
+                width (* 0.5 r)
+                height (* 0.75 r)
+                half-height (/ height 2)
+                half-width (/ width 2)
+                x-left (- cx half-width)
+                y-left (- cy half-height)]
+            [:g
+             {:onClick (fn [e]
+                         (rf/dispatch [:pause-period-play]))}
+             [:line {:fill "white"
+                     :x1 x-left
+                     :y1 y-left
+                     :x2 x-left
+                     :y2 (+ y-left height)
+                     :stroke-width "1"
+                     :stroke "white"
+                     :stroke-linecap "round"
+                     }]
+             [:line {:fill "white"
+                     :x1 (+ x-left width)
+                     :y1 y-left
+                     :x2 (+ x-left width)
+                     :y2 (+ y-left height)
+                     :stroke-width "1"
+                     :stroke "white"
+                     :stroke-linecap "round"
+                     }]
+             ]
+            ))
         ]
        )
 
