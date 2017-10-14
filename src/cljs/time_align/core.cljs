@@ -1591,11 +1591,14 @@
                :primaryText (concatonated-text description 10 "no description provided ...")
                :style       (if is-selected {:backgroundColor "#dddddd"})
                :onClick     (fn [e]
-                              (if is-selected
-                                (rf/dispatch [:set-active-page {:page-id :add-entity-forms
-                                                                :type    :period
-                                                                :id      id}])
-                                (rf/dispatch [:set-selected {:type :period :id id}])))}
+                              (when-not is-selected
+                                (rf/dispatch [:set-selected {:type :period :id id}])))
+
+               :on-double-click (fn [e]
+                                  (when is-selected
+                                    (hist/nav! (str "/edit/period/" id))))
+
+               }
 
               (if (and (some? (:start period))
                        (some? (:stop period)))
@@ -1815,7 +1818,8 @@
 
 (secretary/defroute agenda-route "/agenda" []
   (rf/dispatch [:set-main-drawer false])
-  (rf/dispatch [:set-active-page {:page-id :agenda}]))
+  (rf/dispatch [:set-active-page {:page-id :agenda}])
+  )
 
 (secretary/defroute list-route "/list" []
   (rf/dispatch [:set-main-drawer false])
@@ -1823,7 +1827,7 @@
 
 (secretary/defroute queue-route "/queue" []
   (rf/dispatch [:set-main-drawer false])
-  (rf/dispatch [:set-active-page {:page-id :list}]))
+  (rf/dispatch [:set-active-page {:page-id :queue}]))
 
 (secretary/defroute add-category-route "/add" []
   (rf/dispatch [:set-active-page {:page-id :add-entity-forms
@@ -1835,20 +1839,18 @@
   (println "In edit category")
   (rf/dispatch [:set-active-page {:page-id :edit-entity-forms
                                   :type    :category
-                                  :id      id}]))
+                                  :id      (uuid id)}]))
 
 (secretary/defroute edit-task-route "/edit/task/:id" [id]
   (println "In edit task")
   (rf/dispatch [:set-active-page {:page-id :edit-entity-forms
                                   :type    :task
-                                  :id      id}]))
+                                  :id      (uuid id)}]))
 
 (secretary/defroute period-task-route "/edit/period/:id" [id]
   (rf/dispatch [:set-active-page {:page-id :edit-entity-forms
                                   :type    :period
-                                  :id      id}]))
-
-
+                                  :id      (uuid id)}]))
 
 ;; -------------------------
 ;; History
