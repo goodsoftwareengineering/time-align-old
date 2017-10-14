@@ -506,7 +506,9 @@
 
 (defn clock-tick []
   (swap! clock-state assoc :time (new js/Date))
-  (rf/dispatch [:update-period-in-play])
+  (if (some? (get-in @re-frame.db/app-db [:view :period-in-play])) ;; TODO this smells bad
+    (rf/dispatch [:update-period-in-play])
+    )
   ;; TODO think about putting clock state in db
   ;; have handler that ticks the clock + resets any "playing" period
   )
@@ -543,8 +545,6 @@
                                      (.preventDefault e)
                                      (rf/dispatch
                                        [:set-selected-period nil])))]
-
-    (js/setTimeout clock-tick 5000)
 
     [:svg (merge {:key         date-str
                   :id          date-str
@@ -1886,4 +1886,7 @@
   (rf/dispatch-sync [:initialize-db])
   (load-interceptors!)
   (hist/hook-browser-navigation!)
-  (mount-components))
+  (mount-components)
+  (js/setInterval clock-tick 5000) ;; TODO this is bad
+  )
+
