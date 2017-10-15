@@ -7,12 +7,11 @@
             [re-frame.core :as rf]
             [reanimated.core :as anim]
             [secretary.core :as secretary]
-            [goog.events :as events]
-            [goog.history.EventType :as HistoryEventType]
             [markdown.core :refer [md->html]]
             [ajax.core :refer [GET POST]]
             [time-align.ajax :refer [load-interceptors!]]
             [time-align.handlers]
+            [time-align.history :as hist]
             [time-align.subscriptions]
             [clojure.string :as string]
             [time-align.client-utilities :as cutils]
@@ -20,7 +19,7 @@
             [goog.string :as gstring]
             [time-align.utilities :as utils]
             [cljs.pprint :refer [pprint]])
-  (:import goog.History))
+  )
 
 (def app-theme {:primary   (color :blue-grey-600)
                 :secondary (color :red-500)})
@@ -675,7 +674,7 @@
                                          (= sel-id (:id period)))
                                   (fn [e]
                                     (rf/dispatch [:set-active-page
-                                                  {:page-id :entity-forms
+                                                  {:page-id :add-entity-forms
                                                    :type    :period
                                                    :id      (:id period)}]))
                                   (fn [e]
@@ -822,11 +821,7 @@
       (merge basic-mini-button
              {:style   (merge (:style basic-mini-button)
                               {:marginBottom "20"})
-              :onClick (fn [e]
-                         (rf/dispatch [:set-active-page
-                                       {:page-id :entity-forms
-                                        :type    :category
-                                        :id      nil}]))})
+              :onClick (fn [e] (hist/nav! "/add"))})
 
       [ic/content-add basic-ic]]
 
@@ -886,7 +881,7 @@
             :onTouchTap (fn [e]
                           (rf/dispatch
                             [:set-active-page
-                             {:page-id :entity-forms
+                             {:page-id :add-entity-forms
                               :type    :period
                               :id      (get-in
                                          selected
@@ -921,7 +916,7 @@
             :onTouchTap (fn [e]
                           (rf/dispatch
                             [:set-active-page
-                             {:page-id :entity-forms
+                             {:page-id :add-entity-forms
                               :type    :period
                               :id      (get-in
                                          selected
@@ -991,47 +986,37 @@
                  :open               main-drawer-state
                  :disableSwipeToOpen true
                  :onRequestChange    (fn [new-state] (rf/dispatch [:set-main-drawer new-state]))}
-      [ui/menu-item {:onTouchTap    #(do
-                                       (rf/dispatch [:set-main-drawer false])
-                                       (rf/dispatch [:set-active-page {:page-id :home}]))
-                     :innerDivStyle {:display "flex" :align-items "center"}}
-       (svg-mui-time-align {:color "black"
-                            :style {:marginRight "0.5em"}})
-       [:span "Home"]]
-      [ui/menu-item {:onTouchTap    #(do
-                                       (rf/dispatch [:set-main-drawer false])
-                                       (rf/dispatch [:set-active-page {:page-id :list}]))
-                     :innerDivStyle {:display "flex" :align-items "center"}}
-       (svg-mui-entity {:type :all :color "black" :style {:marginRight "0.5em"}})
-       [:span "List"]]
 
-      [ui/menu-item {:onTouchTap    #(do
-                                       (rf/dispatch [:set-main-drawer false])
-                                       (rf/dispatch [:set-active-page {:page-id :agenda}]))
-                     :innerDivStyle {:display "flex" :align-items "center"}}
+      [:a {:href "/#"}
+       [ui/menu-item {:onTouchTap    #(do
+                                        (rf/dispatch [:set-main-drawer false])
+                                        (rf/dispatch [:set-active-page {:page-id :home}]))
+                      :innerDivStyle {:display "flex" :align-items "center"}}
+        (svg-mui-time-align {:color "black"
+                             :style {:marginRight "0.5em"}})
+        [:span "Home"]]]
 
-       [ic/action-view-agenda {:style {:marginRight "0.5em"}}]
-       [:span "Agenda"]]
+      [:a {:href "#/list"}
+       [ui/menu-item {:innerDivStyle {:display "flex" :align-items "center"}}
+        (svg-mui-entity {:type :all :color "black" :style {:marginRight "0.5em"}})
+        [:span "List"]]]
 
-      [ui/menu-item {:onTouchTap    #(do
-                                       (rf/dispatch [:set-main-drawer false])
-                                       (rf/dispatch [:set-active-page {:page-id :queue}]))
-                     :innerDivStyle {:display "flex" :align-items "center"}}
+      [:a {:href "#/agenda"}
+       [ui/menu-item {:innerDivStyle {:display "flex" :align-items "center"}}
+        [ic/action-view-agenda {:style {:marginRight "0.5em"}}]
+        [:span "Agenda"]]]
 
-       [ic/action-toc {:style {:marginRight "0.5em"}}]
-       [:span "Queue"]]
+      [:a {:href "#/queue"}
+       [ui/menu-item {:innerDivStyle {:display "flex" :align-items "center"}}
+        [ic/action-toc {:style {:marginRight "0.5em"}}]
+        [:span "Queue"]]]
 
-      [ui/menu-item {:onTouchTap    #(rf/dispatch [:set-main-drawer false])
-                     :innerDivStyle {:display "flex" :align-items "center"}
+      [ui/menu-item {:innerDivStyle {:display "flex" :align-items "center"}
                      :disabled      true}
-
        [ic/action-settings {:style {:marginRight "0.5em"}}]
        [:span "Settings"]]
 
-      [ui/menu-item {:onTouchTap    #(do
-                                       (rf/dispatch [:set-main-drawer false])
-                                       (rf/dispatch [:set-active-page {:page-id :account}]))
-                     :innerDivStyle {:display "flex" :align-items "center"}
+      [ui/menu-item {:innerDivStyle {:display "flex" :align-items "center"}
                      :disabled      true}
        [ic/social-person {:style {:marginRight "0.5em"
                                   :color       "grey"}}]
@@ -1139,11 +1124,11 @@
                                             (= selected-id (:id period)))
                                      (fn [e]
                                        (rf/dispatch [:set-active-page
-                                                     {:page-id :entity-forms
-                                                      :type :period
-                                                      :id (:id period)}]))
-                                       (fn [e]
-                                         (rf/dispatch
+                                                     {:page-id :add-entity-forms
+                                                      :type    :period
+                                                      :id      (:id period)}]))
+                                     (fn [e]
+                                       (rf/dispatch
                                           [:set-selected-period (:id period)])
                                          )
                                        )}])))])
@@ -1285,7 +1270,7 @@
                     :onClick  (fn [e]
                                 (rf/dispatch
                                   [:set-active-page
-                                   {:page-id :entity-forms
+                                   {:page-id :add-entity-forms
                                     :type    :category
                                     :id      nil}]))}]
    [ui/flat-button {:label    "Task"
@@ -1299,7 +1284,7 @@
                     :onClick  (fn [e]
                                 (rf/dispatch
                                   [:set-active-page
-                                   {:page-id :entity-forms
+                                   {:page-id :add-entity-forms
                                     :type    :task
                                     :id      nil}]))}]
    [ui/flat-button {:label    "Period"
@@ -1313,7 +1298,7 @@
                     :onClick  (fn [e]
                                 (rf/dispatch
                                   [:set-active-page
-                                   {:page-id :entity-forms
+                                   {:page-id :add-entity-forms
                                     :type    :period
                                     :id      nil}]))}]
    ]
@@ -1334,10 +1319,7 @@
    [ui/flat-button {:icon            (r/as-element [ic/navigation-cancel basic-ic])
                     :backgroundColor "grey"
                     :onTouchTap      (fn [e]
-                                       (rf/dispatch [:set-active-page
-                                                     {:pageId back-page-id
-                                                      :type   nil
-                                                      :id     nil}])
+                                       (.back js/history)
                                        )}]
    [ui/flat-button {:icon            (r/as-element [ic/content-save basic-ic])
                     :backgroundColor (:primary app-theme)
@@ -1350,11 +1332,7 @@
   (let [color @(rf/subscribe [:category-form-color])
         name  @(rf/subscribe [:category-form-name])]
 
-    [:div.category-form {:style {:padding         "0.5em"
-                                 :backgroundColor "white"}}
-
-     (entity-form-chooser :category)
-
+    [:div
      [ui/text-field {:floating-label-text "Name"
                      :value               name
                      :onChange            (fn [e v]
@@ -1378,8 +1356,8 @@
      [ui/divider {:style {:margin-top    "1em"
                           :margin-bottom "1em"}}]
 
-     (entity-form-buttons :home [:save-category-form] [:delete-category-form-entity])
-     ]
+     (entity-form-buttons :home [:save-category-form] [:delete-category-form-entity])]
+
     )
   )
 
@@ -1428,11 +1406,7 @@
         categories  @(rf/subscribe [:categories])
         ]
 
-    [:div.task-form {:style {:padding         "0.5em"
-                             :backgroundColor "white"}}
-
-     (entity-form-chooser :task)
-
+    [:div
      [ui/text-field {:floating-label-text "Name"
                      :value               name
                      :fullWidth           true
@@ -1497,11 +1471,7 @@
         tasks       @(rf/subscribe [:tasks])
         planned     @(rf/subscribe [:period-form-planned])]
 
-    [:div.task-form {:style {:padding         "0.5em"
-                             :backgroundColor "white"}}
-
-     (entity-form-chooser :period)
-
+    [:div
      [ui/checkbox {:label      "Planned"
                    :labelStyle {:color (:primary app-theme)}
                    :style      {:marginTop "20"}
@@ -1583,21 +1553,26 @@
     )
   )
 
-(defn entity-forms [page]
+(defn entity-form
+  [page-value entity-id]
+  (case page-value
+        :category (category-form entity-id)
+        :task (task-form entity-id)
+        :period (period-form entity-id)
+        [:div (str page-value " page value doesn't exist")]))
+
+(defn entity-forms [page add?]
   (let [page-value (if-let [entity-type (:type-or-nil page)]
                      entity-type
                      :category)
         entity-id  (:id-or-nil page)
-        ]
+        div-name (keyword (str "div." page-value "-form"))]
     [:div.entity-form-container
      (app-bar)
-
-     (case page-value
-       :category (category-form entity-id)
-       :task (task-form entity-id)
-       :period (period-form entity-id)
-       [:div (str page-value " page value doesn't exist")]
-       )
+     [div-name {:style {:padding         "0.5em"
+                        :backgroundColor "white"}}
+      (when add? (entity-form-chooser page-value))
+      (entity-form page-value entity-id)]
      ]
     )
   )
@@ -1616,11 +1591,14 @@
                :primaryText (concatonated-text description 10 "no description provided ...")
                :style       (if is-selected {:backgroundColor "#dddddd"})
                :onClick     (fn [e]
-                              (if is-selected
-                                (rf/dispatch [:set-active-page {:page-id :entity-forms
-                                                                :type    :period
-                                                                :id      id}])
-                                (rf/dispatch [:set-selected {:type :period :id id}])))}
+                              (when-not is-selected
+                                (rf/dispatch [:set-selected {:type :period :id id}])))
+
+               :on-double-click (fn [e]
+                                  (when is-selected
+                                    (hist/nav! (str "/edit/period/" id))))
+
+               }
 
               (if (and (some? (:start period))
                        (some? (:stop period)))
@@ -1694,22 +1672,25 @@
                                 (some?))]
     (r/as-element
       [ui/list-item
-       {:key         id
-        :primaryText (concatonated-text name 15 "no name entered ...")
-        :nestedItems (->> periods-sorted
-                          (map (partial list-period current-selection)))
-        :leftIcon    (r/as-element
-                       [ui/checkbox {:checked   complete
-                                     :iconStyle {:fill color}}])
-        :open        (or is-selected
-                         is-child-selected)
-        :style       (if is-selected {:backgroundColor "#dddddd"})
-        :onClick     (fn [e]
-                       (if is-selected
-                         (rf/dispatch [:set-active-page {:page-id :entity-forms
-                                                         :type    :task
-                                                         :id      id}])
-                         (rf/dispatch [:set-selected {:type :task :id id}])))
+       {:key           id
+        :primaryText   (concatonated-text name 15 "no name entered ...")
+        :nestedItems   (->> periods-sorted
+                            (map (partial list-period current-selection)))
+        :leftIcon      (r/as-element
+                         [ui/checkbox {:checked   complete
+                                       :iconStyle {:fill color}}])
+        :open          (or is-selected
+                           is-child-selected)
+        :style         (if is-selected {:backgroundColor "#dddddd"})
+
+
+        :onClick       (fn [e]
+                         (rf/dispatch [:set-selected {:type :task :id id}]))
+
+        :onDoubleClick (fn [e]
+                         (when is-selected
+                                        (hist/nav! (str "/edit/task/" id))))
+
         }])))
 
 (defn list-category [current-selection category]
@@ -1737,24 +1718,26 @@
                                              ))
                                         tasks)]
 
-    [ui/list-item {:key         id
-                   :primaryText (concatonated-text name 20
-                                                   "no name entered ...")
-                   :leftIcon    (r/as-element (svg-mui-circle color))
-                   :nestedItems (->> ordered-tasks
-                                     (map #(assoc % :color color))
-                                     (map (partial list-task current-selection)))
-                   :open        (or is-selected
-                                    is-child-selected
-                                    is-grandchild-selected)
-                   :style       (if is-selected {:backgroundColor "#dddddd"})
-                   :onClick     (fn [e]
-                                  (if is-selected
-                                    (rf/dispatch [:set-active-page {:page-id :entity-forms
-                                                                    :type    :category
-                                                                    :id      id}])
-                                    (rf/dispatch [:set-selected {:type :category :id id}])))
-                   }]))
+    [ui/list-item {:key             id
+                   :primaryText     (concatonated-text name 20
+                                                       "no name entered ...")
+                   :leftIcon        (r/as-element (svg-mui-circle color))
+                   :nestedItems     (->> ordered-tasks
+                                         (map #(assoc % :color color))
+                                         (map (partial list-task current-selection)))
+                   :open            (or is-selected
+                                        is-child-selected
+                                        is-grandchild-selected)
+                   :style           (if is-selected {:backgroundColor "#dddddd"})
+                   :onClick         (fn [e]
+                                      (when-not is-selected
+                                        (rf/dispatch [:set-selected {:type :category :id id}])))
+                   :on-double-click (fn [e]
+                                      (when is-selected
+                                        (hist/nav! (str "/edit/category/" id))
+                                        ))
+                   }
+     ]))
 
 (defn list-page []
   (let [categories        @(rf/subscribe [:categories])
@@ -1772,7 +1755,7 @@
 
 (defn agenda-page []
   (let [selected            @(rf/subscribe [:selected])
-        periods             @(rf/subscribe [:periods]) ]
+        periods             @(rf/subscribe [:periods])]
     [:div
      (app-bar)
      [ui/paper {:style {:width "100%"}}
@@ -1786,7 +1769,6 @@
      (app-bar)
      [ui/paper {:style {:width "100%"}}
       (queue tasks selected)]]))
-
 
 
 (defn account-page []
@@ -1815,7 +1797,8 @@
      [:div
       (case page-id
         :home (home-page)
-        :entity-forms (entity-forms this-page)
+        :add-entity-forms (entity-forms this-page true)
+        :edit-entity-forms (entity-forms this-page false)
         :list (list-page)
         :account (account-page)
         :agenda (agenda-page)
@@ -1830,19 +1813,49 @@
 ;; Routes
 (secretary/set-config! :prefix "#")
 
-(secretary/defroute "/" []
-                    (rf/dispatch [:set-active-page {:page-id :home}]))
+(secretary/defroute home-route "/" []
+  (rf/dispatch [:set-active-page {:page-id :home}]))
+
+(secretary/defroute agenda-route "/agenda" []
+  (rf/dispatch [:set-main-drawer false])
+  (rf/dispatch [:set-active-page {:page-id :agenda}])
+  )
+
+(secretary/defroute list-route "/list" []
+  (rf/dispatch [:set-main-drawer false])
+  (rf/dispatch [:set-active-page {:page-id :list}]))
+
+(secretary/defroute queue-route "/queue" []
+  (rf/dispatch [:set-main-drawer false])
+  (rf/dispatch [:set-active-page {:page-id :queue}]))
+
+(secretary/defroute add-category-route "/add" []
+  (rf/dispatch [:set-active-page {:page-id :add-entity-forms
+                                  :type    :category
+                                  :id      nil}]))
+
+
+(secretary/defroute edit-category-route "/edit/category/:id" [id]
+  (println "In edit category")
+  (rf/dispatch [:set-active-page {:page-id :edit-entity-forms
+                                  :type    :category
+                                  :id      (uuid id)}]))
+
+(secretary/defroute edit-task-route "/edit/task/:id" [id]
+  (println "In edit task")
+  (rf/dispatch [:set-active-page {:page-id :edit-entity-forms
+                                  :type    :task
+                                  :id      (uuid id)}]))
+
+(secretary/defroute period-task-route "/edit/period/:id" [id]
+  (rf/dispatch [:set-active-page {:page-id :edit-entity-forms
+                                  :type    :period
+                                  :id      (uuid id)}]))
 
 ;; -------------------------
 ;; History
 ;; must be called after routes have been defined
-(defn hook-browser-navigation! []
-  (doto (History.)
-    (events/listen
-      HistoryEventType/NAVIGATE
-      (fn [event]
-        (secretary/dispatch! (.-token event))))
-    (.setEnabled true)))
+
 
 ;; -------------------------
 ;; Initialize app
@@ -1854,5 +1867,5 @@
 (defn init! []
   (rf/dispatch-sync [:initialize-db])
   (load-interceptors!)
-  (hook-browser-navigation!)
+  (hist/hook-browser-navigation!)
   (mount-components))

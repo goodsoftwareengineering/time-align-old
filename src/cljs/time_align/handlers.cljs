@@ -39,20 +39,15 @@
           type (:type params)
           id (:id params)
           view-page (case page
-                      ;; :home {:page-id page
-                      ;;        :type-or-nil nil
-                      ;;        :id-or-nil nil}
-                      :entity-forms {:page-id     page
-                                     :type-or-nil type
-                                     :id-or-nil   id}
-                      ;; :list {:page-id page
-                      ;;        :type-or-nil nil
-                      ;;        :id-or-nil nil}
-
-                      ;; default works for :home :account :list
+                      (or :add-entity-forms
+                          :edit-entity-forms) {:page-id page
+                                               :type-or-nil type
+                                               :id-or-nil   id}
+                      ;;default
                       {:page-id     page
                        :type-or-nil nil
                        :id-or-nil   nil})
+
           to-load (case type
                     :category [:load-category-entity-form id]
                     :task [:load-task-entity-form id]
