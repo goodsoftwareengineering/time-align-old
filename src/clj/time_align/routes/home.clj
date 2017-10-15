@@ -1,11 +1,13 @@
 (ns time-align.routes.home
   (:require [time-align.layout :as layout]
+            [time-align.utilities :as utils]
             [compojure.core :refer [defroutes GET POST]]
             [ring.util.http-response :as response]
             [ring.middleware.anti-forgery :refer :all]
             [time-align.db.core :as db]
             [clojure.tools.logging :as log]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io])
+  (:import [java.net InetAddress]))
 
 (defn home-page []
   (layout/render "home.html"))
@@ -24,7 +26,9 @@
            (POST "/analytics" []
              (fn [req]
                (->> req
-                   :params
-                   db/create-analytic!
-                   (format "%d analytic(s) added")
-                   response/ok))))
+                    :params
+                    (merge {:ip_addr (InetAddress/getByName (:remote-addr req))})
+                    utils/thread-friendly-pprint!
+                    db/create-analytic!
+                    (format "%d analytic(s) added")
+                    response/ok))))

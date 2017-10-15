@@ -13,7 +13,9 @@
             BatchUpdateException
             Date
             Timestamp
-            PreparedStatement]))
+            PreparedStatement]
+           [clojure.lang Keyword]
+           [java.net InetAddress]))
 
 (defstate ^:dynamic *db*
           :start (conman/connect! {:jdbc-url (env :database-url)})
@@ -54,6 +56,11 @@
     (.setType "jsonb")
     (.setValue (generate-string value))))
 
+(defn to-pg-inet [value]
+  (doto (PGobject.)
+    (.setType "inet")
+    (.setValue (.getHostAddress value))))
+
 (extend-type clojure.lang.IPersistentVector
   jdbc/ISQLParameter
   (set-parameter [v ^java.sql.PreparedStatement stmt ^long idx]
@@ -68,4 +75,8 @@
   IPersistentMap
   (sql-value [value] (to-pg-json value))
   IPersistentVector
-  (sql-value [value] (to-pg-json value)))
+  (sql-value [value] (to-pg-json value))
+  Keyword
+  (sql-value [value] (to-pg-json value))
+  InetAddress
+  (sql-value [value] (to-pg-inet value)))

@@ -30,8 +30,8 @@ WHERE uid = :uid;
 -- :name create-analytic! :! :n
 -- :doc creates an analytic
 INSERT INTO analytics
-(dispatch_key, payload)
-VALUES (:dispatch_key, :payload);
+(dispatch_key, payload, ip_addr)
+VALUES (:dispatch_key, :payload, :ip_addr);
 
 -- :name get-analytic-by-id :? :1
 -- :doc retrieve a row in the analytic by id
