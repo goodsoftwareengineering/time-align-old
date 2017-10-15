@@ -5,6 +5,7 @@
                                    reg-event-fx
                                    reg-fx
                                    ->interceptor]]
+            [ajax.core :refer [GET POST]]
             [time-align.utilities :as utils]
             [time-align.client-utilities :as cutils]
             [time-align.storage :as store]
@@ -36,9 +37,26 @@
 
               (merge context {:effects (dissoc effects :route)})))))
 
+(def send-analytic
+  (->interceptor
+    :id :send-analytic
+    :before (fn [context]
+             (let [event (get-in context [:coeffects :event])
+                   dispatch-key (nth event 0)
+                   payload (nth event 1 nil)]
+               (println "Before send")
+               (utils/thread-friendly-pprint! event)
+               (POST "/analytics"
+                     {:headers {"Accept" "application/transit+json"}
+                      :params  {:dispatch_key dispatch-key
+                                :payload      {:payload payload}}
+                      :handler println}))
+             context)))
+
+
 (reg-event-db
   :initialize-db
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [_ _]
     (let [hot-garbage-let-var (if (some #(= :app-db %) (store/store->keys))
                                 (->> :app-db
@@ -50,7 +68,7 @@
 
 (reg-event-fx
   :set-active-page
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [cofx [_ params]]
     (let [db (:db cofx)
           page (:page-id params)
@@ -79,7 +97,7 @@
 
 (reg-event-db
   :load-category-entity-form
-  [persist-ls]
+  [persist-ls ]
   (fn [db [_ id]]
     (let [categories (:categories db)
           this-category (some #(if (= id (:id %)) %) categories)
@@ -92,7 +110,7 @@
 
 (reg-event-db
   :load-task-entity-form
-  [persist-ls]
+  [persist-ls ]
   (fn [db [_ id]]
     (let [tasks (cutils/pull-tasks db)
           this-task (some #(if (= id (:id %)) %) tasks)
@@ -111,7 +129,7 @@
 
 (reg-event-db
   :load-period-entity-form
-  [persist-ls]
+  [persist-ls ]
   (fn [db [_ id]]
     (let [periods (cutils/pull-periods db)
           this-period (some #(if (= id (:id %)) %)
@@ -134,13 +152,13 @@
 
 (reg-event-db
   :set-zoom
-  [persist-ls]
+  [persist-ls ]
   (fn [db [_ quadrant]]
     (assoc-in db [:view :zoom] quadrant)))
 
 (reg-event-db
   :set-view-range-day
-  [persist-ls]
+  [persist-ls ]
   (fn [db [_ _]]
     (assoc-in db [:view :range]
               {:start (new js/Date)
@@ -148,7 +166,7 @@
 
 (reg-event-db
   :set-view-range-week
-  [persist-ls]
+  [persist-ls ]
   (fn [db [_ _]]
     (assoc-in db [:view :range]
               {:start (utils/one-week-ago (js/Date.))
@@ -156,25 +174,25 @@
 
 (reg-event-db
   :set-view-range-custom
-  [persist-ls]
+  [persist-ls ]
   (fn [db [_ range]]
     (assoc-in db [:view :range] range)))
 
 (reg-event-db
   :toggle-main-drawer
-  [persist-ls]
+  [persist-ls ]
   (fn [db [_ _]]
     (update-in db [:view :main-drawer] not)))
 
 (reg-event-db
   :set-main-drawer
-  [persist-ls]
+  [persist-ls ]
   (fn [db [_ new-state]]
     (assoc-in db [:view :main-drawer] new-state)))
 
 (reg-event-fx
   :set-selected-period
-  [persist-ls]
+  [persist-ls ]
   (fn [cofx [_ period-id]]
     (let [
           db (:db cofx)
@@ -198,7 +216,7 @@
 
 (reg-event-db
   :set-selected
-  [persist-ls]
+  [persist-ls ]
   (fn [db [_ {:keys [type id]}]]
     (assoc-in db [:view :selected]
               {:current-selection  {:type-or-nil type
@@ -207,7 +225,7 @@
 
 (reg-event-fx
   :set-selected-queue
-  [persist-ls]
+  [persist-ls ]
   (fn [cofx [_ period-id]]
     ;; TODO might need to set action-button state on nil to auto collapse
     (let [
@@ -227,7 +245,7 @@
 ;; not using this yet VVV
 (reg-event-fx
   :set-selected-task
-  [persist-ls]
+  [persist-ls ]
   (fn [cofx [_ task-id]]
     (let [db (:db cofx)]
 
@@ -240,7 +258,7 @@
 
 (reg-event-db
   :action-buttons-expand
-  [persist-ls]
+  [persist-ls ]
   (fn [db [_ _]]
     (let [selection (get-in db [:view :selected :current-selection])
           s-type (:type-or-nil selection)
@@ -254,7 +272,7 @@
 
 (reg-event-db
   :action-buttons-back
-  [persist-ls]
+  [persist-ls ]
   (fn [db [_ _]]
     (let [cur-state (get-in db [:view :action-buttons])
           new-state
@@ -293,7 +311,7 @@
 
 (reg-event-db
   :move-selected-period
-  [persist-ls]
+  [persist-ls ]
   (fn [db [_ mid-point-time-ms]]
     (if (period-selected? db)
       (let [
@@ -361,7 +379,7 @@
 
 (reg-event-db
   :set-category-form-color
-  [persist-ls]
+  [persist-ls ]
   (fn [db [_ color]]
     (assoc-in db [:view :category-form :color-map]
               (merge (get-in db [:view :category-form :color-map])
@@ -402,31 +420,31 @@
 
 (reg-event-db
   :set-category-form-name
-  [persist-ls]
+  [persist-ls ]
   (fn [db [_ name]]
     (assoc-in db [:view :category-form :name] name)))
 
 (reg-event-db
   :set-task-form-category-id
-  [persist-ls]
+  [persist-ls ]
   (fn [db [_ category-id]]
     (assoc-in db [:view :task-form :category-id] category-id)))
 
 (reg-event-db
   :set-task-form-name
-  [persist-ls]
+  [persist-ls ]
   (fn [db [_ name]]
     (assoc-in db [:view :task-form :name] name)))
 
 (reg-event-db
   :set-task-form-description
-  [persist-ls]
+  [persist-ls ]
   (fn [db [_ desc]]
     (assoc-in db [:view :task-form :description] desc)))
 
 (reg-event-db
   :set-task-form-complete
-  [persist-ls]
+  [persist-ls ]
   (fn [db [_ comp]]
     (assoc-in db [:view :task-form :complete] comp)))
 
@@ -525,7 +543,7 @@
 
 (reg-event-db
   :set-period-form-description
-  [persist-ls]
+  [persist-ls ]
   (fn [db [_ desc]]
     (assoc-in db [:view :period-form :description] desc)
     ))
