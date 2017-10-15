@@ -168,9 +168,10 @@
 (s/def ::displayed-day (s/with-gen inst?
                         #?(:cljs #(gen/return (new js/Date))
                            :clj #(gen/return (t/zoned-date-time)))))
-
+(s/def ::period-in-play ::id-or-nil)
 (s/def ::view (s/and (s/keys :req-un [::page
                                       ::selected
+                                      ::period-in-play
                                       ::continous-action
                                       ::main-drawer
                                       ::zoom
@@ -195,4 +196,3 @@
 (s/def ::db (s/keys :req-un [::user ::view ::categories]))
 
 (def default-db (gen/generate (s/gen ::db)))
-

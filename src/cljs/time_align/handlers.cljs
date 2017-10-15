@@ -59,10 +59,6 @@
                {:dispatch to-load}
                {})))))
 
-
-
-
-
 (reg-event-db
   :load-category-entity-form
   [persist-ls]
@@ -118,8 +114,6 @@
                  :description  description})
       )))
 
-
-
 (reg-event-db
   :set-zoom
   [persist-ls]
@@ -169,12 +163,18 @@
           type (if (nil? period-id) nil :period)
           prev (get-in db [:view :selected :current-selection])
           curr {:type-or-nil type :id-or-nil period-id}
+          in-play-id (get-in db [:view :period-in-play])
           ]
 
       {:db       (assoc-in db [:view :selected]
                            {:current-selection  curr
                             :previous-selection prev})
-       :dispatch [:action-buttons-back]}
+       :dispatch-n (filter some? (list ;; TODO upgrade re-frame and remove filter
+                                  (when (and (some? in-play-id)
+                                             (= in-play-id period-id))
+                                    [:pause-period-play])
+                                  [:action-buttons-back]))
+       }
       )
     ))
 
@@ -206,8 +206,6 @@
       )
     ))
 
-
-
 ;; not using this yet VVV
 (reg-event-fx
   :set-selected-task
@@ -221,8 +219,6 @@
        :dispatch [:action-buttons-back]}
       )
     ))
-
-
 
 (reg-event-db
   :action-buttons-expand
@@ -249,7 +245,6 @@
             :else :collapsed)]
       (assoc-in db [:view :action-buttons] new-state)
       )))
-
 
 (reg-event-db
   :set-moving-period
@@ -308,7 +303,11 @@
            new-start-ms          (- mid-point-time-ms (/ period-length-ms 2))
            new-stop-ms           (+ new-start-ms period-length-ms)
 
-           this-day              (utils/zero-in-day (get-in db [:view :displayed-day]))
+            this-day              (as-> (get-in db [:view :displayed-day]) d
+                                       (new js/Date
+                                            (.getFullYear d)
+                                            (.getMonth d)
+                                            (.getDate d)))
 
            ;; straddled task could have negative `new-stop-ms`
            ;; + ing the time to this-day zeroed in will account for that
@@ -351,8 +350,6 @@
                      color))
     ))
 
-
-
 (reg-event-fx
   :save-category-form
   [persist-ls]
@@ -377,8 +374,6 @@
        :dispatch [:set-active-page {:page-id :home :type nil :id nil}]
        }
       )))
-
-
 
 (reg-event-db
   :set-category-form-name
@@ -451,7 +446,6 @@
         {:db db                                             ;; TODO display some sort of error
          }))))
 
-
 (reg-event-db
   :set-period-form-date
   [persist-ls]
@@ -468,8 +462,6 @@
         (assoc-in db [:view :period-form start-or-stop] new-d))
       )
     ))
-
-
 
 (reg-event-db
   :set-period-form-time
@@ -495,11 +487,6 @@
       )
     ))
 
-
-
-
-
-
 (reg-event-db
   :set-period-form-description
   [persist-ls]
@@ -507,14 +494,12 @@
     (assoc-in db [:view :period-form :description] desc)
     ))
 
-
 (reg-event-db
   :set-period-form-task-id
   [persist-ls]
   (fn [db [_ task-id]]
     (assoc-in db [:view :period-form :task-id] task-id))
   )
-
 
 (reg-event-fx
   :save-period-form
@@ -662,7 +647,6 @@
        :dispatch [:set-active-page {:page-id :home}]}
       )))
 
-
 (reg-event-fx
   :delete-period-form-entity
   (fn [cofx [_ _]]
@@ -743,3 +727,125 @@
 
      (assoc-in db [:view :displayed-day]
                new))))
+
+(reg-event-fx
+ :play-period
+ (fn [cofx [_ id]]
+   (let [
+         db (:db cofx)
+         ;; find the period
+         periods (cutils/pull-periods db)
+         this-period (some #(if (= (:id %) id) %) periods)
+
+         ;; copy the period
+         new-id (random-uuid)
+         start (new js/Date)
+         stop  (as-> (new js/Date) d
+                 (.setMinutes d (+ 1 (.getMinutes d))) ;; TODO adjustable increment
+                 (new js/Date d)
+                 );; TODO we need to abstract out this mutative toxin
+
+         new-actual-period (merge
+                            (select-keys this-period
+                                         [:description])
+                            {:id new-id
+                             :start start
+                             :stop stop})
+         ;; TODO uuid gen funciton that checks for taken? or should that only be handled on the back end?
+
+         ;; set up to place
+         category-id (:category-id this-period)
+         task-id (:task-id this-period)
+         all-categories (:categories db)
+         this-category (some #(if (= (:id %) category-id) %)
+                             all-categories)
+         other-categories (filter #(not (= (:id %) category-id))
+                                  all-categories)
+         all-tasks (:tasks this-category)
+         this-task (some #(if (= (:id %) task-id) %)
+                         all-tasks)
+         other-tasks (filter #(not (= (:id %) task-id))
+                             all-tasks)
+         all-actual-periods (:actual-periods this-task)
+
+         ;; place
+         new-task (merge this-task
+                         {:actual-periods (conj all-actual-periods new-actual-period)})
+         new-category (merge this-category
+                             {:tasks (conj other-tasks new-task)})
+         new-db (merge db
+                       {:categories (conj other-categories new-category)
+                        :view (assoc (:view db) :period-in-play new-id)})
+         ]
+     {:db new-db
+      :dispatch [:set-selected-period nil]}
+     )
+   ))
+
+(reg-event-db
+ :play-actual-or-planned-period
+ (fn [db [_ id]]
+
+   ))
+
+(reg-event-db
+ :update-period-in-play
+ (fn [db [_ _]]
+   (let [playing-period (get-in db [:view :period-in-play])
+         is-playing (some? playing-period)
+         ]
+     (if is-playing
+       (let [id playing-period
+             periods (cutils/pull-periods db)
+             all-actual-periods (filter #(= (:type %) :actual) periods)
+             this-period (some #(if (= (:id %) id) %) all-actual-periods)
+             old-stop (:stop this-period)
+             now (new js/Date)
+             new-stop (if  (> (.valueOf old-stop) ;; TODO probably remove
+                              (.valueOf now))
+                        old-stop
+                        now)
+             new-this-period (merge this-period
+                                    {:stop new-stop}) ;; this is the whole point
+
+             ;; all the extra stuff to put it back in
+             category-id (:category-id this-period)
+             task-id (:task-id this-period)
+
+             all-categories (:categories db)
+             this-category (some #(if (= (:id %) category-id) %)
+                                 all-categories)
+             other-categories (filter #(not (= (:id %) category-id))
+                                      all-categories)
+             all-tasks (:tasks this-category)
+             this-task (some #(if (= (:id %) task-id) %)
+                             all-tasks)
+             other-tasks (filter #(not (= (:id %) task-id))
+                                 all-tasks)
+             other-actual-periods (->> this-task
+                                       (:actual-periods)
+                                       (filter #(not (= (:id %) id))))
+
+             new-task (merge this-task
+                             {:actual-periods (conj other-actual-periods
+                                                    new-this-period)})
+             new-category (merge this-category
+                                 {:tasks (conj other-tasks new-task)})
+             new-db (merge db
+                           {:categories (conj other-categories new-category)})
+             ]
+
+         new-db
+
+
+         )
+
+       ;; no playing period
+       db)
+     )))
+
+(reg-event-db
+ :pause-period-play ;; TODO should probably be called stop
+ (fn [db _]
+   (assoc-in db [:view :period-in-play] nil) ;; TODO after specter add in an adjust selected period stop time
+   ))

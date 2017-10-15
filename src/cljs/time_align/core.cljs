@@ -190,7 +190,9 @@
         ]
 
     [:g {:key (str id)}
-     (if straddles-now
+     (if (and straddles-now ;; ticker splitting should only happen when displaying today
+              (= (utils/zero-in-day displayed-day)
+                 (utils/zero-in-day (new js/Date))))
        [:g
         [:path
          {:d            broken-arc-before
@@ -458,7 +460,7 @@
     [:g
      (zoom-mv-arrows-svg
       :q1 basics
-      (fn [e] (println "q2")(rf/dispatch [:set-zoom :q2]))
+      (fn [e] (rf/dispatch [:set-zoom :q2]))
       (fn [e] (rf/dispatch [:set-zoom :q4])))
      (zoom-mv-arrows-svg
       :q2 basics
@@ -504,6 +506,9 @@
 
 (defn clock-tick []
   (swap! clock-state assoc :time (new js/Date))
+  (if (some? (get-in @re-frame.db/app-db [:view :period-in-play])) ;; TODO this smells bad
+    (rf/dispatch [:update-period-in-play])
+    )
   ;; TODO think about putting clock state in db
   ;; have handler that ticks the clock + resets any "playing" period
   )
@@ -530,6 +535,8 @@
                                            [:current-selection :id-or-nil])
                                    nil)
         is-moving-period         @(rf/subscribe [:is-moving-period])
+        period-in-play           @(rf/subscribe [:period-in-play])
+        period-in-play-color     @(rf/subscribe [:period-in-play-color])
         stop-touch-click-handler (if is-moving-period
                                    (fn [e]
                                      (.preventDefault e)
@@ -540,8 +547,6 @@
                                      (.preventDefault e)
                                      (rf/dispatch
                                        [:set-selected-period nil])))]
-
-    (js/setTimeout clock-tick 1000)
 
     [:svg (merge {:key         date-str
                   :id          date-str
@@ -584,16 +589,55 @@
        [:g
         [:line {:fill         "transparent"
                 :stroke-width "1"
-                :stroke       "white"
+                :stroke       (if (some? period-in-play)
+                                period-in-play-color
+                                "white")
+                :opacity      "0.5"
                 :filter       "url(#shadow-2dp)"
                 :x1           (:cx svg-consts)
                 :y1           (:cy svg-consts)
                 :x2           (:x ticker-pos)
                 :y2           (:y ticker-pos)}]
-        [:circle (merge {:fill   "white"
+        [:circle (merge {:fill  (if (some? period-in-play)
+                                  period-in-play-color
+                                  "white")
                          :filter "url(#shadow-2dp)"
                          :r      (:ticker-r svg-consts)}
                         (select-keys svg-consts [:cx :cy]))]
+
+        (when (some? period-in-play)
+          (let [cx (:cx svg-consts)
+                cy (:cy svg-consts)
+                r  (:ticker-r svg-consts)
+                width (* 0.5 r)
+                height (* 0.75 r)
+                half-height (/ height 2)
+                half-width (/ width 2)
+                x-left (- cx half-width)
+                y-left (- cy half-height)]
+            [:g
+             {:onClick (fn [e]
+                         (rf/dispatch [:pause-period-play]))}
+             [:line {:fill "white"
+                     :x1 x-left
+                     :y1 y-left
+                     :x2 x-left
+                     :y2 (+ y-left height)
+                     :stroke-width "1"
+                     :stroke "white"
+                     :stroke-linecap "round"
+                     }]
+             [:line {:fill "white"
+                     :x1 (+ x-left width)
+                     :y1 y-left
+                     :x2 (+ x-left width)
+                     :y2 (+ y-left height)
+                     :stroke-width "1"
+                     :stroke "white"
+                     :stroke-linecap "round"
+                     }]
+             ]
+            ))
         ]
        )
 
@@ -758,7 +802,6 @@
        ;; (element 0.99)
        ;; 50
        (fn []
-         (println "dispatching")
          ;; (reset! action-buttons-collapsed-click false)
          (rf/dispatch [:action-buttons-expand])
          )]
@@ -847,32 +890,36 @@
     )
   )
 
-(defn action-buttons-period-selection [selected]
+(defn action-buttons-period-selection [selected period-in-play]
   (if @action-buttons-collapsed-click
     (do (reset! action-buttons-collapsed-click false)
         (reset! margin-action-expanded 20)))
 
   [:div expanded-buttons-style
 
-   ;; TODO this switches with pause depending on play state
-   ;; shouldn't be too bad, the ticker makes the
-   [ui/floating-action-button
-    (merge basic-mini-button
-           {:style (merge (:style basic-mini-button)
-                          {:marginBottom "20"})})
-    [ic/av-play-arrow basic-ic]]
+   (if (some? period-in-play)
+     [ui/floating-action-button
+      (merge basic-mini-button
+             {:style (merge (:style basic-mini-button)
+                            {:marginBottom "20"})
+              :onTouchTap (fn [e]
+                            (rf/dispatch
+                             [:pause-period-play]))
+              })
+      [ic/av-pause basic-ic]]
 
-   [ui/floating-action-button
-    (merge basic-mini-button
-           {:style (merge (:style basic-mini-button)
-                          {:marginBottom "20"})})
-    (svg-mui-stretch)]
-
-   [ui/floating-action-button
-    (merge basic-mini-button
-           {:style (merge (:style basic-mini-button)
-                          {:marginBottom "20"})})
-    (svg-mui-shrink)]
+     [ui/floating-action-button
+      (merge basic-mini-button
+             {:style (merge (:style basic-mini-button)
+                            {:marginBottom "20"})
+              :onTouchTap (fn [e]
+                            (rf/dispatch
+                             [:play-period
+                              (:id-or-nil (:current-selection selected))
+                              ]))
+              })
+      [ic/av-play-arrow basic-ic]]
+     )
 
    [ui/floating-action-button
     (merge basic-mini-button
@@ -894,20 +941,36 @@
    ]
   )
 
-(defn action-buttons-queue-selection [selected]
+(defn action-buttons-queue-selection [selected period-in-play]
   (if @action-buttons-collapsed-click
     (do (reset! action-buttons-collapsed-click false)
         (reset! margin-action-expanded 20)))
 
   [:div expanded-buttons-style
 
-   ;; TODO this switches with pause depending on play state
-   ;; shouldn't be too bad, the ticker makes the
-   [ui/floating-action-button
-    (merge basic-mini-button
-           {:style (merge (:style basic-mini-button)
-                          {:marginBottom "20"})})
-    [ic/av-play-arrow basic-ic]]
+   (if (some? period-in-play)
+     [ui/floating-action-button
+      (merge basic-mini-button
+             {:style (merge (:style basic-mini-button)
+                            {:marginBottom "20"})
+              :onTouchTap (fn [e]
+                            (rf/dispatch
+                             [:pause-period-play]))
+              })
+      [ic/av-pause basic-ic]]
+
+     [ui/floating-action-button
+      (merge basic-mini-button
+             {:style (merge (:style basic-mini-button)
+                            {:marginBottom "20"})
+              :onTouchTap (fn [e]
+                            (rf/dispatch
+                             [:play-period
+                              (:id-or-nil (:current-selection selected))
+                              ]))
+              })
+      [ic/av-play-arrow basic-ic]]
+     )
 
    [ui/floating-action-button
     (merge basic-mini-button
@@ -928,7 +991,7 @@
    ]
   )
 
-(defn action-buttons [state selected]
+(defn action-buttons [state selected period-in-play]
   (let [forceable @forcer]
     (case state
       :collapsed
@@ -936,9 +999,9 @@
       :no-selection
       (action-buttons-no-selection)
       :period
-      (action-buttons-period-selection selected)
+      (action-buttons-period-selection selected period-in-play)
       :queue
-      (action-buttons-queue-selection selected)
+      (action-buttons-queue-selection selected period-in-play)
       [:div "no buttons!"]
       )
     )
@@ -1095,6 +1158,48 @@
      [:p {:style {:padding "0.25em"}} (:description period)]
      ]
     ))
+(defn mini-arc [period]
+  (let [
+        {:keys [id description color]} period
+        start                (:start period)
+        start-ms             (utils/get-ms start)
+        start-angle          (cutils/ms-to-angle start-ms)
+        stop                 (:stop period)
+        stop-ms              (utils/get-ms stop)
+        stop-angle           (cutils/ms-to-angle stop-ms)
+
+        angle-difference     (- stop-angle start-angle)
+        minimum-angle        30
+        factor-change        (- minimum-angle angle-difference)
+        ;; adjustments seek to set the angle difference to minimum (no matter what it is)
+        ;; catches when one side goes over edge with max & min
+        start-angle-adjusted (.max js/Math
+                                   (- start-angle (/ factor-change 2))
+                                   1)
+        stop-angle-adjusted  (.min js/Math
+                                   (+ stop-angle (/ factor-change 2))
+                                   359)
+
+        use-adjustment       (< angle-difference 20)
+        start-used           (if use-adjustment
+                               start-angle-adjusted
+                               start-angle)
+        stop-used            (if use-adjustment
+                               stop-angle-adjusted
+                               stop-angle)]
+    [ui/svg-icon
+     {:viewBox "0 0 24 24"}
+     [:g
+      [:circle {:cx           "12" :cy "12" :r "11"
+                :stroke-width "2" :stroke "#cdcdcd"
+                :fill         "transparent"}]
+      [:path
+       {:d            (describe-arc 12 12 11 start-used stop-used)
+        :stroke       color
+        :stroke-width "2"
+        :fill         "transparent"
+        }]]]
+    ))
 
 (defn agenda [selected periods]
   (let [planned-periods (filter #(and (= :planned (:type %))
@@ -1116,23 +1221,19 @@
                                             {:backgroundColor (color :grey-300)}
                                             {}))
                       :key         (:id period)
-                      :leftIcon    (r/as-element
-                                    (svg-mui-circle (:color period)))
+                      :leftIcon    (r/as-element (mini-arc period))
                       :primaryText (concatonated-text (:description period)
                                                       10 "No period description ...")
                       :onTouchTap  (if (and period-selected
                                             (= selected-id (:id period)))
                                      (fn [e]
                                        (rf/dispatch [:set-active-page
-                                                     {:page-id :add-entity-forms
-                                                      :type    :period
-                                                      :id      (:id period)}]))
-                                     (fn [e]
-                                       (rf/dispatch
-                                          [:set-selected-period (:id period)])
-                                         )
-                                       )}])))])
-  )
+                                                     {:page-id :entity-forms
+                                                      :type :period
+                                                      :id (:id period)}]))
+                                       (fn [e]
+                                         (rf/dispatch
+                                          [:set-selected-period (:id period)])))}])))]))
 
 (defn home-page []
   (let [
@@ -1141,6 +1242,7 @@
         action-button-state @(rf/subscribe [:action-buttons])
         displayed-day       @(rf/subscribe [:displayed-day])
         periods             @(rf/subscribe [:periods])
+        period-in-play      @(rf/subscribe [:period-in-play])
         ]
 
     [:div.app-container
@@ -1206,7 +1308,7 @@
                :padding    "0.75em"
                ;; :border "green solid 0.1em"
                :box-sizing "border-box"}}
-      (action-buttons action-button-state selected)]]))
+      (action-buttons action-button-state selected period-in-play)]]))
 
 (def standard-colors (->> (aget js/MaterialUIStyles "colors")
                           (js->clj)
@@ -1586,10 +1688,10 @@
         is-child-selected false]
 
     (r/as-element
-      [ui/list-item
-       (merge {:key         id
-               :primaryText (concatonated-text description 10 "no description provided ...")
-               :style       (if is-selected {:backgroundColor "#dddddd"})
+     [ui/list-item
+      (merge {:key         id
+              :primaryText (concatonated-text description 10 "no description provided ...")
+              :style       (if is-selected {:backgroundColor "#dddddd"})
                :onClick     (fn [e]
                               (when-not is-selected
                                 (rf/dispatch [:set-selected {:type :period :id id}])))
@@ -1604,46 +1706,7 @@
                        (some? (:stop period)))
 
                 ;; if not queue render the arc
-                (let [start                (:start period)
-                      start-ms             (utils/get-ms start)
-                      start-angle          (cutils/ms-to-angle start-ms)
-                      stop                 (:stop period)
-                      stop-ms              (utils/get-ms stop)
-                      stop-angle           (cutils/ms-to-angle stop-ms)
-
-                      angle-difference     (- stop-angle start-angle)
-                      minimum-angle        30
-                      factor-change        (- minimum-angle angle-difference)
-                      ;; adjustments seek to set the angle difference to minimum (no matter what it is)
-                      ;; catches when one side goes over edge with max & min
-                      start-angle-adjusted (.max js/Math
-                                                 (- start-angle (/ factor-change 2))
-                                                 1)
-                      stop-angle-adjusted  (.min js/Math
-                                                 (+ stop-angle (/ factor-change 2))
-                                                 359)
-
-                      use-adjustment       (< angle-difference 20)
-                      start-used           (if use-adjustment
-                                             start-angle-adjusted
-                                             start-angle)
-                      stop-used            (if use-adjustment
-                                             stop-angle-adjusted
-                                             stop-angle)]
-
-                  {:leftIcon (r/as-element
-                               [ui/svg-icon
-                                {:viewBox "0 0 24 24"}
-                                [:g
-                                 [:circle {:cx           "12" :cy "12" :r "11"
-                                           :stroke-width "2" :stroke "#cdcdcd"
-                                           :fill         "transparent"}]
-                                 [:path
-                                  {:d            (describe-arc 12 12 11 start-used stop-used)
-                                   :stroke       color
-                                   :stroke-width "2"
-                                   :fill         "transparent"
-                                   }]]])})
+                {:leftIcon (r/as-element (mini-arc period))}
 
                 ;; otherwise render a queue indicator
                 {:leftIcon (r/as-element
@@ -1761,7 +1824,6 @@
      [ui/paper {:style {:width "100%"}}
       (agenda selected periods)]]))
 
-
 (defn queue-page []
   (let [tasks     @(rf/subscribe [:tasks])
         selected  @(rf/subscribe [:selected])]
@@ -1868,4 +1930,7 @@
   (rf/dispatch-sync [:initialize-db])
   (load-interceptors!)
   (hist/hook-browser-navigation!)
-  (mount-components))
+  (mount-components)
+  (js/setInterval clock-tick 5000) ;; TODO this is bad
+  )
+

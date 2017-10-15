@@ -22,12 +22,10 @@
               (t/zoned-date-time year month day hour minute second (* 1000 millisecond))
               "UTC"))))
 
-
 (defn get-default-timezone
   []
   #?(:cljs (.guess js/moment.tz)
      :clj  (t/zone-id)))
-
 
 (def week-ms
   (->> 1
@@ -142,7 +140,6 @@
                  (date-string d)
                  (js/Date. d))))
 
-
 (defn get-ms
   "takes a js/date and returns milliseconds since 00:00 that day. Essentially relative ms for the day."
  [date]
@@ -161,9 +158,8 @@
                (-> s (* 1000))
                ms))))
 
-
 (defn is-this-day-before-that-day? [this-day that-day]
-  (:cljs (let [that-day-year  (.getFullYear that-day)
+  #?(:cljs (let [that-day-year  (.getFullYear that-day)
                that-day-month (.getMonth that-day)
                that-day-day   (.getDate that-day)
 
@@ -177,7 +173,7 @@
 
 
 (defn is-this-day-after-that-day? [this-day that-day]
-  (:cljs (let [that-day-year  (.getFullYear that-day)
+  #?(:cljs (let [that-day-year  (.getFullYear that-day)
                that-day-month (.getMonth that-day)
                that-day-day   (.getDate that-day)
 
