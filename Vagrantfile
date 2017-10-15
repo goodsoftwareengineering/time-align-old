@@ -8,7 +8,7 @@
 Vagrant.configure(2) do |config|
     config.ssh.insert_key = false
     config.vm.synced_folder ".", "/home/vagrant/time-align", fsnotify: true, type: 'rsync',
-                            rsync__exclude: [".git/", "target/", "out/", "log/"]
+                            rsync__exclude: [".git/", "target/", "out/"]
     config.vm.synced_folder "~/.m2", "/home/vagrant/.m2"
     config.vm.network "forwarded_port", guest: 3000, host: 3000
     config.vm.network "forwarded_port", guest: 3449, host: 3449
