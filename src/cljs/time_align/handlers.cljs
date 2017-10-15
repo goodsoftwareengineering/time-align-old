@@ -728,10 +728,11 @@
      (assoc-in db [:view :displayed-day]
                new))))
 
-(reg-event-db
+(reg-event-fx
  :play-period
- (fn [db [_ id]]
+ (fn [cofx [_ id]]
    (let [
+         db (:db cofx)
          ;; find the period
          periods (cutils/pull-periods db)
          this-period (some #(if (= (:id %) id) %) periods)
@@ -776,7 +777,8 @@
                        {:categories (conj other-categories new-category)
                         :view (assoc (:view db) :period-in-play new-id)})
          ]
-     new-db
+     {:db new-db
+      :dispatch [:set-selected-period nil]}
      )
    ))
 
