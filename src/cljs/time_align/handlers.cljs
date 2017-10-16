@@ -386,13 +386,19 @@
           tasks (:tasks this-category)
           ]
 
-      {:db       (assoc-in
-                   (assoc db :categories (conj other-categories
-                                               (merge this-category {:id id :name name :color color})))
-                   [:view :category-form] {:id-or-nil nil :name "" :color-map {:red 0 :green 0 :blue 0}}) ;; TODO move to dispatch-n
+      {:db (assoc db :categories (conj other-categories
+                                       (merge this-category {:id id :name name :color color})))
+       :dispatch [:clear-category-form]
        :route [:back]
        }
       )))
+
+(reg-event-db
+ :clear-category-form
+ [persist-ls]
+ (fn [db _]
+   (assoc-in db [:view :category-form] {:id-or-nil nil :name "" :color-map {:red 0 :green 0 :blue 0}}))
+ )
 
 (reg-event-db
   :set-category-form-name
@@ -447,28 +453,34 @@
                      :complete        (:complete task-form)
                      :actual-periods  []
                      :planned-periods []}
-          new-db (assoc-in
-                   (merge db
-                          {:categories
-                           (conj other-categories
-                                 (merge this-category
-                                        {:tasks
-                                         (conj other-tasks this-task)}))})
-                   [:view :task-form] {:id-or-nil   nil
-                                       :name        ""
-                                       :description ""
-                                       :complete    false
-                                       :category-id nil
-                                       })]
+          new-db (merge db
+                        {:categories
+                         (conj other-categories
+                               (merge this-category
+                                      {:tasks
+                                       (conj other-tasks this-task)}))})]
 
       (if (some? category-id)                               ;; secondary, view should not dispatch when nil
 
         {:db new-db
          :route [:back]
+         :dispatch [:clear-task-form]
          }
 
         {:db db                                             ;; TODO display some sort of error
          }))))
+
+(reg-event-db
+ :clear-task-form
+ [persist-ls]
+ (fn [db _]
+   (assoc-in db [:view :task-form] {:id-or-nil   nil
+                                    :name        ""
+                                    :description ""
+                                    :complete    false
+                                    :category-id nil
+                                    }))
+ )
 
 (reg-event-db
   :set-period-form-date
@@ -599,30 +611,25 @@
                                                      ;;keys have to be absent for queue
                                                      {:start start :stop stop})))
 
-          new-db (assoc-in
-                   ;; puts period where it needs to be
-                   (merge db
-                          {:categories
-                           (conj other-categories
-                                 (merge this-category
-                                        {:tasks
-                                         (conj other-tasks
-                                               (merge (dissoc this-task :category-id :color)
-                                                      ;; below will handle when a period is being changed
-                                                      ;; from actual to planned
-                                                      ;; by always merging over both sets in a task
-                                                      {:actual-periods (if make-actual
-                                                                         (conj other-periods-actual
-                                                                               this-period-to-be-inserted)
-                                                                         other-periods-actual)}
-                                                      {:planned-periods (if (not make-actual)
-                                                                          (conj other-periods-planned
-                                                                                this-period-to-be-inserted)
-                                                                          other-periods-planned)}))}))})
-                   ;; resets period form
-                   [:view :period-form]
-                   {:id-or-nil nil :task-id nil :error-or-nil nil :planned false}) ;; TODO move to a dispatched event
-          ]
+          new-db (merge db ;; puts period where it needs to be
+                        {:categories
+                         (conj other-categories
+                               (merge this-category
+                                      {:tasks
+                                       (conj other-tasks
+                                             (merge (dissoc this-task :category-id :color)
+                                                    ;; below will handle when a period is being changed
+                                                    ;; from actual to planned
+                                                    ;; by always merging over both sets in a task
+                                                    {:actual-periods (if make-actual
+                                                                       (conj other-periods-actual
+                                                                             this-period-to-be-inserted)
+                                                                       other-periods-actual)}
+                                                    {:planned-periods (if (not make-actual)
+                                                                        (conj other-periods-planned
+                                                                              this-period-to-be-inserted)
+                                                                        other-periods-planned)}))}))})]
+
       (if (or (and (nil? start) (nil? stop))
               (< start-v stop-v))
         (if (some? task-id)
@@ -637,9 +644,18 @@
         )
       )))
 
+(reg-event-db
+ :clear-period-form
+ [persist-ls]
+ (fn [db _]
+   (assoc-in db
+             [:view :period-form]
+             {:id-or-nil nil :task-id nil :error-or-nil nil :planned false})))
+
 (reg-event-fx
   :delete-category-form-entity
-  [persist-ls]
+  [persist-ls
+   route]
   (fn [cofx [_ _]]
     (let [db (:db cofx)
           category-id (get-in db [:view :category-form :id-or-nil])
@@ -649,10 +665,13 @@
           new-db (merge db {:categories other-categories})
           ]
       {:db       new-db
-       :dispatch [:set-active-page {:page-id :home}]})))
+       :dispatch [:clear-category-form]
+       :route [:back]})))
 
 (reg-event-fx
   :delete-task-form-entity
+  [persist-ls
+   route]
   (fn [cofx [_ _]]
     (let [db (:db cofx)
           task-id (get-in db [:view :task-form :id-or-nil])
@@ -673,11 +692,14 @@
                                               (merge this-category {:tasks other-tasks}))})
           ]
       {:db       new-db
-       :dispatch [:set-active-page {:page-id :home}]}
+       :dispatch [:clear-task-form]
+       :route [:back]}
       )))
 
 (reg-event-fx
   :delete-period-form-entity
+  [persist-ls
+   route]
   (fn [cofx [_ _]]
     (let [db (:db cofx)
           period-id (get-in db [:view :period-form :id-or-nil])
@@ -728,8 +750,9 @@
 
 
       {:db         new-db
-       :dispatch-n (list [:set-active-page {:page-id :home}]
-                         [:set-selected-period nil])}
+       :dispatch-n (list [:clear-period-form]
+                         [:set-selected-period nil])
+       :route [:back]}
       )))
 
 (reg-event-db
@@ -740,6 +763,7 @@
 
 (reg-event-db
  :iterate-displayed-day
+ [persist-ls]
  (fn [db [_ direction]]
    (let [current (get-in db [:view :displayed-day])
          current-date (.getDate current)
@@ -759,6 +783,7 @@
 
 (reg-event-fx
  :play-period
+ [persist-ls]
  (fn [cofx [_ id]]
    (let [
          db (:db cofx)
@@ -813,6 +838,7 @@
 
 (reg-event-db
  :update-period-in-play
+ [persist-ls]
  (fn [db [_ _]]
    (let [playing-period (get-in db [:view :period-in-play])
          is-playing (some? playing-period)
@@ -865,6 +891,7 @@
 
 (reg-event-db
  :pause-period-play ;; TODO should probably be called stop
+ [persist-ls]
  (fn [db _]
    (assoc-in db [:view :period-in-play] nil) ;; TODO after specter add in an adjust selected period stop time
    ))
