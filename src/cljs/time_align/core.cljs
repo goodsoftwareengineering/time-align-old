@@ -192,7 +192,8 @@
     [:g {:key (str id)}
      (if (and straddles-now ;; ticker splitting should only happen when displaying today
               (= (utils/zero-in-day displayed-day)
-                 (utils/zero-in-day (new js/Date))))
+                 (utils/zero-in-day (new js/Date)))
+              (not is-period-selected))
        [:g
         [:path
          {:d            broken-arc-before
