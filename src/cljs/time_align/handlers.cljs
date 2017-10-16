@@ -783,23 +783,17 @@
    ))
 
 (reg-event-db
- :play-actual-or-planned-period
- (fn [db [_ id]]
-
-   ))
-
-(reg-event-db
  :update-period-in-play
  (fn [db [_ _]]
    (let [playing-period (get-in db [:view :period-in-play])
          is-playing (some? playing-period)
-         ]
-     (if is-playing
-       (let [id playing-period
-             periods (cutils/pull-periods db)
-             all-actual-periods (filter #(= (:type %) :actual) periods)
-             this-period (some #(if (= (:id %) id) %) all-actual-periods)
-             old-stop (:stop this-period)
+         id playing-period
+         periods (cutils/pull-periods db)
+         all-actual-periods (filter #(= (:type %) :actual) periods)
+         this-period (some #(if (= (:id %) id) %) all-actual-periods)]
+
+     (if (and is-playing (some? this-period))
+       (let [old-stop (:stop this-period)
              now (new js/Date)
              new-stop (if  (> (.valueOf old-stop) ;; TODO probably remove
                               (.valueOf now))
@@ -834,12 +828,8 @@
              new-db (merge db
                            {:categories (conj other-categories new-category)})
              ]
-
          new-db
-
-
          )
-
        ;; no playing period
        db)
      )))
