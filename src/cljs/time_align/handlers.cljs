@@ -8,6 +8,7 @@
             [time-align.utilities :as utils]
             [time-align.client-utilities :as cutils]
             [time-align.storage :as store]
+            [time-align.history :as hist]
             [alandipert.storage-atom :refer [local-storage remove-local-storage!]]))
 
 (def persist-ls
@@ -17,6 +18,23 @@
              (remove-local-storage! :app-db)
              (local-storage (atom (get-in context [:effects :db])) :app-db)
              context)))
+(def route
+  (->interceptor
+   :id :route-after-event
+   :after (fn [context]
+            (let [payload (get-in context [:effects :route]) ;; [:add "/example/of/payload"]
+                                                             ;; [:back]
+                  back (= :back (first payload))
+                  add  (if (= :add (first payload))
+                         (last payload))
+                  effects (get-in context [:effects])]
+
+              (if back
+                (.back js/history)
+                (if (some? add)
+                  (hist/nav! add)))
+
+              (merge context {:effects (dissoc effects :route)})))))
 
 (reg-event-db
   :initialize-db
@@ -352,7 +370,8 @@
 
 (reg-event-fx
   :save-category-form
-  [persist-ls]
+  [persist-ls
+   route]
   (fn [cofx [_ _]]
     (let [db (:db cofx)
           name (get-in db [:view :category-form :name])
@@ -371,7 +390,7 @@
                    (assoc db :categories (conj other-categories
                                                (merge this-category {:id id :name name :color color})))
                    [:view :category-form] {:id-or-nil nil :name "" :color-map {:red 0 :green 0 :blue 0}}) ;; TODO move to dispatch-n
-       :dispatch [:set-active-page {:page-id :home :type nil :id nil}]
+       :route [:back]
        }
       )))
 
@@ -406,8 +425,9 @@
     (assoc-in db [:view :task-form :complete] comp)))
 
 (reg-event-fx
-  :submit-task-form                                         ;; TODO change this to "save" or others to "submit"
-  [persist-ls]
+  :save-task-form
+  [persist-ls
+   route]
   (fn [cofx [_ _]]
     (let [db (:db cofx)
           task-form (get-in db [:view :task-form])
@@ -442,7 +462,11 @@
                                        })]
 
       (if (some? category-id)                               ;; secondary, view should not dispatch when nil
-        {:db new-db :dispatch [:set-active-page {:page-id :home}]}
+
+        {:db new-db
+         :route [:back]
+         }
+
         {:db db                                             ;; TODO display some sort of error
          }))))
 
@@ -503,7 +527,8 @@
 
 (reg-event-fx
   :save-period-form
-  [persist-ls]
+  [persist-ls
+   route]
   (fn [cofx [_ _]]
     (let [db (:db cofx)
 
@@ -601,8 +626,12 @@
       (if (or (and (nil? start) (nil? stop))
               (< start-v stop-v))
         (if (some? task-id)
-          {:db new-db :dispatch [:set-active-page {:page-id :home}]}
+          {:db new-db
+           :route [:back]
+           }
+
           {:db (assoc-in db [:view :period-form :error-or-nil] :no-task)}
+
           )
         {:db (assoc-in db [:view :period-form :error-or-nil] :time-mismatch)}
         )
