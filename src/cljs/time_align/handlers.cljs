@@ -10,6 +10,7 @@
             [time-align.client-utilities :as cutils]
             [time-align.storage :as store]
             [time-align.history :as hist]
+            [time-align.worker-handlers]
             [alandipert.storage-atom :refer [local-storage remove-local-storage!]]))
 
 (def persist-ls
@@ -17,7 +18,7 @@
     :id :persist-to-localstorage
     :after (fn [context]
              (remove-local-storage! :app-db)
-             (local-storage (atom (get-in context [:effects :db])) :app-db)
+             (local-storage (atom (dissoc (get-in context [:effects :db]) :worker-pool)) :app-db)
              context)))
 (def route
   (->interceptor
@@ -46,12 +47,14 @@
                    payload (nth event 1 nil)]
                (println "Before send")
                (utils/thread-friendly-pprint! event)
-               (POST "/analytics"
-                     {:headers {"Accept" "application/transit+json"}
-                      :params  {:dispatch_key dispatch-key
-                                :payload      {:payload payload}}
-                      :handler println}))
-             context)))
+               (dispatch [:test-worker-fx {:handler :send-analytic
+                                           :on-success :on-worker-fx-success
+                                           :on-error   :on-worker-fx-error
+                                           :arguments  {:params  {:dispatch_key dispatch-key
+                                                                  :payload      {:payload payload}}
+                                                        :csrf-token js/csrfToken}}]))
+              context)))
+
 
 (reg-event-db
   :initialize-db
@@ -62,8 +65,12 @@
                                      store/key->transit-str
                                      (.getItem js/localStorage)
                                      store/transit-json->map)
-                                db/default-db)]
-      hot-garbage-let-var)))
+                                db/default-db)
+          hot-garbage-worker-pool (merge hot-garbage-let-var
+                                         {:worker-pool (js/Worker. "/bootstrap_worker.js")})]
+      (time-align.worker-handlers/init! (:worker-pool hot-garbage-worker-pool))
+      hot-garbage-worker-pool)))
+
 
 (reg-event-fx
   :set-active-page
