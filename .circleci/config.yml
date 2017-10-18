@@ -53,6 +53,8 @@ jobs:
           command: dockerize -wait tcp://localhost:5432 -timeout 1m
 
       # run tests!
+      - run: echo $DATABASE_URL
+
       - run: lein test
 
       - run: lein with-profile test doo phantom test once

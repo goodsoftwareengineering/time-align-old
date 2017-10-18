@@ -4,7 +4,8 @@
             [clojure.test :refer :all]
             [clojure.java.jdbc :as jdbc]
             [time-align.config :refer [env]]
-            [mount.core :as mount]))
+            [mount.core :as mount])
+  (:import [java.net InetAddress]))
 
 (use-fixtures
   :once
@@ -35,6 +36,7 @@
     [t-conn *db*]
     (is (= 1
            (db/create-analytic! t-conn {:dispatch_key ":test"
-                                        :payload {:chump "tastic"}})
+                                        :ip_addr      (InetAddress/getByName "127.0.0.1")
+                                        :payload      {:chump "tastic"}})
            (count (db/get-analytics t-conn {}))))
     ))
