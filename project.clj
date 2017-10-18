@@ -100,7 +100,7 @@
 
    :project/dev   {:dependencies   [[binaryage/devtools "0.9.3"]
                                     [com.cemerick/piggieback "0.2.2-SNAPSHOT"]
-                                    [doo "0.1.7"]
+                                    [doo "0.1.8"]
                                   [figwheel-sidecar "0.5.10"]
                                     [org.clojure/test.check "0.9.0"]
                                     [pjstadig/humane-test-output "0.8.1"]
@@ -110,7 +110,7 @@
                                     [ring/ring-mock "0.3.0"]]
 
                    :plugins        [[com.jakemccrary/lein-test-refresh "0.19.0"]
-                                    [lein-doo "0.1.7"]
+                                    [lein-doo "0.1.8"]
                                   [lein-figwheel "0.5.10"]
                                   [org.clojure/clojurescript "1.9.946"]]
                    :cljsbuild
