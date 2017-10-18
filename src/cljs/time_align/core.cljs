@@ -192,7 +192,8 @@
     [:g {:key (str id)}
      (if (and straddles-now ;; ticker splitting should only happen when displaying today
               (= (utils/zero-in-day displayed-day)
-                 (utils/zero-in-day (new js/Date))))
+                 (utils/zero-in-day (new js/Date)))
+              (not is-period-selected))
        [:g
         [:path
          {:d            broken-arc-before
@@ -1406,7 +1407,7 @@
    ]
   )
 
-(defn entity-form-buttons [back-page-id save-dispatch-vec delete-dispatch-vec]
+(defn entity-form-buttons [save-dispatch-vec delete-dispatch-vec]
   [:div.buttons {:style {:display         "flex"
                          :justify-content "space-between"
                          :margin-top      "1em"
@@ -1458,7 +1459,7 @@
      [ui/divider {:style {:margin-top    "1em"
                           :margin-bottom "1em"}}]
 
-     (entity-form-buttons :home [:save-category-form] [:delete-category-form-entity])]
+     (entity-form-buttons [:save-category-form] [:delete-category-form-entity])]
 
     )
   )
@@ -1557,7 +1558,7 @@
      [ui/divider {:style {:margin-top    "1em"
                           :margin-bottom "1em"}}]
 
-     (entity-form-buttons :home [:submit-task-form] [:delete-task-form-entity])
+     (entity-form-buttons [:save-task-form] [:delete-task-form-entity])
 
      ]
     )
@@ -1650,7 +1651,7 @@
      [ui/divider {:style {:margin-top    "1em"
                           :margin-bottom "1em"}}]
 
-     (entity-form-buttons :home [:save-period-form] [:delete-period-form-entity])
+     (entity-form-buttons [:save-period-form] [:delete-period-form-entity])
      ]
     )
   )
