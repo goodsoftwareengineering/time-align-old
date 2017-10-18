@@ -394,8 +394,7 @@
 
 (reg-event-fx
   :save-category-form
-  [persist-ls
-   route]
+  [persist-ls route send-analytic]
   (fn [cofx [_ _]]
     (let [db (:db cofx)
           name (get-in db [:view :category-form :name])
@@ -419,7 +418,7 @@
 
 (reg-event-db
  :clear-category-form
- [persist-ls]
+ [persist-ls send-analytic]
  (fn [db _]
    (assoc-in db [:view :category-form] {:id-or-nil nil :name "" :color-map {:red 0 :green 0 :blue 0}}))
  )
@@ -456,8 +455,7 @@
 
 (reg-event-fx
   :save-task-form
-  [persist-ls
-   route]
+  [persist-ls route send-analytic]
   (fn [cofx [_ _]]
     (let [db (:db cofx)
           task-form (get-in db [:view :task-form])
@@ -496,7 +494,7 @@
 
 (reg-event-db
  :clear-task-form
- [persist-ls]
+ [persist-ls send-analytic]
  (fn [db _]
    (assoc-in db [:view :task-form] {:id-or-nil   nil
                                     :name        ""
@@ -563,8 +561,7 @@
 
 (reg-event-fx
   :save-period-form
-  [persist-ls
-   route]
+  [persist-ls route send-analytic]
   (fn [cofx [_ _]]
     (let [db (:db cofx)
 
@@ -670,7 +667,7 @@
 
 (reg-event-db
  :clear-period-form
- [persist-ls]
+ [persist-ls send-analytic]
  (fn [db _]
    (assoc-in db
              [:view :period-form]
@@ -678,8 +675,7 @@
 
 (reg-event-fx
   :delete-category-form-entity
-  [persist-ls
-   route]
+  [persist-ls route send-analytic]
   (fn [cofx [_ _]]
     (let [db (:db cofx)
           category-id (get-in db [:view :category-form :id-or-nil])
@@ -694,8 +690,7 @@
 
 (reg-event-fx
   :delete-task-form-entity
-  [persist-ls
-   route]
+  [persist-ls route send-analytic]
   (fn [cofx [_ _]]
     (let [db (:db cofx)
           task-id (get-in db [:view :task-form :id-or-nil])
@@ -722,8 +717,7 @@
 
 (reg-event-fx
   :delete-period-form-entity
-  [persist-ls
-   route]
+  [persist-ls route send-analytic]
   (fn [cofx [_ _]]
     (let [db (:db cofx)
           period-id (get-in db [:view :period-form :id-or-nil])
