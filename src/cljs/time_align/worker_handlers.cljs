@@ -1,13 +1,13 @@
 (ns time-align.worker-handlers
-  (:require [re-frame.core :refer [dispatch reg-event-fx reg-fx]])
-  (:import goog.object))
+  (:require [re-frame.core :refer [dispatch reg-event-fx reg-fx]]
+            [oops.core :refer [oget oset!]]))
 
 
 (def succ-fail (atom {}))
 
 (defn handle-request!
   [event]
-  (let [data   (js->clj (.-data event) :keywordize-keys true)
+  (let [data   (js->clj (oget event "data") :keywordize-keys true)
         state  (keyword (:state data))
         result (:result data)
         handled-by (-> data :handled-by keyword)
@@ -21,7 +21,7 @@
 
 (defn init!
   [worker]
-  (goog.object/set worker "onmessage" handle-request!))
+  (oset! worker "onmessage" handle-request!))
 
 (reg-fx
   :worker
@@ -29,7 +29,6 @@
     [{:keys [pool handler arguments on-success on-error] :as data}]
     (swap! succ-fail merge {handler {:on-success on-success
                                      :on-error on-error}})
-    (.log js/console @succ-fail)
     (.postMessage pool (clj->js {:arguments arguments
                                  :handler handler}))
     ))
@@ -49,5 +48,4 @@
   (fn [coeffects [_ task]]
     (let [worker-pool (-> coeffects :db :worker-pool)
           task-with-pool (assoc task :pool worker-pool)]
-      (.log js/console "In test-worker-fx")
       {:worker task-with-pool})))

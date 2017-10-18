@@ -5,12 +5,14 @@
 
   :dependencies [[alandipert/storage-atom "2.0.1"]
                  [buddy "1.3.0"]
+                 [binaryage/oops "0.5.6"]
                  [cljs-ajax "0.5.9"]
                  [cljs-react-material-ui "0.2.43"]
                  [cljsjs/js-joda "1.5.0-0"]
                  [cljsjs/moment-timezone "0.5.11-0"]
                  [clojure.java-time "0.3.0"]
                  [com.cognitect/transit-cljs "0.8.239"]
+                 [com.rpl/specter "1.0.3"]
                  [compojure "1.5.2"]
                  [conman "0.6.3"]
                  [cprop "0.1.10"]
@@ -26,7 +28,7 @@
                  [metosin/ring-http-response "0.8.2"]
                  [mount "0.1.11"]
                  [org.clojure/clojure "1.9.0-alpha19"]
-                 [org.clojure/clojurescript "1.9.521" :scope "provided"]
+                 [org.clojure/clojurescript "1.9.946" :scope "provided"]
                  [org.clojure/core.async "0.3.443"]
                  [org.clojure/tools.cli "0.3.5"]
                  [org.clojure/tools.logging "0.3.1"]
@@ -110,7 +112,7 @@
                    :plugins        [[com.jakemccrary/lein-test-refresh "0.19.0"]
                                     [lein-doo "0.1.7"]
                                   [lein-figwheel "0.5.10"]
-                                  [org.clojure/clojurescript "1.9.521"]]
+                                  [org.clojure/clojurescript "1.9.946"]]
                    :cljsbuild
                                    {:builds
                                     {:app

@@ -1,6 +1,6 @@
 (ns time-align.db
   (:require #?(:clj  [clojure.spec.alpha :as s]
-               :cljs [cljs.spec :as s])
+               :cljs [clojure.spec.alpha :as s])
             #?(:clj  [clojure.pprint :refer [pprint]]
                :cljs [cljs.pprint :refer [pprint]])
             #?(:clj  [java-time :as t])

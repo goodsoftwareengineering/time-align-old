@@ -1,7 +1,7 @@
 (ns time-align.worker
   (:require [devtools.core :as devtools]
-            [ajax.core :refer [GET POST]])
-  (:import goog.object))
+            [ajax.core :refer [GET POST]]
+            [oops.core :refer [oget oset!]]))
 
 (def handlers (atom {}))
 
@@ -20,7 +20,7 @@
 
 (defn handle-request!
   [event]
-  (let [data (-> event .-data (js->clj :keywordize-keys true))
+  (let [data (-> event (oget "data") (js->clj :keywordize-keys true))
         {:keys [arguments handler]} data
         handler (keyword handler)   ;;keywordiness gets lost from clj->js->clj
         handler-fn (-> @handlers handler :fn)
@@ -50,4 +50,4 @@
             true
             identity)
 
-(goog.object/set js/self "onmessage" handle-request!)
+(oset! js/self "onmessage" handle-request!)
