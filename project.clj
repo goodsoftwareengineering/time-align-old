@@ -142,7 +142,7 @@
                    :cljsbuild
                                    {:builds
                                     {:test
-                                     {:source-paths ["src/cljc" "src/cljs" "test/cljc" "test/cljs"]
+                                     {:source-paths ["src/cljc" "src/cljs" "src_worker/cljs" "test/cljc" "test/cljs"]
                                       :compiler
                                                     {:output-to     "target/test.js"
                                                      :main          "time-align.doo-runner"

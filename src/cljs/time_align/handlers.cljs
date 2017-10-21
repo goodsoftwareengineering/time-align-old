@@ -81,10 +81,12 @@
           type (:type params)
           id (:id params)
           view-page (case page
-                      (or :add-entity-forms
-                          :edit-entity-forms) {:page-id page
-                                               :type-or-nil type
-                                               :id-or-nil   id}
+                      :edit-entity-forms {:page-id page
+                                          :type-or-nil type
+                                          :id-or-nil   id}
+                      :add-entity-forms {:page-id page
+                                          :type-or-nil type
+                                          :id-or-nil   nil}
                       ;;default
                       {:page-id     page
                        :type-or-nil nil
@@ -97,6 +99,8 @@
                     nil)
           ]
       (merge {:db (assoc-in db [:view :page] view-page)}
+             (when (= page :add-entity-forms)
+               {:dispatch [:clear-entities]})
              (if (some? id)
                {:dispatch to-load}
                {})))))
@@ -452,6 +456,15 @@
   [persist-ls send-analytic]
   (fn [db [_ comp]]
     (assoc-in db [:view :task-form :complete] comp)))
+
+(reg-event-fx
+  :clear-entities
+  [persist-ls send-analytic]
+  (fn [cofx _]
+    {:dispatch-n (list [:clear-category-form]
+                       [:clear-task-form]
+                       [:clear-period-form])
+     :db (:db cofx)}))
 
 (reg-event-fx
   :save-task-form

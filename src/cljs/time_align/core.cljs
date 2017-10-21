@@ -1893,19 +1893,18 @@
   (rf/dispatch [:set-active-page {:page-id :queue}]))
 
 (secretary/defroute add-category-route "/add" []
+  (rf/dispatch [:clear-entities])
   (rf/dispatch [:set-active-page {:page-id :add-entity-forms
                                   :type    :category
                                   :id      nil}]))
 
 
 (secretary/defroute edit-category-route "/edit/category/:id" [id]
-  (println "In edit category")
   (rf/dispatch [:set-active-page {:page-id :edit-entity-forms
                                   :type    :category
                                   :id      (uuid id)}]))
 
 (secretary/defroute edit-task-route "/edit/task/:id" [id]
-  (println "In edit task")
   (rf/dispatch [:set-active-page {:page-id :edit-entity-forms
                                   :type    :task
                                   :id      (uuid id)}]))
