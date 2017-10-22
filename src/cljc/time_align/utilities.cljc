@@ -12,7 +12,7 @@
 
 
 (defn make-date
-  ([] #?(:cljs (js/moment.tz (js/Date.) "UTC")
+  ([] #?(:cljs (.toDate (js/moment.tz (js/Date.) "UTC"))
          :clj  (t/with-zone (t/zoned-date-time) "UTC")))
   ( [year month day]
     (make-date year month day 0))

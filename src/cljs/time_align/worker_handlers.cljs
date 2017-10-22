@@ -36,12 +36,14 @@
 (reg-event-fx
   :on-worker-fx-success
   (fn [_ [_ result]]
-    (.debug js/console "success" result)))
+    ;; (.debug js/console "success" result)
+    ))
 
 (reg-event-fx
   :on-worker-fx-error
   (fn [_ [_ result]]
-    (.debug js/console "error" result)))
+    ;; (.debug js/console "error" result)
+    ))
 
 (reg-event-fx
   :test-worker-fx
