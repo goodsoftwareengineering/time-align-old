@@ -4,7 +4,8 @@
             [clojure.test :refer :all]
             [clojure.java.jdbc :as jdbc]
             [time-align.config :refer [env]]
-            [mount.core :as mount]))
+            [mount.core :as mount])
+  (:import [java.net InetAddress]))
 
 (use-fixtures
   :once
@@ -15,22 +16,27 @@
     (migrations/migrate ["migrate"] (select-keys env [:database-url]))
     (f)))
 
-;(deftest test-users
-;  (jdbc/with-db-transaction [t-conn *db*]
-;                            (jdbc/db-set-rollback-only! t-conn)
-;                            (is (= 1 (db/create-user!
-;                                       t-conn
-;                                       {:id         "1"
-;                                        :first_name "Sam"
-;                                        :last_name  "Smith"
-;                                        :email      "sam.smith@example.com"
-;                                        :pass       "pass"})))
-;                            (is (= {:id         "1"
-;                                    :first_name "Sam"
-;                                    :last_name  "Smith"
-;                                    :email      "sam.smith@example.com"
-;                                    :pass       "pass"
-;                                    :admin      nil
-;                                    :last_login nil
-;                                    :is_active  nil}
-;                                   (db/get-user t-conn {:id "1"})))))
+(deftest test-users
+  (jdbc/with-db-transaction
+    [t-conn *db*]
+    (jdbc/db-set-rollback-only! t-conn)
+    (is (= 1
+           (db/create-user! t-conn
+                            {:name      "Sam"
+                             :email     "sam.smith@example.com"
+                             :hash_pass "pass"})))
+    (is (= {:name      "Sam"
+            :email     "sam.smith@example.com"
+            :hash_pass "pass"}
+           (-> (db/get-user-by-name t-conn {:name_like "Sam"})
+               (dissoc :uid))))))
+
+(deftest test-analytics
+  (jdbc/with-db-transaction
+    [t-conn *db*]
+    (is (= 1
+           (db/create-analytic! t-conn {:dispatch_key ":test"
+                                        :ip_addr      (InetAddress/getByName "127.0.0.1")
+                                        :payload      {:chump "tastic"}})
+           (count (db/get-analytics t-conn {}))))
+    ))

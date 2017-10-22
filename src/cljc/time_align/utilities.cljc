@@ -1,11 +1,19 @@
 (ns time-align.utilities
   (:require [clojure.string :as string]
             #?(:cljs [cljsjs.moment-timezone])
-            #?(:clj [java-time :as t])))
+            #?(:clj [java-time :as t])
+            [clojure.pprint :refer [pprint]]
+            ))
+(defn thread-friendly-pprint!
+  [to-prn]
+  (pprint to-prn)
+  (println "TEST")
+  to-prn)
+
 
 (defn make-date
-  ([] #?(:cljs (js/moment.tz (js/Date.) "UTC")
-         :clj  (t/with-zone-same-instant (t/zoned-date-time) "UTC")))
+  ([] #?(:cljs (.toDate (js/moment.tz (js/Date.) "UTC"))
+         :clj  (t/with-zone (t/zoned-date-time) "UTC")))
   ( [year month day]
     (make-date year month day 0))
   ( [year month day hour]
@@ -18,7 +26,7 @@
     #?(:cljs (-> (js/Date. (.UTC js/Date year (- 1 month) day hour minute second millisecond))
                  (js/moment.tz "UTC"))
        ;;The api for zoned-date-time takes nanoseconds as its last variable
-       :clj (t/with-zone-same-instant
+       :clj (t/with-zone
               (t/zoned-date-time year month day hour minute second (* 1000 millisecond))
               "UTC"))))
 

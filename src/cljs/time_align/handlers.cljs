@@ -5,10 +5,12 @@
                                    reg-event-fx
                                    reg-fx
                                    ->interceptor]]
+            [ajax.core :refer [GET POST]]
             [time-align.utilities :as utils]
             [time-align.client-utilities :as cutils]
             [time-align.storage :as store]
             [time-align.history :as hist]
+            [time-align.worker-handlers]
             [alandipert.storage-atom :refer [local-storage remove-local-storage!]]))
 
 (def persist-ls
@@ -16,7 +18,7 @@
     :id :persist-to-localstorage
     :after (fn [context]
              (remove-local-storage! :app-db)
-             (local-storage (atom (get-in context [:effects :db])) :app-db)
+             (local-storage (atom (dissoc (get-in context [:effects :db]) :worker-pool)) :app-db)
              context)))
 (def route
   (->interceptor
@@ -36,31 +38,55 @@
 
               (merge context {:effects (dissoc effects :route)})))))
 
+(def send-analytic
+  (->interceptor
+    :id :send-analytic
+    :before (fn [context]
+             (let [event (get-in context [:coeffects :event])
+                   dispatch-key (nth event 0)
+                   payload (nth event 1 nil)]
+               ;; (println "Before send")
+               ;; (utils/thread-friendly-pprint! event)
+               (dispatch [:test-worker-fx {:handler :send-analytic
+                                           :on-success :on-worker-fx-success
+                                           :on-error   :on-worker-fx-error
+                                           :arguments  {:params  {:dispatch_key dispatch-key
+                                                                  :payload      {:payload payload}}
+                                                        :csrf-token js/csrfToken}}]))
+              context)))
+
+
 (reg-event-db
   :initialize-db
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [_ _]
     (let [hot-garbage-let-var (if (some #(= :app-db %) (store/store->keys))
                                 (->> :app-db
                                      store/key->transit-str
                                      (.getItem js/localStorage)
                                      store/transit-json->map)
-                                db/default-db)]
-      hot-garbage-let-var)))
+                                db/default-db)
+          hot-garbage-worker-pool (merge hot-garbage-let-var
+                                         {:worker-pool (js/Worker. "/bootstrap_worker.js")})]
+      (time-align.worker-handlers/init! (:worker-pool hot-garbage-worker-pool))
+      hot-garbage-worker-pool)))
+
 
 (reg-event-fx
   :set-active-page
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [cofx [_ params]]
     (let [db (:db cofx)
           page (:page-id params)
           type (:type params)
           id (:id params)
           view-page (case page
-                      (or :add-entity-forms
-                          :edit-entity-forms) {:page-id page
-                                               :type-or-nil type
-                                               :id-or-nil   id}
+                      :edit-entity-forms {:page-id page
+                                          :type-or-nil type
+                                          :id-or-nil   id}
+                      :add-entity-forms {:page-id page
+                                          :type-or-nil type
+                                          :id-or-nil   nil}
                       ;;default
                       {:page-id     page
                        :type-or-nil nil
@@ -73,13 +99,15 @@
                     nil)
           ]
       (merge {:db (assoc-in db [:view :page] view-page)}
+             (when (= page :add-entity-forms)
+               {:dispatch [:clear-entities]})
              (if (some? id)
                {:dispatch to-load}
                {})))))
 
 (reg-event-db
   :load-category-entity-form
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [db [_ id]]
     (let [categories (:categories db)
           this-category (some #(if (= id (:id %)) %) categories)
@@ -92,7 +120,7 @@
 
 (reg-event-db
   :load-task-entity-form
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [db [_ id]]
     (let [tasks (cutils/pull-tasks db)
           this-task (some #(if (= id (:id %)) %) tasks)
@@ -111,7 +139,7 @@
 
 (reg-event-db
   :load-period-entity-form
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [db [_ id]]
     (let [periods (cutils/pull-periods db)
           this-period (some #(if (= id (:id %)) %)
@@ -134,13 +162,13 @@
 
 (reg-event-db
   :set-zoom
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [db [_ quadrant]]
     (assoc-in db [:view :zoom] quadrant)))
 
 (reg-event-db
   :set-view-range-day
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [db [_ _]]
     (assoc-in db [:view :range]
               {:start (new js/Date)
@@ -148,7 +176,7 @@
 
 (reg-event-db
   :set-view-range-week
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [db [_ _]]
     (assoc-in db [:view :range]
               {:start (utils/one-week-ago (js/Date.))
@@ -156,25 +184,25 @@
 
 (reg-event-db
   :set-view-range-custom
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [db [_ range]]
     (assoc-in db [:view :range] range)))
 
 (reg-event-db
   :toggle-main-drawer
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [db [_ _]]
     (update-in db [:view :main-drawer] not)))
 
 (reg-event-db
   :set-main-drawer
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [db [_ new-state]]
     (assoc-in db [:view :main-drawer] new-state)))
 
 (reg-event-fx
   :set-selected-period
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [cofx [_ period-id]]
     (let [
           db (:db cofx)
@@ -198,7 +226,7 @@
 
 (reg-event-db
   :set-selected
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [db [_ {:keys [type id]}]]
     (assoc-in db [:view :selected]
               {:current-selection  {:type-or-nil type
@@ -207,7 +235,7 @@
 
 (reg-event-fx
   :set-selected-queue
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [cofx [_ period-id]]
     ;; TODO might need to set action-button state on nil to auto collapse
     (let [
@@ -227,7 +255,7 @@
 ;; not using this yet VVV
 (reg-event-fx
   :set-selected-task
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [cofx [_ task-id]]
     (let [db (:db cofx)]
 
@@ -240,7 +268,7 @@
 
 (reg-event-db
   :action-buttons-expand
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [db [_ _]]
     (let [selection (get-in db [:view :selected :current-selection])
           s-type (:type-or-nil selection)
@@ -254,7 +282,7 @@
 
 (reg-event-db
   :action-buttons-back
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [db [_ _]]
     (let [cur-state (get-in db [:view :action-buttons])
           new-state
@@ -266,7 +294,7 @@
 
 (reg-event-db
   :set-moving-period
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [db [_ is-moving-bool]]
     (assoc-in db [:view :continous-action :moving-period]
               is-moving-bool)))
@@ -361,7 +389,7 @@
 
 (reg-event-db
   :set-category-form-color
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [db [_ color]]
     (assoc-in db [:view :category-form :color-map]
               (merge (get-in db [:view :category-form :color-map])
@@ -370,8 +398,7 @@
 
 (reg-event-fx
   :save-category-form
-  [persist-ls
-   route]
+  [persist-ls route send-analytic]
   (fn [cofx [_ _]]
     (let [db (:db cofx)
           name (get-in db [:view :category-form :name])
@@ -395,45 +422,53 @@
 
 (reg-event-db
  :clear-category-form
- [persist-ls]
+ [persist-ls send-analytic]
  (fn [db _]
    (assoc-in db [:view :category-form] {:id-or-nil nil :name "" :color-map {:red 0 :green 0 :blue 0}}))
  )
 
 (reg-event-db
   :set-category-form-name
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [db [_ name]]
     (assoc-in db [:view :category-form :name] name)))
 
 (reg-event-db
   :set-task-form-category-id
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [db [_ category-id]]
     (assoc-in db [:view :task-form :category-id] category-id)))
 
 (reg-event-db
   :set-task-form-name
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [db [_ name]]
     (assoc-in db [:view :task-form :name] name)))
 
 (reg-event-db
   :set-task-form-description
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [db [_ desc]]
     (assoc-in db [:view :task-form :description] desc)))
 
 (reg-event-db
   :set-task-form-complete
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [db [_ comp]]
     (assoc-in db [:view :task-form :complete] comp)))
 
 (reg-event-fx
+  :clear-entities
+  [persist-ls send-analytic]
+  (fn [cofx _]
+    {:dispatch-n (list [:clear-category-form]
+                       [:clear-task-form]
+                       [:clear-period-form])
+     :db (:db cofx)}))
+
+(reg-event-fx
   :save-task-form
-  [persist-ls
-   route]
+  [persist-ls route send-analytic]
   (fn [cofx [_ _]]
     (let [db (:db cofx)
           task-form (get-in db [:view :task-form])
@@ -472,7 +507,7 @@
 
 (reg-event-db
  :clear-task-form
- [persist-ls]
+ [persist-ls send-analytic]
  (fn [db _]
    (assoc-in db [:view :task-form] {:id-or-nil   nil
                                     :name        ""
@@ -484,7 +519,7 @@
 
 (reg-event-db
   :set-period-form-date
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [db [_ [new-d start-or-stop]]]
     (let [o (get-in db [:view :period-form start-or-stop])]
       (if (some? o)
@@ -501,7 +536,7 @@
 
 (reg-event-db
   :set-period-form-time
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [db [_ [new-s start-or-stop]]]
     (let [o (get-in db [:view :period-form start-or-stop])]
       (if (some? o)
@@ -525,22 +560,21 @@
 
 (reg-event-db
   :set-period-form-description
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [db [_ desc]]
     (assoc-in db [:view :period-form :description] desc)
     ))
 
 (reg-event-db
   :set-period-form-task-id
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [db [_ task-id]]
     (assoc-in db [:view :period-form :task-id] task-id))
   )
 
 (reg-event-fx
   :save-period-form
-  [persist-ls
-   route]
+  [persist-ls route send-analytic]
   (fn [cofx [_ _]]
     (let [db (:db cofx)
 
@@ -646,7 +680,7 @@
 
 (reg-event-db
  :clear-period-form
- [persist-ls]
+ [persist-ls send-analytic]
  (fn [db _]
    (assoc-in db
              [:view :period-form]
@@ -654,8 +688,7 @@
 
 (reg-event-fx
   :delete-category-form-entity
-  [persist-ls
-   route]
+  [persist-ls route send-analytic]
   (fn [cofx [_ _]]
     (let [db (:db cofx)
           category-id (get-in db [:view :category-form :id-or-nil])
@@ -670,8 +703,7 @@
 
 (reg-event-fx
   :delete-task-form-entity
-  [persist-ls
-   route]
+  [persist-ls route send-analytic]
   (fn [cofx [_ _]]
     (let [db (:db cofx)
           task-id (get-in db [:view :task-form :id-or-nil])
@@ -698,8 +730,7 @@
 
 (reg-event-fx
   :delete-period-form-entity
-  [persist-ls
-   route]
+  [persist-ls route send-analytic]
   (fn [cofx [_ _]]
     (let [db (:db cofx)
           period-id (get-in db [:view :period-form :id-or-nil])
@@ -757,13 +788,13 @@
 
 (reg-event-db
   :set-period-form-planned
-  [persist-ls]
+  [persist-ls send-analytic]
   (fn [db [_ is-planned]]
     (assoc-in db [:view :period-form :planned] is-planned)))
 
 (reg-event-db
  :iterate-displayed-day
- [persist-ls]
+ [persist-ls send-analytic]
  (fn [db [_ direction]]
    (let [current (get-in db [:view :displayed-day])
          current-date (.getDate current)
@@ -783,7 +814,7 @@
 
 (reg-event-fx
  :play-period
- [persist-ls]
+ [persist-ls send-analytic]
  (fn [cofx [_ id]]
    (let [
          db (:db cofx)
@@ -837,8 +868,15 @@
    ))
 
 (reg-event-db
+ :play-actual-or-planned-period
+ [persist-ls send-analytic]
+ (fn [db [_ id]]
+
+   ))
+
+(reg-event-db
  :update-period-in-play
- [persist-ls]
+ [persist-ls send-analytic]
  (fn [db [_ _]]
    (let [playing-period (get-in db [:view :period-in-play])
          is-playing (some? playing-period)
@@ -891,7 +929,7 @@
 
 (reg-event-db
  :pause-period-play ;; TODO should probably be called stop
- [persist-ls]
+ [persist-ls send-analytic]
  (fn [db _]
    (assoc-in db [:view :period-in-play] nil) ;; TODO after specter add in an adjust selected period stop time
    ))
