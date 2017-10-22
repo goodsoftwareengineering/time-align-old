@@ -67,7 +67,9 @@
                                      store/transit-json->map)
                                 db/default-db)
           hot-garbage-worker-pool (merge hot-garbage-let-var
-                                         {:worker-pool (js/Worker. "/bootstrap_worker.js")})]
+                                         {:worker-pool (js/Worker. (if js/goog.DEBUG
+                                                                     "/bootstrap_worker.js"
+                                                                     "js/worker.js"))})]
       (time-align.worker-handlers/init! (:worker-pool hot-garbage-worker-pool))
       hot-garbage-worker-pool)))
 
