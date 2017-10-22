@@ -3,6 +3,7 @@
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
 
+
   :dependencies [[alandipert/storage-atom "2.0.1"]
                  [buddy "1.3.0"]
                  [binaryage/oops "0.5.6"]
@@ -101,7 +102,7 @@
    :project/dev   {:dependencies   [[binaryage/devtools "0.9.3"]
                                     [com.cemerick/piggieback "0.2.2-SNAPSHOT"]
                                     [doo "0.1.8"]
-                                  [figwheel-sidecar "0.5.10"]
+                                    [figwheel-sidecar "0.5.14"]
                                     [org.clojure/test.check "0.9.0"]
                                     [pjstadig/humane-test-output "0.8.1"]
                                     [prone "1.1.4"]
@@ -111,8 +112,8 @@
 
                    :plugins        [[com.jakemccrary/lein-test-refresh "0.19.0"]
                                     [lein-doo "0.1.8"]
-                                  [lein-figwheel "0.5.10"]
-                                  [org.clojure/clojurescript "1.9.946"]]
+                                    [lein-figwheel "0.5.14"]
+                                    [org.clojure/clojurescript "1.9.946"]]
                    :cljsbuild
                                    {:builds
                                     {:app
