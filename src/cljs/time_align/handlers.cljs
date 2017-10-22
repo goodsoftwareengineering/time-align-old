@@ -45,8 +45,8 @@
              (let [event (get-in context [:coeffects :event])
                    dispatch-key (nth event 0)
                    payload (nth event 1 nil)]
-               (println "Before send")
-               (utils/thread-friendly-pprint! event)
+               ;; (println "Before send")
+               ;; (utils/thread-friendly-pprint! event)
                (dispatch [:test-worker-fx {:handler :send-analytic
                                            :on-success :on-worker-fx-success
                                            :on-error   :on-worker-fx-error
@@ -321,7 +321,7 @@
 
 (reg-event-db
   :move-selected-period
-  [persist-ls send-analytic]
+  [persist-ls]
   (fn [db [_ mid-point-time-ms]]
     (if (period-selected? db)
       (let [
