@@ -195,4 +195,33 @@
                          true))))
 (s/def ::db (s/keys :req-un [::user ::view ::categories]))
 
-(def default-db (gen/generate (s/gen ::db)))
+(def default-db
+{:user
+ {:name "",
+  :id (random-uuid),
+  :email ""},
+ :view
+ {:period-in-play nil,
+  :zoom nil,
+  :selected
+  {:current-selection
+   {:type-or-nil nil,
+    :id-or-nil nil},
+   :previous-selection {:type-or-nil nil, :id-or-nil nil}},
+  :page {:page-id :home, :type-or-nil nil, :id-or-nil nil},
+  :period-form
+  {:id-or-nil nil, :task-id nil, :error-or-nil nil, :planned false},
+  :action-buttons :collapsed,
+  :continous-action {:moving-period false},
+  :displayed-day (utils/make-date),
+  :category-form
+  {:id-or-nil nil, :name "", :color-map {:red 0, :green 0, :blue 0}},
+  :task-form
+  {:id-or-nil nil,
+   :name "",
+   :description "",
+   :complete false,
+   :category-id nil},
+  :main-drawer false},
+ :categories (list)})
+
