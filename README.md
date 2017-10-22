@@ -21,6 +21,7 @@ generated using Luminus version "2.9.11.46"
 - run in nrepl `(start)` (launches the server)
 - run in nrepl `(start-fw)` (transpiles cljs and starts figwheel server)
 - run in nrepl `(cljs)` (starts a clojurescript repl in your browser that will connect automagically when you open localhost:3000)
+- run in nrepl `(start-autobuild worker)` to compile the web worker clojurescript files
 
 ## sequence of events
 - *more iteratively* finish all cards before experience reports
