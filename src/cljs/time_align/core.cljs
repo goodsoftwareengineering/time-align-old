@@ -1431,7 +1431,6 @@
 
     [:div
      [ui/text-field {:floating-label-text "Name"
-                     :value               name
                      :onChange            (fn [e v]
                                             (rf/dispatch [:set-category-form-name v]))}]
 
@@ -1505,22 +1504,18 @@
 
     [:div
      [ui/text-field {:floating-label-text "Name"
-                     :value               name
                      :fullWidth           true
-                     :onChange
-                                          (fn [e v]
-                                            (rf/dispatch [:set-task-form-name v])
-                                            )}]
+                     :onChange (fn [e v]
+                                 (rf/dispatch [:set-task-form-name v])
+                                 )}]
 
      [ui/text-field {:floating-label-text "Description"
-                     :value               description
                      :fullWidth           true
                      :multiLine           true
                      :rows                4
-                     :onChange
-                                          (fn [e v]
-                                            (rf/dispatch [:set-task-form-description v])
-                                            )}]
+                     :onChange (fn [e v]
+                                 (rf/dispatch [:set-task-form-description v])
+                                 )}]
 
      [ui/select-field
       ;; select fields get a little strange with the parent entity id's
@@ -1612,7 +1607,6 @@
                                   (rf/dispatch [:set-period-form-time [new-s :stop]]))}]
 
      [ui/text-field {:floating-label-text "Description"
-                     :value               description
                      :fullWidth           true
                      :multiLine           true
                      :rows                4
