@@ -1,4 +1,4 @@
-(defproject time-align "0.1.0-SNAPSHOT"
+(defproject time-align "0.0.0-SNAPSHOT"
 
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
@@ -45,7 +45,9 @@
                  [ring/ring-core "1.6.0-RC3"]
                  [ring/ring-defaults "0.2.3"]
                  [secretary "1.2.3"]
-                 [selmer "1.10.7"]]
+                 [selmer "1.10.7"]
+                 [org.clojure/test.check "0.9.0"] ;;TODO find better solution, should only be in dev deps
+                 ]
 
 
   :min-lein-version "2.0.0"
@@ -73,22 +75,28 @@
    :nrepl-port       7002
    :css-dirs         ["resources/public/css"]
    :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
-
-
   :profiles
   {:uberjar       {:omit-source    true
-                   :prep-tasks     ["compile" ["cljsbuild" "once" "min"]]
+                   :prep-tasks     ["compile" ["cljsbuild" "once" "min" "min-worker"]]
                    :cljsbuild
                                    {:builds
                                     {:min
                                      {:source-paths ["src/cljc" "src/cljs" "env/prod/cljs"]
-                                      :compiler
-                                                    {:output-to     "target/cljsbuild/public/js/app.js"
+                                      :compiler     {:output-to     "target/cljsbuild/public/js/app.js"
                                                      :optimizations :advanced
-                                                     :pretty-print  false
+                                                     :pretty-print  true ;; TODO change back
+                                                     :pseudo-names true
                                                      :closure-warnings
                                                                     {:externs-validation :off :non-standard-jsdoc :off}
-                                                     :externs       ["react/externs/react.js"]}}}}
+                                                     :closure-defines {goog.DEBUG false}
+                                                     :externs       ["react/externs/react.js"]}}
+                                     :min-worker
+                                     {:source-paths ["src_worker/cljs"]
+                                      :compiler     {:main          time-align.worker
+                                                     :output-dir    "target/cljsbuild/public/js/out_worker"
+                                                     :output-to     "target/cljsbuild/public/js/worker.js"
+                                                     :optimizations :advanced
+                                                     :pretty-print  false}}}}
 
 
                    :aot            :all
@@ -103,7 +111,6 @@
                                     [com.cemerick/piggieback "0.2.2-SNAPSHOT"]
                                     [doo "0.1.8"]
                                     [figwheel-sidecar "0.5.14"]
-                                    [org.clojure/test.check "0.9.0"]
                                     [pjstadig/humane-test-output "0.8.1"]
                                     [prone "1.1.4"]
                                     [re-frisk "0.5.0"]
@@ -128,10 +135,10 @@
                                                      :pretty-print  true}}
                                      :worker
                                      {:source-paths ["src_worker/cljs"]
-                                      :compiler {:output-to     "target/cljsbuild/public/js/worker.js"
-                                                 :output-dir    "target/cljsbuild/public/js/out_worker"
-                                                 :source-map    true
-                                                 :optimizations :none}
+                                      :compiler     {:output-to     "target/cljsbuild/public/js/worker.js"
+                                                     :output-dir    "target/cljsbuild/public/js/out_worker"
+                                                     :source-map    true
+                                                     :optimizations :none}
                                       }}}
                    :doo            {:build "test"}
                    :source-paths   ["env/dev/clj"]

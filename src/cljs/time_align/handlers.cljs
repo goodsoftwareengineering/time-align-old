@@ -11,6 +11,7 @@
             [time-align.storage :as store]
             [time-align.history :as hist]
             [time-align.worker-handlers]
+            [oops.core :refer [oget oset! ocall]]
             [alandipert.storage-atom :refer [local-storage remove-local-storage!]]))
 
 (def persist-ls
@@ -32,7 +33,7 @@
                   effects (get-in context [:effects])]
 
               (if back
-                (.back js/history)
+                (ocall js/history "back")
                 (if (some? add)
                   (hist/nav! add)))
 
@@ -67,7 +68,9 @@
                                      store/transit-json->map)
                                 db/default-db)
           hot-garbage-worker-pool (merge hot-garbage-let-var
-                                         {:worker-pool (js/Worker. "/bootstrap_worker.js")})]
+                                         {:worker-pool (js/Worker. (if js/goog.DEBUG
+                                                                     "/bootstrap_worker.js"
+                                                                     "js/worker.js"))})]
       (time-align.worker-handlers/init! (:worker-pool hot-garbage-worker-pool))
       hot-garbage-worker-pool)))
 

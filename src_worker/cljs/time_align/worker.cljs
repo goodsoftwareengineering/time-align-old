@@ -1,11 +1,9 @@
 (ns time-align.worker
-  (:require [devtools.core :as devtools]
+  (:require
             [ajax.core :refer [GET POST]]
             [oops.core :refer [oget oset!]]))
 
 (def handlers (atom {}))
-
-(devtools/install!)
 
 (defn defhandler
   [key should-post-message? fn]
