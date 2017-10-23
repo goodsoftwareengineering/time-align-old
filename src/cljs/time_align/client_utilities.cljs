@@ -1,7 +1,9 @@
 (ns time-align.client-utilities
   (:require
     [clojure.string :as string]
-    [time-align.utilities :as utils]))
+    [time-align.utilities :as utils]
+    [oops.core :refer [oget oset! ocall]]
+    ))
 
 (defn polar-to-cartesian [cx cy r angle]
   (let [cx-float (js/parseFloat cx)
@@ -140,27 +142,27 @@
 
 
 (defn client-to-view-box [id evt type]
-  (let [pt (-> (.getElementById js/document id)
-               (.createSVGPoint))
+  (let [pt (-> (ocall js/document "getElementById" id)
+               (ocall "createSVGPoint"))
         ctm (-> evt
-                (.-target)
-                (.getScreenCTM))]
+                (oget "target")
+                (ocall "getScreenCTM"))]
 
-    (set! (.-x pt) (if (= :touch type)
-                     (as-> evt e
-                           (.-touches e)
-                           (.item e 0)
-                           (.-clientX e))
-                     (.-clientX evt)))
-    (set! (.-y pt) (if (= :touch type)
-                     (as-> evt e
-                           (.-touches e)
-                           (.item e 0)
-                           (.-clientY e))
-                     (.-clientY evt)))
+       (oset! pt "x" (if (= :touch type)
+                              (as-> evt e
+                                    (oget e "touches")
+                                    (ocall e "item" 0)
+                                    (oget e "clientX"))
+                              (oget evt "clientX")))
+       (oset! pt "y" (if (= :touch type)
+                              (as-> evt e
+                                    (oget e "touches")
+                                    (ocall e "item" 0)
+                                    (oget e "clientY"))
+                              (oget evt "clientY")))
 
-    (let [trans-pt (.matrixTransform pt (.inverse ctm))]
-      {:x (.-x trans-pt) :y (.-y trans-pt)})))
+    (let [trans-pt (ocall pt "matrixTransform" (ocall ctm "inverse"))]
+      {:x (oget trans-pt "x") :y (oget trans-pt "y")})))
 
 
 (defn point-to-centered-circle

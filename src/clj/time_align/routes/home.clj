@@ -28,7 +28,6 @@
                (->> req
                     :params
                     (merge {:ip_addr (InetAddress/getByName (:remote-addr req))})
-                    utils/thread-friendly-pprint!
                     db/create-analytic!
                     (format "%d analytic(s) added")
                     response/ok))))
