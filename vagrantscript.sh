@@ -24,9 +24,3 @@ sudo -u postgres psql -c "CREATE USER test WITH PASSWORD 'test';"
 sudo -u postgres psql -c "ALTER ROLE test superuser;"
 sudo -u postgres psql -c "ALTER DATABASE time_align_dev OWNER TO dev;"
 sudo -u postgres psql -c "ALTER DATABASE time_align_test OWNER TO test;"
-
-# chmod +x /home/vagrant/chorechart/cider-deps-repl
-
-# cd /home/vagrant/chorechart
-# lein migratus migrate
-
