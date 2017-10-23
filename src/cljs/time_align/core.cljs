@@ -927,14 +927,11 @@
            {:style      (merge (:style basic-mini-button)
                                {:marginBottom "20"})
             :onTouchTap (fn [e]
-                          (rf/dispatch
-                            [:set-active-page
-                             {:page-id :add-entity-forms
-                              :type    :period
-                              :id      (get-in
-                                         selected
-                                         [:current-selection
-                                          :id-or-nil])}]))})
+                            (hist/nav! (str "/edit/period/" (get-in
+                                                             selected
+                                                             [:current-selection
+                                                              :id-or-nil]))))
+            })
 
     [ic/editor-mode-edit basic-ic]]
 
@@ -978,14 +975,11 @@
            {:style      (merge (:style basic-mini-button)
                                {:marginBottom "20"})
             :onTouchTap (fn [e]
-                          (rf/dispatch
-                            [:set-active-page
-                             {:page-id :add-entity-forms
-                              :type    :period
-                              :id      (get-in
-                                         selected
-                                         [:current-selection
-                                          :id-or-nil])}]))})
+                            (hist/nav! (str "/edit/period/" (get-in
+                                                             selected
+                                                             [:current-selection
+                                                              :id-or-nil]))))
+            })
     [ic/editor-mode-edit basic-ic]]
 
    (back-button)
@@ -1909,7 +1903,7 @@
                                   :type    :task
                                   :id      (uuid id)}]))
 
-(secretary/defroute period-task-route "/edit/period/:id" [id]
+(secretary/defroute edit-period-route "/edit/period/:id" [id]
   (rf/dispatch [:set-active-page {:page-id :edit-entity-forms
                                   :type    :period
                                   :id      (uuid id)}]))

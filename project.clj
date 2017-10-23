@@ -1,4 +1,4 @@
-(defproject time-align "0.1.0-SNAPSHOT"
+(defproject time-align "0.0.0-SNAPSHOT"
 
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
@@ -84,7 +84,8 @@
                                      {:source-paths ["src/cljc" "src/cljs" "env/prod/cljs"]
                                       :compiler     {:output-to     "target/cljsbuild/public/js/app.js"
                                                      :optimizations :advanced
-                                                     :pretty-print  false
+                                                     :pretty-print  true ;; TODO change back
+                                                     :pseudo-names true
                                                      :closure-warnings
                                                                     {:externs-validation :off :non-standard-jsdoc :off}
                                                      :closure-defines {goog.DEBUG false}

@@ -11,6 +11,7 @@
             [time-align.storage :as store]
             [time-align.history :as hist]
             [time-align.worker-handlers]
+            [oops.core :refer [oget oset! ocall]]
             [alandipert.storage-atom :refer [local-storage remove-local-storage!]]))
 
 (def persist-ls
@@ -32,7 +33,7 @@
                   effects (get-in context [:effects])]
 
               (if back
-                (.back js/history)
+                (ocall js/history "back")
                 (if (some? add)
                   (hist/nav! add)))
 
