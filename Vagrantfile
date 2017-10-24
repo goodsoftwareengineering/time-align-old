@@ -14,6 +14,7 @@ Vagrant.configure(2) do |config|
     config.vm.network "forwarded_port", guest: 3449, host: 3449
     config.vm.network "forwarded_port", guest: 5432, host: 5432
     config.vm.network "forwarded_port", guest: 7002, host: 7002
+    config.vm.network "public_network"
     config.vm.provision "shell", path: "vagrantscript.sh"
 
     config.vm.provider "virtualbox" do |v,override|

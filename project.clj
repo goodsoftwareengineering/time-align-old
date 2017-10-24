@@ -72,6 +72,7 @@
    [:cljsbuild :builds :app :compiler :output-to]]
   :figwheel
   {:http-server-root "public"
+   :server-ip   "0.0.0.0"
    :nrepl-port       7002
    :css-dirs         ["resources/public/css"]
    :nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
@@ -82,14 +83,14 @@
                                    {:builds
                                     {:min
                                      {:source-paths ["src/cljc" "src/cljs" "env/prod/cljs"]
-                                      :compiler     {:output-to     "target/cljsbuild/public/js/app.js"
-                                                     :optimizations :advanced
-                                                     :pretty-print  true ;; TODO change back
-                                                     :pseudo-names true
+                                      :compiler     {:output-to       "target/cljsbuild/public/js/app.js"
+                                                     :optimizations   :advanced
+                                                     :pretty-print    true ;; TODO change back
+                                                     :pseudo-names    true
                                                      :closure-warnings
-                                                                    {:externs-validation :off :non-standard-jsdoc :off}
+                                                                      {:externs-validation :off :non-standard-jsdoc :off}
                                                      :closure-defines {goog.DEBUG false}
-                                                     :externs       ["react/externs/react.js"]}}
+                                                     :externs         ["react/externs/react.js"]}}
                                      :min-worker
                                      {:source-paths ["src_worker/cljs"]
                                       :compiler     {:main          time-align.worker
@@ -125,6 +126,8 @@
                                    {:builds
                                     {:app
                                      {:source-paths ["src/cljs" "src/cljc" "env/dev/cljs"]
+                                      :figwheel     {:websocket-url "ws://[[client-hostname]]:[[server-port]]/figwheel-ws"
+                                                     :on-jsload     "time-align.core/mount-components"}
                                       :compiler     {:main          "time-align.app"
                                                      :asset-path    "/js/out"
                                                      :output-to     "target/cljsbuild/public/js/app.js"
@@ -135,6 +138,7 @@
                                                      :pretty-print  true}}
                                      :worker
                                      {:source-paths ["src_worker/cljs"]
+                                      :figwheel     {:websocket-url "ws://[[server-ip]]:[[server-port]]/figwheel-ws"}
                                       :compiler     {:output-to     "target/cljsbuild/public/js/worker.js"
                                                      :output-dir    "target/cljsbuild/public/js/out_worker"
                                                      :source-map    true
