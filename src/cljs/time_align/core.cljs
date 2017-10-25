@@ -507,6 +507,7 @@
 
 (defn clock-tick []
   (swap! clock-state assoc :time (new js/Date))
+
   (if (some? (get-in @re-frame.db/app-db [:view :period-in-play])) ;; TODO this smells bad
     (rf/dispatch [:update-period-in-play])
     )
@@ -549,113 +550,121 @@
                                      (rf/dispatch
                                        [:set-selected-period nil])))]
 
-    [:svg (merge {:key         date-str
-                  :id          date-str
-                  :style       {:display      "inline-box"
-                                :touch-action "pinch-zoom"
-                                ;; this stops scrolling
-                                ;; for moving period
-                                }
-                  :width       "100%"
-                  :height      "100%"
-                  :onTouchEnd  stop-touch-click-handler
-                  :onMouseUp   stop-touch-click-handler
-                  :onTouchMove (if is-moving-period
-                                 (partial handle-period-move
-                                          date-str :touch))
-                  :onMouseMove (if is-moving-period
-                                 (partial handle-period-move
-                                          date-str :mouse))
-                  :onClick     deselect
-                  }
-                 (case zoom
-                   :q1 {:viewBox "40 0 60 60"}
-                   :q2 {:viewBox "0 0 60 60"}
-                   :q3 {:viewBox "0 40 60 60"}
-                   :q4 {:viewBox "40 40 60 60"}
-                   (select-keys svg-consts [:viewBox])
-                   ))
+    [:div {:style {:height "100%"}}
+     [:svg (merge {:key         date-str
+                   :id          date-str
+                   :style       {:display      "inline-box"
+                                 :touch-action "pinch-zoom"
+                                 ;; this stops scrolling
+                                 ;; for moving period
+                                 }
+                   :width       "100%"
+                   :height      "85%"
+                   :onTouchEnd  stop-touch-click-handler
+                   :onMouseUp   stop-touch-click-handler
+                   :onTouchMove (if is-moving-period
+                                  (partial handle-period-move
+                                           date-str :touch))
+                   :onMouseMove (if is-moving-period
+                                  (partial handle-period-move
+                                           date-str :mouse))
+                   :onClick     deselect
+                   }
+                  (case zoom
+                    :q1 {:viewBox "40 0 60 60"}
+                    :q2 {:viewBox "0 0 60 60"}
+                    :q3 {:viewBox "0 40 60 60"}
+                    :q4 {:viewBox "40 40 60 60"}
+                    (select-keys svg-consts [:viewBox])
+                    ))
 
-     (if (some? zoom) (zoomed-in-buttons))
+      (if (some? zoom) (zoomed-in-buttons))
 
-     shadow-filter
-     [:circle (merge {:fill "#e8e8e8" :filter "url(#shadow-2dp)"}
-                     (select-keys svg-consts [:cx :cy :r]))]
-     [:circle (merge {:fill "#f1f1f1" :r (:inner-r svg-consts)}
-                     (select-keys svg-consts [:cx :cy]))]
+      shadow-filter
+      [:circle (merge {:fill "#e8e8e8" :filter "url(#shadow-2dp)"}
+                      (select-keys svg-consts [:cx :cy :r]))]
+      [:circle (merge {:fill "#f1f1f1" :r (:inner-r svg-consts)}
+                      (select-keys svg-consts [:cx :cy]))]
 
-     (periods filtered-periods selected is-moving-period curr-time day)
+      (periods filtered-periods selected is-moving-period curr-time day)
 
-     (if display-ticker
-       [:g
-        [:line {:fill         "transparent"
-                :stroke-width "1"
-                :stroke       (if (some? period-in-play)
-                                period-in-play-color
-                                "white")
-                :opacity      "0.5"
-                :filter       "url(#shadow-2dp)"
-                :x1           (:cx svg-consts)
-                :y1           (:cy svg-consts)
-                :x2           (:x ticker-pos)
-                :y2           (:y ticker-pos)}]
-        [:circle (merge {:fill  (if (some? period-in-play)
-                                  period-in-play-color
-                                  "white")
-                         :filter "url(#shadow-2dp)"
-                         :r      (:ticker-r svg-consts)}
-                        (select-keys svg-consts [:cx :cy]))]
+      (if display-ticker
+        [:g
+         [:line {:fill         "transparent"
+                 :stroke-width "1"
+                 :stroke       (if (some? period-in-play)
+                                 period-in-play-color
+                                 "white")
+                 :opacity      "0.5"
+                 :filter       "url(#shadow-2dp)"
+                 :x1           (:cx svg-consts)
+                 :y1           (:cy svg-consts)
+                 :x2           (:x ticker-pos)
+                 :y2           (:y ticker-pos)}]
+         [:circle (merge {:fill   (if (some? period-in-play)
+                                    period-in-play-color
+                                    "white")
+                          :filter "url(#shadow-2dp)"
+                          :r      (:ticker-r svg-consts)}
+                         (select-keys svg-consts [:cx :cy]))]
 
-        (when (some? period-in-play)
-          (let [cx (:cx svg-consts)
-                cy (:cy svg-consts)
-                r  (:ticker-r svg-consts)
-                width (* 0.5 r)
-                height (* 0.75 r)
-                half-height (/ height 2)
-                half-width (/ width 2)
-                x-left (- cx half-width)
-                y-left (- cy half-height)]
-            [:g
-             {:onClick (fn [e]
-                         (rf/dispatch [:pause-period-play]))}
-             [:line {:fill "white"
-                     :x1 x-left
-                     :y1 y-left
-                     :x2 x-left
-                     :y2 (+ y-left height)
-                     :stroke-width "1"
-                     :stroke "white"
-                     :stroke-linecap "round"
-                     }]
-             [:line {:fill "white"
-                     :x1 (+ x-left width)
-                     :y1 y-left
-                     :x2 (+ x-left width)
-                     :y2 (+ y-left height)
-                     :stroke-width "1"
-                     :stroke "white"
-                     :stroke-linecap "round"
-                     }]
-             ]
-            ))
-        ]
-       )
-
-     (if (nil? zoom)
-       [:g
-        [:polyline {:points "10,85 5,90 10,95"
-                    :fill "grey"
-                    :onClick (fn [e]
-                               (rf/dispatch [:iterate-displayed-day :prev]))}]
-        [:polyline {:points "90,85 95,90 90,95"
-                    :fill "grey"
-                    :onClick (fn [e]
-                               (rf/dispatch [:iterate-displayed-day :next]))}]
-
-        ]
-       )
-     ]))
+         (when (some? period-in-play)
+           (let [cx          (:cx svg-consts)
+                 cy          (:cy svg-consts)
+                 r           (:ticker-r svg-consts)
+                 width       (* 0.5 r)
+                 height      (* 0.75 r)
+                 half-height (/ height 2)
+                 half-width  (/ width 2)
+                 x-left      (- cx half-width)
+                 y-left      (- cy half-height)]
+             [:g
+              {:onClick (fn [e]
+                          (rf/dispatch [:pause-period-play]))}
+              [:line {:fill           "white"
+                      :x1             x-left
+                      :y1             y-left
+                      :x2             x-left
+                      :y2             (+ y-left height)
+                      :stroke-width   "1"
+                      :stroke         "white"
+                      :stroke-linecap "round"
+                      }]
+              [:line {:fill           "white"
+                      :x1             (+ x-left width)
+                      :y1             y-left
+                      :x2             (+ x-left width)
+                      :y2             (+ y-left height)
+                      :stroke-width   "1"
+                      :stroke         "white"
+                      :stroke-linecap "round"
+                      }]
+              ]
+             ))
+         ]
+        )]
+     (when (nil? zoom)
+       [:div {:style {:height "15%"}}
+        [ui/icon-button {:style   {:width  "50%"
+                                   :height "100%"}
+                         :onClick (fn [e]
+                                    (rf/dispatch [:iterate-displayed-day :prev]))}
+         [ui/svg-icon
+          {:viewBox "0 0 50 50" :style {:width "100%" :height "100%"}}
+          [:polyline {:points       "25,0 0,25 25,50"
+                      :fill         "grey"
+                      :fill-opacity "1"
+                      }]]]
+        [ui/icon-button {:style   {:width  "50%"
+                                   :height "100%"}
+                         :onClick (fn [e]
+                                    (rf/dispatch [:iterate-displayed-day :next]))}
+         [ui/svg-icon
+          {:viewBox "0 0 50 50" :style {:width "100%" :height "100%"}}
+          [:polyline {:points       "25,25 0,0 0,50"
+                      :fill         "grey"
+                      :fill-opacity "1"
+                      }]]]])]))
 
 (defn days [days tasks selected-period]
   (->> days
