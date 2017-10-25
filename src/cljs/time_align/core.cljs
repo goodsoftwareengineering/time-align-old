@@ -1431,8 +1431,9 @@
 
     [:div
      [ui/text-field {:floating-label-text "Name"
+                     :default-value name
                      :onChange            (fn [e v]
-                                            (rf/dispatch [:set-category-form-name v]))}]
+                                            (rf/dispatch-sync [:set-category-form-name v]))}]
 
      [:div.colorHeader {:style {:display         "flex"
                                 :flexWrap        "nowrap"
@@ -1505,16 +1506,18 @@
     [:div
      [ui/text-field {:floating-label-text "Name"
                      :fullWidth           true
+                     :default-value name
                      :onChange (fn [e v]
-                                 (rf/dispatch [:set-task-form-name v])
+                                 (rf/dispatch-sync [:set-task-form-name v])
                                  )}]
 
      [ui/text-field {:floating-label-text "Description"
                      :fullWidth           true
                      :multiLine           true
                      :rows                4
+                     :default-value description
                      :onChange (fn [e v]
-                                 (rf/dispatch [:set-task-form-description v])
+                                 (rf/dispatch-sync [:set-task-form-description v])
                                  )}]
 
      [ui/select-field
@@ -1610,9 +1613,10 @@
                      :fullWidth           true
                      :multiLine           true
                      :rows                4
+                     :default-value description
                      :onChange
                                           (fn [e v]
-                                            (rf/dispatch [:set-period-form-description v])
+                                            (rf/dispatch-sync [:set-period-form-description v])
                                             )}]
 
      [ui/select-field
