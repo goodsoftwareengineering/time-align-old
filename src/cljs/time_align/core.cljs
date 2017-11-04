@@ -424,85 +424,6 @@
                    {:d (str "M " x3 " " y3 " " "L " x4 " " y4 " ")})]
      ]))
 
-(defn zoom-mv-arrows-svg [quadrant styles click-top click-bottom]
-  (let [generic   {:fill           "transparent"
-                   :stroke-width   "1"
-                   }
-
-        q1 {:top "90,2.5 85,5 90,7.5"    :bottom "92.5,10 95,15 97.5,10"}
-        q2 {:top "10,2.5 15,5 10,7.5"    :bottom "7.5,10 5,15 2.5,10"}
-        q3 {:top "7.5,90 5,85 2.5,90"    :bottom "10,97.5 15,95 10,92.5"}
-        q4 {:top "92.5,90 95,85 97.5,90" :bottom "90,97.5 85,95 90,92.5"}
-
-        points (case quadrant
-                     :q1 q1
-                     :q2 q2
-                     :q3 q3
-                     :q4 q4
-                     "")
-        ]
-
-    [:g
-     [:polyline (merge generic styles
-                       {:points (:top points)
-                        :onClick click-top})]
-     [:polyline (merge generic styles
-                       {:points (:bottom points)
-                        :onClick click-bottom})]
-     ])
-  )
-
-(defn zoomed-in-buttons []
-  (let [
-        basics {:stroke "#b2b2b2"
-                :fill "#b2b2b1"}
-        ]
-
-    [:g
-     (zoom-mv-arrows-svg
-      :q1 basics
-      (fn [e] (rf/dispatch [:set-zoom :q2]))
-      (fn [e] (rf/dispatch [:set-zoom :q4])))
-     (zoom-mv-arrows-svg
-      :q2 basics
-      (fn [e] (rf/dispatch [:set-zoom :q1]))
-      (fn [e] (rf/dispatch [:set-zoom :q3])))
-     (zoom-mv-arrows-svg
-      :q3 basics
-      (fn [e] (rf/dispatch [:set-zoom :q2]))
-      (fn [e] (rf/dispatch [:set-zoom :q4])))
-     (zoom-mv-arrows-svg
-      :q4 basics
-      (fn [e] (rf/dispatch [:set-zoom :q1]))
-      (fn [e] (rf/dispatch [:set-zoom :q3])))
-       ]
-  ))
-
-(defn zoom-out-buttons []
-  (let [basics {:fill   "#d2d2d2"
-                :stroke "#a2a2a2"
-                :shadow true
-                :r      5
-                }]
-    [:g
-     (--svg (merge basics
-                   {:cx    10 :cy 10
-                    :click (fn [e]
-                             (rf/dispatch [:set-zoom nil]))}))
-     (--svg (merge basics
-                   {:cx    90 :cy 10
-                    :click (fn [e]
-                             (rf/dispatch [:set-zoom nil]))}))
-     (--svg (merge basics
-                   {:cx    10 :cy 90
-                    :click (fn [e]
-                             (rf/dispatch [:set-zoom nil]))}))
-     (--svg (merge basics
-                   {:cx    90 :cy 90
-                    :click (fn [e]
-                             (rf/dispatch [:set-zoom nil]))}))
-     ]))
-
 (defonce clock-state (r/atom {:time (new js/Date)}))
 
 (defn clock-tick []
@@ -520,6 +441,7 @@
         curr-time                (:time @clock-state)
         display-ticker           (= (.valueOf (utils/zero-in-day day))
                                     (.valueOf (utils/zero-in-day curr-time)))
+
         ticker-ms                (utils/get-ms curr-time)
         ticker-angle             (cutils/ms-to-angle ticker-ms)
         ticker-pos               (cutils/polar-to-cartesian
@@ -527,7 +449,6 @@
                                    (:cy svg-consts)
                                    (:r svg-consts)
                                    ticker-angle)
-        zoom                     @(rf/subscribe [:zoom])
         filtered-periods         (cutils/filter-periods-for-day day tasks)
         selected-period          (if (= :period
                                         (get-in
@@ -548,7 +469,9 @@
                                    (fn [e]
                                      (.preventDefault e)
                                      (rf/dispatch
-                                       [:set-selected-period nil])))]
+                                      [:set-selected-period nil])))
+        zoom @(rf/subscribe [:zoom])
+        ]
 
     [:div {:style {:height "100%"}}
      [:svg (merge {:key         date-str
@@ -559,7 +482,6 @@
                                  ;; for moving period
                                  }
                    :width       "100%"
-                   :height      "85%"
                    :onTouchEnd  stop-touch-click-handler
                    :onMouseUp   stop-touch-click-handler
                    :onTouchMove (if is-moving-period
@@ -577,8 +499,6 @@
                     :q4 {:viewBox "40 40 60 60"}
                     (select-keys svg-consts [:viewBox])
                     ))
-
-      (if (some? zoom) (zoomed-in-buttons))
 
       shadow-filter
       [:circle (merge {:fill "#e8e8e8" :filter "url(#shadow-2dp)"}
@@ -643,28 +563,7 @@
              ))
          ]
         )]
-     (when (nil? zoom)
-       [:div {:style {:height "15%"}}
-        [ui/icon-button {:style   {:width  "50%"
-                                   :height "100%"}
-                         :onClick (fn [e]
-                                    (rf/dispatch [:iterate-displayed-day :prev]))}
-         [ui/svg-icon
-          {:viewBox "0 0 50 50" :style {:width "100%" :height "100%"}}
-          [:polyline {:points       "25,0 0,25 25,50"
-                      :fill         "grey"
-                      :fill-opacity "1"
-                      }]]]
-        [ui/icon-button {:style   {:width  "50%"
-                                   :height "100%"}
-                         :onClick (fn [e]
-                                    (rf/dispatch [:iterate-displayed-day :next]))}
-         [ui/svg-icon
-          {:viewBox "0 0 50 50" :style {:width "100%" :height "100%"}}
-          [:polyline {:points       "25,25 0,0 0,50"
-                      :fill         "grey"
-                      :fill-opacity "1"
-                      }]]]])]))
+     ]))
 
 (defn days [days tasks selected-period]
   (->> days
@@ -860,9 +759,6 @@
   :q1)
 
 (defn action-buttons-no-selection []
-  (let [zoom @(rf/subscribe [:zoom])
-        ;; spring @mae-spring
-        ]
 
     (if @action-buttons-collapsed-click
       (do (reset! action-buttons-collapsed-click false)
@@ -878,26 +774,8 @@
 
       [ic/content-add basic-ic]]
 
-     (if (some? zoom)
-       [ui/floating-action-button
-        (merge basic-mini-button
-               {:style (merge (:style basic-mini-button)
-                              {:marginBottom "20"})
-                :onClick (fn [e]
-                           (rf/dispatch [:set-zoom nil]))})
-        [ic/action-zoom-out basic-ic]]
-
-       [ui/floating-action-button
-        (merge basic-mini-button
-               {:style (merge (:style basic-mini-button)
-                              {:marginBottom "20"})
-                :onClick (fn [e]
-                           (rf/dispatch [:set-zoom (current-quadrant)]))})
-        [ic/action-zoom-in basic-ic]])
-
      (back-button)
      ]
-    )
   )
 
 (defn action-buttons-period-selection [selected period-in-play]
@@ -1162,6 +1040,7 @@
      [:p {:style {:padding "0.25em"}} (:description period)]
      ]
     ))
+
 (defn mini-arc [period]
   (let [
         {:keys [id description color]} period
@@ -1239,6 +1118,39 @@
                                          (rf/dispatch
                                           [:set-selected-period (:id period)])))}])))]))
 
+(defn svg-mui-zoom
+  "cartesian quadrants go counter clockwise"
+  [quadrant]
+  (let [
+        zoom @(rf/subscribe [:zoom])
+        d (case quadrant
+            1 {:d "M25,25 L25,0  A25,25 0 0 1 47,25 z"}
+            2 {:d "M25,25 L25,0  A25,25 0 0 0 3,25 z"}
+            3 {:d "M25,25 L25,47 A25,25 0 0 1 3,25 z"}
+            4 {:d "M25,25 L25,47 A25,25 0 0 0 47,25 z"})
+
+        zoom-fn #(rf/dispatch [:set-zoom %])
+        za (case quadrant
+              1 :q1
+              2 :q2
+              3 :q3
+              4 :q4)
+        zoom-arg (if (some? zoom) nil za)
+        invert (= zoom za)]
+
+    [ui/icon-button {:onClick (fn [e] (zoom-fn zoom-arg))
+                     :style (if invert
+                              {:background-color "grey"}
+                              {})}
+     [ui/svg-icon
+      {:viewBox "0 0 50 50" :style {:width "100%" :height "100%"}}
+      [:circle {:cx 25 :cy 25 :r 22
+                :fill (if invert "grey" "white")
+                :stroke (if invert "white" "grey")
+                :stroke-width "4"}]
+      [:path (merge {:fill (if invert "white" "grey")}
+                    d)]]]))
+
 (defn home-page []
   (let [
         tasks               @(rf/subscribe [:tasks])
@@ -1285,6 +1197,36 @@
                                             ;; at least on mobile
                                             ;; TODO add breakpoint rules
                          }}
+       [:div.navigation.zoom
+        {:style {:display "flex"
+                 :justify-content "space-between"}}
+        [ui/icon-button
+         {:onClick (fn [e]
+                     (rf/dispatch [:iterate-displayed-day :prev]))}
+         [ui/svg-icon
+          {:viewBox "0 0 50 50" :style {:width "100%" :height "100%"}}
+          [:polyline {:points       "25,0 0,25 25,50"
+                      :fill         "grey"
+                      :fill-opacity "1"
+                      }]]]
+
+        (svg-mui-zoom 1)
+        (svg-mui-zoom 4)
+        (svg-mui-zoom 3)
+        (svg-mui-zoom 2)
+
+        [ui/icon-button
+         {:onClick (fn [e]
+                     (rf/dispatch [:iterate-displayed-day :next]))}
+         [ui/svg-icon
+          {:viewBox "0 0 50 50" :style {:width "100%" :height "100%"}}
+          [:polyline {:points       "25,25 0,0 0,50"
+                      :fill         "grey"
+                      :fill-opacity "1"
+                      }]]]]
+
+       [ui/divider {:style {:margin-top    "0"
+                            :margin-bottom "0"}}]
 
        [ui/tabs {:tabItemContainerStyle {:backgroundColor "white"}
                  :inkBarStyle           {:backgroundColor (:primary app-theme)}}
@@ -1833,7 +1775,6 @@
      (app-bar)
      [ui/paper {:style {:width "100%"}}
       (queue tasks selected)]]))
-
 
 (defn account-page []
   (let []
