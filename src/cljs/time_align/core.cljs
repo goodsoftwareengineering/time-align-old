@@ -1135,8 +1135,9 @@
               2 :q2
               3 :q3
               4 :q4)
-        zoom-arg (if (some? zoom) nil za)
-        invert (= zoom za)]
+        invert (= zoom za)
+        zoom-arg (if (and (some? zoom) invert) nil za)
+        ]
 
     [ui/icon-button {:onClick (fn [e] (zoom-fn zoom-arg))
                      :style (if invert
