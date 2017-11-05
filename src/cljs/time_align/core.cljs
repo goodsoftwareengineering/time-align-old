@@ -601,11 +601,37 @@
     (if (< character-limit (count text))
       (str (string/join "" (take character-limit text)) " ...")
       text)
+    ;; returns empty message as an r/as-emelent because that is the only way to style
+    ;; text in a listem item primary-text attr
     (r/as-element
       [:span {:style {:text-decoration "italic"
                       :color           "grey"}}
-       if-empty-message]))
-  )
+       if-empty-message])))
+
+(defn duration-ms-to-string [time]
+  (str
+   (gstring/format "%.2f"
+                   (-> time
+                       (/ 1000)
+                       (/ 60)
+                       (/ 60)))
+   " hours"))
+
+(defn period-list-item-primary-text
+  "takes in a period and gives back a string to use as info in a list item element"
+  [period]
+
+  (let [description (:description period)
+        is-empty (empty? description)
+        duration-ms (- (:stop period) (:start period))
+        ]
+
+    (if is-empty
+      (str (utils/date-string (:start period))
+           " : "
+           (duration-ms-to-string duration-ms)
+           )
+      (concatonated-text description 10 "no description..."))))
 
 (defn queue [tasks selected]
   (let [periods-no-stamps (cutils/filter-periods-no-stamps tasks)
@@ -625,7 +651,7 @@
                    :key         (:id period)
                    :leftIcon    (r/as-element
                                   [ui/svg-icon [ic/action-list {:color (:color period)}]])
-                   :primaryText (concatonated-text (:description period) 10 "No period description ...")
+                   :primaryText (period-list-item-primary-text period)
                    :onTouchTap  (if (and period-selected
                                          (= sel-id (:id period)))
                                   (fn [e]
@@ -973,14 +999,7 @@
     )
   )
 
-(defn duration-ms-to-string [time]
-  (str
-   (gstring/format "%.2f"
-                   (-> time
-                       (/ 1000)
-                       (/ 60)
-                       (/ 60)))
-   " hours"))
+
 
 (defn stats-no-selection []
   (let [planned-time @(rf/subscribe [:planned-time :selected-day])
@@ -1108,8 +1127,7 @@
                                             {}))
                       :key         (:id period)
                       :leftIcon    (r/as-element (mini-arc period))
-                      :primaryText (concatonated-text (:description period)
-                                                      10 "No period description ...")
+                      :primaryText (period-list-item-primary-text period)
                       :onTouchTap  (if (and period-selected
                                             (= selected-id (:id period)))
                                      (fn [e]
@@ -1638,7 +1656,7 @@
     (r/as-element
      [ui/list-item
       (merge {:key         id
-              :primaryText (concatonated-text description 10 "no description provided ...")
+              :primaryText (period-list-item-primary-text period)
               :style       (if is-selected {:backgroundColor "#dddddd"})
                :onClick     (fn [e]
                               (when-not is-selected
