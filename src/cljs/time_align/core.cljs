@@ -621,17 +621,15 @@
   "takes in a period and gives back a string to use as info in a list item element"
   [period]
 
-  (let [description (:description period)
-        is-empty (empty? description)
-        duration-ms (- (:stop period) (:start period))
-        ]
+  (let [description (:description period)]
+    (concatonated-text description 20 "no description...")))
 
-    (if is-empty
-      (str (utils/date-string (:start period))
-           " : "
-           (duration-ms-to-string duration-ms)
-           )
-      (concatonated-text description 10 "no description..."))))
+(defn period-list-item-secondary-text
+  [period]
+  (let [duration-ms (- (:stop period) (:start period))]
+    (str (utils/date-string (:start period))
+         " : "
+         (duration-ms-to-string duration-ms))))
 
 (defn queue [tasks selected]
   (let [periods-no-stamps (cutils/filter-periods-no-stamps tasks)
@@ -652,6 +650,7 @@
                    :leftIcon    (r/as-element
                                   [ui/svg-icon [ic/action-list {:color (:color period)}]])
                    :primaryText (period-list-item-primary-text period)
+                   :secondaryText (period-list-item-secondary-text period)
                    :onTouchTap  (if (and period-selected
                                          (= sel-id (:id period)))
                                   (fn [e]
@@ -1128,6 +1127,7 @@
                       :key         (:id period)
                       :leftIcon    (r/as-element (mini-arc period))
                       :primaryText (period-list-item-primary-text period)
+                      :secondaryText (period-list-item-secondary-text period)
                       :onTouchTap  (if (and period-selected
                                             (= selected-id (:id period)))
                                      (fn [e]
@@ -1657,6 +1657,7 @@
      [ui/list-item
       (merge {:key         id
               :primaryText (period-list-item-primary-text period)
+              :secondaryText (period-list-item-secondary-text period)
               :style       (if is-selected {:backgroundColor "#dddddd"})
                :onClick     (fn [e]
                               (when-not is-selected
