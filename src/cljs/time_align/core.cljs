@@ -473,7 +473,7 @@
         zoom @(rf/subscribe [:zoom])
         ]
 
-    [:div {:style {:height "100%"}}
+    [:div {:style {:height "100%" :width "100%"}}
      [:svg (merge {:key         date-str
                    :id          date-str
                    :style       {:display      "inline-box"
@@ -482,6 +482,7 @@
                                  ;; for moving period
                                  }
                    :width       "100%"
+                   :height      "100%"
                    :onTouchEnd  stop-touch-click-handler
                    :onMouseUp   stop-touch-click-handler
                    :onTouchMove (if is-moving-period
