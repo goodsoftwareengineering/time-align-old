@@ -114,12 +114,30 @@
                                      nil)
         this-period-selected       (= selected-period id)
 
-        opacity-before             "0.3"
-        opacity-after              "0.9"
+        opacity-minor              "0.3"
+        opacity-major              "0.9"
+        is-planned                 (= type :planned)
+        ;; actual is boldest in the past (before now)
+        ;; planned is boldest in the future (after now)
+        ;; opacity-before/after is used for task straddling now
+        opacity-before        (if is-planned
+                                opacity-minor
+                                opacity-major)
+        opacity-after         (if is-planned
+                                opacity-major
+                                opacity-minor)
         opacity                    (cond
-                                     this-period-selected opacity-after
-                                     (> curr-time-ms stop-abs-ms) opacity-before
-                                     :else "0.7")
+                                     this-period-selected opacity-major
+
+                                     ;; planned after now
+                                     (and is-planned (< curr-time-ms stop-abs-ms))
+                                     opacity-major
+
+                                     ;; actual before now
+                                     (and (not is-planned) (> curr-time-ms stop-abs-ms))
+                                     opacity-major
+
+                                     :else opacity-minor)
 
         color                      (cond
                                      (or (nil? selected-period)
