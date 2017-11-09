@@ -12,7 +12,7 @@
 
 
 (defn make-date
-  ([] #?(:cljs (js/Date.)
+  ([] #?(:cljs (.toDate (js/moment.tz (js/Date.) "UTC"))
          :clj  (t/with-zone (t/zoned-date-time) "UTC")))
   ( [year month day]
     (make-date year month day 0))
@@ -23,8 +23,8 @@
   ( [year month day hour minute second]
     (make-date year month day hour minute second 0))
   ( [year month day hour minute second millisecond]
-    #?(:cljs (js/Date. (.UTC js/Date year (- 1 month) day hour minute second millisecond))
-
+    #?(:cljs (-> (js/Date. (.UTC js/Date year (- 1 month) day hour minute second millisecond))
+                 (js/moment.tz "UTC"))
        ;;The api for zoned-date-time takes nanoseconds as its last variable
        :clj (t/with-zone
               (t/zoned-date-time year month day hour minute second (* 1000 millisecond))
@@ -32,7 +32,7 @@
 
 (defn get-default-timezone
   []
-  #?(:cljs (-> (.DateTimeFormat js/Intl) (.resolvedOptions) (.-timeZone))
+  #?(:cljs (.guess js/moment.tz)
      :clj  (t/zone-id)))
 
 (def week-ms
