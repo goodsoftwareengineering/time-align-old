@@ -75,7 +75,8 @@
       wrap-auth
       wrap-webjars
       wrap-flash
-      (wrap-session {:cookie-attrs {:http-only true}})
+      (wrap-session {:cookie-attrs {:http-only true}
+                     :timeout 0})
       (wrap-defaults
         (-> site-defaults
             (assoc-in [:security :anti-forgery] false)
