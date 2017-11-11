@@ -10,7 +10,7 @@
                  [cljs-ajax "0.5.9"]
                  [cljs-react-material-ui "0.2.43"]
                  [cljsjs/js-joda "1.5.0-0"]
-                 [cljsjs/moment-timezone "0.5.11-0"]
+                 [cljsjs/moment-timezone "0.5.11-1"]
                  [clojure.java-time "0.3.0"]
                  [com.cognitect/transit-cljs "0.8.239"]
                  [com.rpl/specter "1.0.3"]

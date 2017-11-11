@@ -19,3 +19,5 @@ GTAGS
 /out/
 
 \.floo
+/node_modules/
+
