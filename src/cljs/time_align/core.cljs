@@ -1124,9 +1124,10 @@
     ))
 
 (defn agenda [selected periods]
-  (let [planned-periods (filter #(and (= :planned (:type %))
-                                      (some? (:start %)))
-                                periods)
+  (let [planned-periods (->> periods
+                             (filter #(and (= :planned (:type %))
+                                           (some? (:start %))))
+                             (filter #(> (.valueOf (new js/Date)) (:stop %))))
         planned-periods-sorted (sort-by #(.valueOf (:start %))
                                          planned-periods)
         period-selected (= :period
