@@ -64,6 +64,7 @@
      [:feMergeNode {:in "SourceGraphic"}]]]])
 
 (defonce margin-action-expanded (r/atom -20))
+
 (defonce mae-spring (anim/interpolate-to margin-action-expanded))
 
 (defn describe-arc [cx cy r start stop]
@@ -1159,6 +1160,7 @@
         displayed-day       @(rf/subscribe [:displayed-day])
         periods             @(rf/subscribe [:periods])
         period-in-play      @(rf/subscribe [:period-in-play])
+        dashboard-tab       @(rf/subscribe [:dashboard-tab])
         ]
 
     [:div.app-container
@@ -1181,7 +1183,7 @@
                :justify-content "center"
                :align-items "center"
                :flex-direction "column"}}
-      
+
       (day tasks selected displayed-day)]
 
      [:div.lower-container
@@ -1202,6 +1204,7 @@
 
        [ui/divider {:style {:margin-top    "0"
                             :margin-bottom "0"}}]
+
        [:div.navigation.zoom
         {:style {:display "flex"
                  :justify-content "space-between"}}
@@ -1234,14 +1237,21 @@
                             :margin-bottom "0"}}]
 
        [ui/tabs {:tabItemContainerStyle {:backgroundColor "white"}
-                 :inkBarStyle           {:backgroundColor (:primary app-theme)}}
-        [ui/tab {:label "agenda" :style {:color (:primary app-theme)}}
+                 :inkBarStyle           {:backgroundColor (:primary app-theme)}
+                 :value                 (name dashboard-tab)
+                 :on-change              (fn [v]
+                                           (rf/dispatch [:set-dashboard-tab (keyword v)]))}
+
+        [ui/tab {:label "agenda" :style {:color (:primary app-theme)}
+                 :value "agenda"}
          (agenda selected periods)
          ]
-        [ui/tab {:label "queue" :style {:color (:primary app-theme)}}
+        [ui/tab {:label "queue" :style {:color (:primary app-theme)}
+                 :value "queue"}
          (queue tasks selected)
          ]
-        [ui/tab {:label "stats" :style {:color (:primary app-theme)}}
+        [ui/tab {:label "stats" :style {:color (:primary app-theme)}
+                 :value "stats"}
          (if (= :period (get-in selected [:current-selection :type-or-nil]))
            (stats-selection selected periods tasks)
            (stats-no-selection)

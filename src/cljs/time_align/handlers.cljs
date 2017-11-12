@@ -936,3 +936,10 @@
  (fn [db _]
    (assoc-in db [:view :period-in-play] nil) ;; TODO after specter add in an adjust selected period stop time
    ))
+
+(reg-event-db
+ :set-dashboard-tab
+ [persist-ls send-analytic]
+ (fn [db [_ tab]]
+   (assoc-in db [:view :dashboard-tab] tab))
+ )

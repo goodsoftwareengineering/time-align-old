@@ -461,3 +461,8 @@
                           (cutils/pull-periods db))
              color (:color period)]
          color)))))
+
+(reg-sub
+ :dashboard-tab
+ (fn [db _]
+   (get-in db [:view :dashboard-tab])))
