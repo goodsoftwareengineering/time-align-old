@@ -1,23 +1,8 @@
 #!/bin/bash
-sudo add-apt-repository ppa:openjdk-r/ppa
-
-# Add jdk repo
-
-sudo add-apt-repository "deb https://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main"
-wget --quiet -O - https://postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-
-# Add postgres repo
-
 sudo apt-get update
 sudo apt-get install -y git g++ automake libtool
-
 sudo apt-get install -y postgresql postgresql-contrib
-
-#Update, install postgres
-
-sudo apt-get install -y openjdk-8-jre-headless
-
-sudo /var/lib/dpkg/info/ca-certificates-java.postinst configure
+sudo apt-get install -y default-jdk
 
 curl https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein -o /usr/local/bin/lein
 chmod a+x /usr/local/bin/lein

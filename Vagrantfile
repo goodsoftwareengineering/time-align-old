@@ -18,7 +18,8 @@ Vagrant.configure(2) do |config|
     config.vm.provision "shell", path: "vagrantscript.sh"
 
     config.vm.provider "virtualbox" do |v,override|
-      override.vm.box = "ubuntu/trusty64"
+      override.vm.box = "bento/ubuntu-16.04"
+      v.customize ["modifyvm", :id, "--cableconnected1", "on"]
       v.memory = 3072
       v.cpus = 4
     end
