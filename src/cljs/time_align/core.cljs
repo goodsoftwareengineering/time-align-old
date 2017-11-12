@@ -465,7 +465,7 @@
         ticker-pos               (cutils/polar-to-cartesian
                                    (:cx svg-consts)
                                    (:cy svg-consts)
-                                   (:r svg-consts)
+                                   (* 0.9 (:r svg-consts))
                                    ticker-angle)
         filtered-periods         (cutils/filter-periods-for-day day tasks)
         selected-period          (if (= :period
@@ -532,56 +532,17 @@
       (if display-ticker
         [:g
          [:line {:fill         "transparent"
-                 :stroke-width "1"
+                 :stroke-width "1.4"
                  :stroke       (if (some? period-in-play)
                                  period-in-play-color
                                  "white")
-                 :opacity      "0.5"
+                 :stroke-linecap "round"
+                 :opacity      "0.59"
                  :filter       "url(#shadow-2dp)"
                  :x1           (:cx svg-consts)
                  :y1           (:cy svg-consts)
                  :x2           (:x ticker-pos)
                  :y2           (:y ticker-pos)}]
-         [:circle (merge {:fill   (if (some? period-in-play)
-                                    period-in-play-color
-                                    "white")
-                          :filter "url(#shadow-2dp)"
-                          :r      (:ticker-r svg-consts)}
-                         (select-keys svg-consts [:cx :cy]))]
-
-         (when (some? period-in-play)
-           (let [cx          (:cx svg-consts)
-                 cy          (:cy svg-consts)
-                 r           (:ticker-r svg-consts)
-                 width       (* 0.5 r)
-                 height      (* 0.75 r)
-                 half-height (/ height 2)
-                 half-width  (/ width 2)
-                 x-left      (- cx half-width)
-                 y-left      (- cy half-height)]
-             [:g
-              {:onClick (fn [e]
-                          (rf/dispatch [:pause-period-play]))}
-              [:line {:fill           "white"
-                      :x1             x-left
-                      :y1             y-left
-                      :x2             x-left
-                      :y2             (+ y-left height)
-                      :stroke-width   "1"
-                      :stroke         "white"
-                      :stroke-linecap "round"
-                      }]
-              [:line {:fill           "white"
-                      :x1             (+ x-left width)
-                      :y1             y-left
-                      :x2             (+ x-left width)
-                      :y2             (+ y-left height)
-                      :stroke-width   "1"
-                      :stroke         "white"
-                      :stroke-linecap "round"
-                      }]
-              ]
-             ))
          ]
         )]
      ]))
@@ -1016,8 +977,6 @@
     )
   )
 
-
-
 (defn stats-no-selection []
   (let [planned-time @(rf/subscribe [:planned-time :selected-day])
         accounted-time @(rf/subscribe [:accounted-time :selected-day])
@@ -1261,7 +1220,7 @@
                      (rf/dispatch [:iterate-displayed-day :next]))}
          [ui/svg-icon
           {:viewBox "0 0 50 50" :style {:width "100%" :height "100%"}}
-          [:polyline {:points       "25,25 0,0 0,50"
+          [:polyline {:points       "50,25 25,0 25,50"
                       :fill         "grey"
                       :fill-opacity "1"
                       }]]]]
