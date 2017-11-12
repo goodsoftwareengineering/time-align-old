@@ -24,16 +24,19 @@
 (s/def ::period (s/with-gen (s/and
                              (s/keys :req-un [::id ::period-type]
                                      :opt-un [::start ::stop ::description])
+
                              (fn [period]
                                ;; actual has timestamps
                                (if (= :actual (:period-type period))
                                  (and (contains? period :start)
                                       (contains? period :stop))
-                                 false)
+                                 false))
+
+                             (fn [period]
                                ;; stop after start
                                (if (and
-                                    (contains? period :start)
-                                    (contains? period :stop))
+                                     (contains? period :start)
+                                     (contains? period :stop))
                                  (> (.valueOf (:stop period))
                                     (.valueOf (:start period)))
                                  true)))
