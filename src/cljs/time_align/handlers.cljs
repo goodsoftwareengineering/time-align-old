@@ -18,6 +18,21 @@
            [clojure.pprint :as pprint]
             ))
 
+;; The event/interceptor lifecycle
+;;                   [event-1    event-2   event-3]
+;; event fires    -> :before -> :before -> :before ↓
+;;                                                 Event happens
+;;                                                 ↓
+;; event complete <- :after  <- :after  <- :after <-
+
+;; The shape of context
+;; {:coeffects {:event [:some-id :some-param]
+;;              :db    <original contents of app-db>}
+;;  :effects   {:db <new value for app-db>
+;;              :dispatch  [:an-event-id :param1]}
+;;  :queue     <a collection of further interceptors>
+;;  :stack     <a collection of interceptors already walked> }
+
 (def persist-ls
   (->interceptor
     :id :persist-to-localstorage
