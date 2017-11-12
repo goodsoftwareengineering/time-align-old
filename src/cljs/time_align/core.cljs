@@ -1181,8 +1181,7 @@
                :justify-content "center"
                :align-items "center"
                :flex-direction "column"}}
-      [:div.day-label {:style {:color "grey"}}
-       (.toDateString displayed-day)]
+      
       (day tasks selected displayed-day)]
 
      [:div.lower-container
@@ -1197,6 +1196,12 @@
                                             ;; at least on mobile
                                             ;; TODO add breakpoint rules
                          }}
+
+       [:div.day-label {:style {:color "grey" :padding "0.01em" :text-align "center"}}
+        [:span (.toDateString displayed-day)]]
+
+       [ui/divider {:style {:margin-top    "0"
+                            :margin-bottom "0"}}]
        [:div.navigation.zoom
         {:style {:display "flex"
                  :justify-content "space-between"}}
