@@ -9,7 +9,6 @@
             [clojure.string :as string])
   #?(:clj (:import java.util.UUID)))
 
-
 #?(:clj (defn random-uuid [](java.util.UUID/randomUUID)))
 
 (s/def ::name (s/and string? #(> 256 (count %))))
@@ -21,10 +20,17 @@
 (s/def ::start ::moment)
 (s/def ::stop ::moment)
 (s/def ::priority int?)
+(s/def ::period-type #{:planned :actual})
 (s/def ::period (s/with-gen (s/and
-                             (s/keys :req-un [::id]
+                             (s/keys :req-un [::id ::period-type]
                                      :opt-un [::start ::stop ::description])
                              (fn [period]
+                               ;; actual has timestamps
+                               (if (= :actual (:period-type period))
+                                 (and (contains? period :start)
+                                      (contains? period :stop))
+                                 false)
+                               ;; stop after start
                                (if (and
                                     (contains? period :start)
                                     (contains? period :stop))
@@ -32,13 +38,12 @@
                                     (.valueOf (:start period)))
                                  true)))
 
-
-
                   ;; generator uses a generated moment and adds a random amount of time to it
                   ;; < 2 hrs
                   #(gen/fmap (fn [moment]
-                               (let [queue-chance (> 0.5 (rand))
-                                     desc-chance  (> 0.5 (rand))
+                               (let [queue-chance  (> 0.5 (rand))
+                                     desc-chance   (> 0.5 (rand))
+                                     actual-chance (> 0.5 (rand))
                                      start        (.valueOf moment)
                                      stop         (->> start
                                                        (+ (rand-int (* 2 utils/hour-ms))))
@@ -46,12 +51,20 @@
                                                     {}
                                                     #?(:cljs {:start (new js/Date start)
                                                               :stop (new js/Date stop)}))
+                                     type         (if-not (empty? stamps)
+                                                    (if actual-chance
+                                                      {:period-type :actual}
+                                                      {:period-type :planned}
+                                                      )
+                                                    {:period-type :planned}
+                                                    )
                                      desc         (if desc-chance
                                                     {:description (gen/generate (s/gen ::description))}
                                                     {})]
 
-                                 (merge stamps desc {:id (random-uuid)})))
+                                 (merge stamps desc type {:id (random-uuid)})))
                              (s/gen ::moment))))
+
 (s/def ::periods (s/coll-of ::period :gen-max 5 :min-count 1))
 (s/def ::hex-digit (s/with-gen (s/and string? #(contains? (set "0123456789abcdef") %))
                       #(s/gen (set "0123456789abcdef"))))
@@ -77,8 +90,7 @@
                                      (contains? period :stop)))))
 (s/def ::actual-periods (s/coll-of ::actual-period :gen-max 5 :min-count 1))
 (s/def ::planned-periods ::periods)
-(s/def ::task (s/keys :req-un [::id ::name ::description ::complete]
-                      :opt-un [::actual-periods ::planned-periods]))
+(s/def ::task (s/keys :req-un [::id ::name ::description ::complete ::periods]))
 ;; TODO complete check (all periods are planned/actual are passed)
 (s/def ::tasks (s/coll-of ::task :gen-max 2 :min-count 1))
 (s/def ::user (s/keys :req-un [::name ::id ::email]))
@@ -140,6 +152,7 @@
                                        :name ""
                                        :color-map {:red 0 :green 0 :blue 0}})))
 (s/def ::category-id ::id-or-nil)
+;; TODO figure out a better default for category-id
 (s/def ::task-form (s/with-gen
                      (s/keys :req-un [::id-or-nil ::name ::description ::complete ::category-id])
                      #(gen/return {:id-or-nil nil
@@ -147,8 +160,6 @@
                                    :description ""
                                    :complete false
                                    :category-id nil})))
-                                   ;; TODO figure out a better default for category-id
-
 (s/def ::task-id ::id-or-nil)
 (s/def ::error #{:time-mismatch})
 (s/def ::error-or-nil (s/with-gen
