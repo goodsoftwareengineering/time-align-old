@@ -1127,7 +1127,7 @@
   (let [planned-periods (->> periods
                              (filter #(and (= :planned (:type %))
                                            (some? (:start %))))
-                             (filter #(> (.valueOf (new js/Date)) (:stop %))))
+                             (filter #(> (:stop %) (.valueOf (new js/Date)))))
         planned-periods-sorted (sort-by #(.valueOf (:start %))
                                          planned-periods)
         period-selected (= :period
