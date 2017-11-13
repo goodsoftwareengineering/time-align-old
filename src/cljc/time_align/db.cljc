@@ -108,7 +108,7 @@
                        (s/or :is-id ::id
                              :is-nil nil?)
                        #(gen/return nil)))
-(s/def ::page-id (s/with-gen #{:home :add-entity-forms :edit-entity-forms}
+(s/def ::page-id (s/with-gen #{:home :add-entity-forms :edit-entity-forms :list :queue :agenda}
                    #(gen/return :home)))
 (s/def ::page  (s/keys :req-un [::page-id
                                 ::type-or-nil
