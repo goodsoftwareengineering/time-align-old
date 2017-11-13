@@ -1,9 +1,13 @@
 (ns time-align.storage
-  (:require [cognitect.transit :as t]))
+  (:require [cognitect.transit :as t]
+            [com.cognitect.transit.types :as ty]))
+
+(extend-type ty/UUID
+  IUUID)
 
 (defn str->
   [st]
-  (let [t (t/reader :json)]
+  (let [t (t/reader :json {:handlers {"u" cljs.core/uuid}})]
     (t/read t st)))
 
 (defn store->keys
@@ -18,5 +22,5 @@
 
 (defn transit-json->map
   [transit-str]
-  (let [r (t/reader :json)]
+  (let [r (t/reader :json {:handlers {"u" cljs.core/uuid} })]
     (t/read r transit-str)))
