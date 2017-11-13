@@ -2,8 +2,8 @@
   (:require [figwheel-sidecar.repl-api :as ra]))
 
 (defn start-fw []
-  (ra/start-autobuild :worker)
-  (ra/start-figwheel!))
+  (ra/start-figwheel!)
+  (ra/start-autobuild :worker))
 
 (defn stop-fw []
   (ra/stop-figwheel!))
