@@ -1,5 +1,6 @@
 (ns user
-  (:require [mount.core :as mount]
+  (:require [alembic.still :as still]
+            [mount.core :as mount]
             [time-align.figwheel :refer [start-fw stop-fw cljs]]
             time-align.core))
 
@@ -13,4 +14,6 @@
   (stop)
   (start))
 
+(defn reload-project.clj
+  (still/load-project))
 

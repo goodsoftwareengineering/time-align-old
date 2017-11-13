@@ -117,7 +117,8 @@
                                     [prone "1.1.4"]
                                     [re-frisk "0.5.0"]
                                     [ring/ring-devel "1.5.1"]
-                                    [ring/ring-mock "0.3.0"]]
+                                    [ring/ring-mock "0.3.0"]
+                                    [alembic "0.3.2"]]
 
                    :plugins        [[com.jakemccrary/lein-test-refresh "0.19.0"]
                                     [lein-doo "0.1.8"]
