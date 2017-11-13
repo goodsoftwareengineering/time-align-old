@@ -1,5 +1,6 @@
 (ns time-align.handlers
   (:require [clojure.spec.alpha :as s]
+            [expound.alpha :as expound]
             [time-align.db :as db]
             [re-frame.core :refer [dispatch
                                    reg-event-db
@@ -87,7 +88,7 @@
                  (->> context
                      (setval [:effects :db] old-db )
                      (merge {:validation {:valid? false
-                                          :explanation (s/explain ::db/db new-db)}}))
+                                          :explanation (expound/expound ::db/db new-db)}}))
                  (->> context
                       (merge {:validation {:valid? true
                                            :explanation nil}})))))

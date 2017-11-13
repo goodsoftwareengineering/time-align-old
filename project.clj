@@ -19,6 +19,7 @@
                  [cprop "0.1.10"]
                  [day8.re-frame/async-flow-fx "0.0.6"]
                  [day8.re-frame/http-fx "0.1.2"]
+                 [expound "0.3.3"]
                  [funcool/struct "1.0.0"]
                  [luminus-immutant "0.2.3"]
                  [luminus-migrations "0.4.2"]
