@@ -466,7 +466,7 @@
         ticker-pos               (cutils/polar-to-cartesian
                                    (:cx svg-consts)
                                    (:cy svg-consts)
-                                   (* 0.9 (:r svg-consts))
+                                   (:r svg-consts)
                                    ticker-angle)
         filtered-periods         (cutils/filter-periods-for-day day tasks)
         selected-period          (if (= :period
@@ -530,23 +530,26 @@
 
       (periods filtered-periods selected is-moving-period curr-time day)
 
-      (if display-ticker
+      (when display-ticker
         [:g
+         [:circle {:cx (:cx svg-consts) :cy (:cy svg-consts)
+                   :r ".7"
+                   :fill "white"
+                   :stroke "transparent"}]
          [:line {:fill         "transparent"
                  :stroke-width "1.4"
                  :stroke       (if (some? period-in-play)
                                  period-in-play-color
                                  "white")
-                 :stroke-linecap "round"
-                 :opacity      "0.59"
-                 :filter       "url(#shadow-2dp)"
+                 :stroke-linecap "butt"
+                 :opacity      "1"
+                 ;; :filter       "url(#shadow-2dp)"
+                 ;; filter breaks bounding box and results in zero width or height
+                 ;; on vertical and horizontal lines (6, 9, 12, 0)
                  :x1           (:cx svg-consts)
                  :y1           (:cy svg-consts)
                  :x2           (:x ticker-pos)
-                 :y2           (:y ticker-pos)}]
-         ]
-        )]
-     ]))
+                 :y2           (:y ticker-pos)}]])]]))
 
 (defn days [days tasks selected-period]
   (->> days
