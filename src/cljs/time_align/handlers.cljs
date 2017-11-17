@@ -475,13 +475,28 @@
   (fn [cofx [_ _]]
     (let [db (:db cofx)
           task-form (get-in db [:view :task-form])
-          task-id (if (some? (:id task-form))
-                    (:id task-form)
+          task-id (if (some? (:id-or-nil task-form))
+                    (:id-or-nil task-form)
                     (random-uuid))
+          old-category-id (->> (cutils/pull-tasks db)
+                               (some #(if (= (:id %) task-id)
+                                        (:category-id %))))
+          old-category  (some #(if (= (:id %) old-category-id) %) (:categories db))
+          old-category-filtered-tasks (filter #(not= task-id (:id %)) ;; removes task from old category
+                                              (:tasks old-category))
+          old-category-filtered (merge old-category {:tasks old-category-filtered-tasks})
           category-id (:category-id task-form)
-          other-categories (->> db
-                                (:categories)
-                                (filter #(not= (:id %) category-id)))
+          other-categories (remove nil?
+                                   (conj
+                                    (->> db
+                                         (:categories)
+                                         (remove #(= (:id %) category-id))
+                                         (remove #(= (:id %) old-category-id))) ;; gets all categories but old and new
+
+                                    (if (and (not= category-id old-category-id)
+                                             (not (nil? old-category-id)))
+                                      old-category-filtered))) ;; puts back old doesn't matter if there wasn't an old
+
           this-category (some #(if (= (:id %) category-id) %)
                               (:categories db))
           other-tasks (:tasks this-category)
