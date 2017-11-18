@@ -4,6 +4,13 @@ html, body {
   margin: 0;
   padding: 0;
   background-color: #c2c2c2;
+
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 div#app {
