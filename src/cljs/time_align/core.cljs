@@ -555,22 +555,6 @@
   (->> days
        (map (partial day tasks selected-period))))
 
-(defn task-list [tasks]
-  [:div.tasks-list {:style {:display "flex"}}
-   [ui/paper
-    [:div.task-list {:style {:overflow-y "scroll"}}
-     [ui/list
-      (->> tasks
-           (map
-             (fn [t]
-               [ui/list-item
-                {:key         (:id t)
-                 :primaryText (:name t)
-                 :onTouchTap  #(rf/dispatch
-                                 [:set-selected-task (:id t)])
-                 }
-                ])))]]]])
-
 (defn svg-mui-circle [color]
   [ui/svg-icon
    {:viewBox "0 0 24 24" :style {:margin-left "0.5em"}}
@@ -1072,6 +1056,8 @@
         stop-used            (if use-adjustment
                                stop-angle-adjusted
                                stop-angle)]
+
+
     [ui/svg-icon
      {:viewBox "0 0 24 24"}
      [:g
@@ -1657,7 +1643,7 @@
               :style       (if is-selected {:backgroundColor "#dddddd"})
                :onClick     (fn [e]
                               (when-not is-selected
-                                (rf/dispatch [:set-selected {:type :period :id id}])))
+                                (rf/dispatch [:set-selected-period id])))
 
                :on-double-click (fn [e]
                                   (when is-selected
@@ -1711,7 +1697,7 @@
 
 
         :onClick       (fn [e]
-                         (rf/dispatch [:set-selected {:type :task :id id}]))
+                         (rf/dispatch [:set-selected-task id]))
 
         :onDoubleClick (fn [e]
                          (when is-selected
@@ -1757,7 +1743,7 @@
                    :style           (if is-selected {:backgroundColor "#dddddd"})
                    :onClick         (fn [e]
                                       (when-not is-selected
-                                        (rf/dispatch [:set-selected {:type :category :id id}])))
+                                        (rf/dispatch [:set-selected-category id])))
                    :on-double-click (fn [e]
                                       (when is-selected
                                         (hist/nav! (str "/edit/category/" id))

@@ -203,38 +203,13 @@
   (fn [db [_ new-state]]
     (assoc-in db [:view :main-drawer] new-state)))
 
-(reg-event-fx
-  :set-selected-period
-  [persist-ls send-analytic]
-  (fn [cofx [_ period-id]]
-    (let [
-          db (:db cofx)
-          type (if (nil? period-id) nil :period)
-          prev (get-in db [:view :selected :current-selection])
-          curr {:type-or-nil type :id-or-nil period-id}
-          in-play-id (get-in db [:view :period-in-play])
-          ]
-
-      {:db       (assoc-in db [:view :selected]
-                           {:current-selection  curr
-                            :previous-selection prev})
-       :dispatch-n (filter some? (list ;; TODO upgrade re-frame and remove filter
-                                  (when (and (some? in-play-id)
-                                             (= in-play-id period-id))
-                                    [:pause-period-play])
-                                  [:action-buttons-back]))
-       }
-      )
-    ))
-
 (reg-event-db
-  :set-selected
-  [persist-ls send-analytic]
-  (fn [db [_ {:keys [type id]}]]
-    (assoc-in db [:view :selected]
-              {:current-selection  {:type-or-nil type
-                                    :id-or-nil   id}
-               :previous-selection (get-in db [:view :selected :current-selection])})))
+ :set-selected-category
+ (fn [db [_ id]]
+   (assoc-in db [:view :selected]
+             {:current-selection  {:type-or-nil :category
+                                   :id-or-nil   id}
+              :previous-selection (get-in db [:view :selected :current-selection])})))
 
 (reg-event-fx
   :set-selected-queue
@@ -263,11 +238,39 @@
     (let [db (:db cofx)]
 
       {:db       (assoc-in db [:view :selected]
-                           {:selected-type :task
-                            :id            task-id})
-       :dispatch [:action-buttons-back]}
+                           {
+                            :current-selection {:type-or-nil :task
+                                                :id-or-nil task-id}
+                            :previous-selection (get-in db [:view :selected :current-selection])
+                            })
+       ;; :dispatch [:action-buttons-back] ;; no selecting task on home yet
+       }
       )
     ))
+
+(reg-event-fx
+ :set-selected-period
+ [persist-ls send-analytic]
+ (fn [cofx [_ period-id]]
+   (let [
+         db (:db cofx)
+         type (if (nil? period-id) nil :period)
+         prev (get-in db [:view :selected :current-selection])
+         curr {:type-or-nil type :id-or-nil period-id}
+         in-play-id (get-in db [:view :period-in-play])
+         ]
+
+     {:db       (assoc-in db [:view :selected]
+                          {:current-selection  curr
+                           :previous-selection prev})
+      :dispatch-n (filter some? (list ;; TODO upgrade re-frame and remove filter
+                                 (when (and (some? in-play-id)
+                                            (= in-play-id period-id))
+                                   [:pause-period-play])
+                                 [:action-buttons-back]))
+      }
+     )
+   ))
 
 (reg-event-db
   :action-buttons-expand
