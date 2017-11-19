@@ -149,7 +149,6 @@
                                    :category-id nil})))
                                    ;; TODO figure out a better default for category-id
 
-
 (s/def ::task-id ::id-or-nil)
 (s/def ::error #{:time-mismatch})
 (s/def ::error-or-nil (s/with-gen
@@ -164,7 +163,8 @@
                                      :task-id nil
                                      :error-or-nil nil
                                      :planned false})))
-
+(s/def ::dashboard-tab (s/with-gen #{:agenda :queue :stats}
+                         #(gen/return :agenda)))
 (s/def ::displayed-day (s/with-gen inst?
                         #?(:cljs #(gen/return (new js/Date))
                            :clj #(gen/return (t/zoned-date-time)))))
@@ -172,6 +172,7 @@
 (s/def ::view (s/and (s/keys :req-un [::page
                                       ::selected
                                       ::period-in-play
+                                      ::dashboard-tab
                                       ::continous-action
                                       ::main-drawer
                                       ::zoom
@@ -201,7 +202,8 @@
   :id (random-uuid),
   :email ""},
  :view
- {:period-in-play nil,
+ {:dashboard-tab :agenda
+  :period-in-play nil,
   :zoom nil,
   :selected
   {:current-selection

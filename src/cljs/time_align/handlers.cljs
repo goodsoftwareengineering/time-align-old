@@ -203,38 +203,13 @@
   (fn [db [_ new-state]]
     (assoc-in db [:view :main-drawer] new-state)))
 
-(reg-event-fx
-  :set-selected-period
-  [persist-ls send-analytic]
-  (fn [cofx [_ period-id]]
-    (let [
-          db (:db cofx)
-          type (if (nil? period-id) nil :period)
-          prev (get-in db [:view :selected :current-selection])
-          curr {:type-or-nil type :id-or-nil period-id}
-          in-play-id (get-in db [:view :period-in-play])
-          ]
-
-      {:db       (assoc-in db [:view :selected]
-                           {:current-selection  curr
-                            :previous-selection prev})
-       :dispatch-n (filter some? (list ;; TODO upgrade re-frame and remove filter
-                                  (when (and (some? in-play-id)
-                                             (= in-play-id period-id))
-                                    [:pause-period-play])
-                                  [:action-buttons-back]))
-       }
-      )
-    ))
-
 (reg-event-db
-  :set-selected
-  [persist-ls send-analytic]
-  (fn [db [_ {:keys [type id]}]]
-    (assoc-in db [:view :selected]
-              {:current-selection  {:type-or-nil type
-                                    :id-or-nil   id}
-               :previous-selection (get-in db [:view :selected :current-selection])})))
+ :set-selected-category
+ (fn [db [_ id]]
+   (assoc-in db [:view :selected]
+             {:current-selection  {:type-or-nil :category
+                                   :id-or-nil   id}
+              :previous-selection (get-in db [:view :selected :current-selection])})))
 
 (reg-event-fx
   :set-selected-queue
@@ -263,11 +238,39 @@
     (let [db (:db cofx)]
 
       {:db       (assoc-in db [:view :selected]
-                           {:selected-type :task
-                            :id            task-id})
-       :dispatch [:action-buttons-back]}
+                           {
+                            :current-selection {:type-or-nil :task
+                                                :id-or-nil task-id}
+                            :previous-selection (get-in db [:view :selected :current-selection])
+                            })
+       ;; :dispatch [:action-buttons-back] ;; no selecting task on home yet
+       }
       )
     ))
+
+(reg-event-fx
+ :set-selected-period
+ [persist-ls send-analytic]
+ (fn [cofx [_ period-id]]
+   (let [
+         db (:db cofx)
+         type (if (nil? period-id) nil :period)
+         prev (get-in db [:view :selected :current-selection])
+         curr {:type-or-nil type :id-or-nil period-id}
+         in-play-id (get-in db [:view :period-in-play])
+         ]
+
+     {:db       (assoc-in db [:view :selected]
+                          {:current-selection  curr
+                           :previous-selection prev})
+      :dispatch-n (filter some? (list ;; TODO upgrade re-frame and remove filter
+                                 (when (and (some? in-play-id)
+                                            (= in-play-id period-id))
+                                   [:pause-period-play])
+                                 [:action-buttons-back]))
+      }
+     )
+   ))
 
 (reg-event-db
   :action-buttons-expand
@@ -475,13 +478,28 @@
   (fn [cofx [_ _]]
     (let [db (:db cofx)
           task-form (get-in db [:view :task-form])
-          task-id (if (some? (:id task-form))
-                    (:id task-form)
+          task-id (if (some? (:id-or-nil task-form))
+                    (:id-or-nil task-form)
                     (random-uuid))
+          old-category-id (->> (cutils/pull-tasks db)
+                               (some #(if (= (:id %) task-id)
+                                        (:category-id %))))
+          old-category  (some #(if (= (:id %) old-category-id) %) (:categories db))
+          old-category-filtered-tasks (filter #(not= task-id (:id %)) ;; removes task from old category
+                                              (:tasks old-category))
+          old-category-filtered (merge old-category {:tasks old-category-filtered-tasks})
           category-id (:category-id task-form)
-          other-categories (->> db
-                                (:categories)
-                                (filter #(not= (:id %) category-id)))
+          other-categories (remove nil?
+                                   (conj
+                                    (->> db
+                                         (:categories)
+                                         (remove #(= (:id %) category-id))
+                                         (remove #(= (:id %) old-category-id))) ;; gets all categories but old and new
+
+                                    (if (and (not= category-id old-category-id)
+                                             (not (nil? old-category-id)))
+                                      old-category-filtered))) ;; puts back old doesn't matter if there wasn't an old
+
           this-category (some #(if (= (:id %) category-id) %)
                               (:categories db))
           other-tasks (:tasks this-category)
@@ -936,3 +954,10 @@
  (fn [db _]
    (assoc-in db [:view :period-in-play] nil) ;; TODO after specter add in an adjust selected period stop time
    ))
+
+(reg-event-db
+ :set-dashboard-tab
+ [persist-ls send-analytic]
+ (fn [db [_ tab]]
+   (assoc-in db [:view :dashboard-tab] tab))
+ )

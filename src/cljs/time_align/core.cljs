@@ -64,6 +64,7 @@
      [:feMergeNode {:in "SourceGraphic"}]]]])
 
 (defonce margin-action-expanded (r/atom -20))
+
 (defonce mae-spring (anim/interpolate-to margin-action-expanded))
 
 (defn describe-arc [cx cy r start stop]
@@ -114,12 +115,30 @@
                                      nil)
         this-period-selected       (= selected-period id)
 
-        opacity-before             "0.3"
-        opacity-after              "0.9"
+        opacity-minor              "0.3"
+        opacity-major              "0.9"
+        is-planned                 (= type :planned)
+        ;; actual is boldest in the past (before now)
+        ;; planned is boldest in the future (after now)
+        ;; opacity-before/after is used for task straddling now
+        opacity-before        (if is-planned
+                                opacity-minor
+                                opacity-major)
+        opacity-after         (if is-planned
+                                opacity-major
+                                opacity-minor)
         opacity                    (cond
-                                     this-period-selected opacity-after
-                                     (> curr-time-ms stop-abs-ms) opacity-before
-                                     :else "0.7")
+                                     this-period-selected opacity-major
+
+                                     ;; planned after now
+                                     (and is-planned (< curr-time-ms stop-abs-ms))
+                                     opacity-major
+
+                                     ;; actual before now
+                                     (and (not is-planned) (> curr-time-ms stop-abs-ms))
+                                     opacity-major
+
+                                     :else opacity-minor)
 
         color                      (cond
                                      (or (nil? selected-period)
@@ -473,15 +492,18 @@
         zoom @(rf/subscribe [:zoom])
         ]
 
-    [:div {:style {:height "100%"}}
+    [:div {:style {:height "100%" :width "100%"}}
      [:svg (merge {:key         date-str
                    :id          date-str
+                   :xmlns "http://www.w3.org/2000/svg"
+                   :version  "1.1"
                    :style       {:display      "inline-box"
                                  :touch-action "pinch-zoom"
                                  ;; this stops scrolling
                                  ;; for moving period
                                  }
                    :width       "100%"
+                   :height      "100%"
                    :onTouchEnd  stop-touch-click-handler
                    :onMouseUp   stop-touch-click-handler
                    :onTouchMove (if is-moving-period
@@ -508,82 +530,30 @@
 
       (periods filtered-periods selected is-moving-period curr-time day)
 
-      (if display-ticker
+      (when display-ticker
         [:g
+         [:circle {:cx (:cx svg-consts) :cy (:cy svg-consts)
+                   :r ".7"
+                   :fill "white"
+                   :stroke "transparent"}]
          [:line {:fill         "transparent"
-                 :stroke-width "1"
+                 :stroke-width "1.4"
                  :stroke       (if (some? period-in-play)
                                  period-in-play-color
                                  "white")
-                 :opacity      "0.5"
-                 :filter       "url(#shadow-2dp)"
+                 :stroke-linecap "butt"
+                 :opacity      "1"
+                 ;; :filter       "url(#shadow-2dp)"
+                 ;; filter breaks bounding box and results in zero width or height
+                 ;; on vertical and horizontal lines (6, 9, 12, 0)
                  :x1           (:cx svg-consts)
                  :y1           (:cy svg-consts)
                  :x2           (:x ticker-pos)
-                 :y2           (:y ticker-pos)}]
-         [:circle (merge {:fill   (if (some? period-in-play)
-                                    period-in-play-color
-                                    "white")
-                          :filter "url(#shadow-2dp)"
-                          :r      (:ticker-r svg-consts)}
-                         (select-keys svg-consts [:cx :cy]))]
-
-         (when (some? period-in-play)
-           (let [cx          (:cx svg-consts)
-                 cy          (:cy svg-consts)
-                 r           (:ticker-r svg-consts)
-                 width       (* 0.5 r)
-                 height      (* 0.75 r)
-                 half-height (/ height 2)
-                 half-width  (/ width 2)
-                 x-left      (- cx half-width)
-                 y-left      (- cy half-height)]
-             [:g
-              {:onClick (fn [e]
-                          (rf/dispatch [:pause-period-play]))}
-              [:line {:fill           "white"
-                      :x1             x-left
-                      :y1             y-left
-                      :x2             x-left
-                      :y2             (+ y-left height)
-                      :stroke-width   "1"
-                      :stroke         "white"
-                      :stroke-linecap "round"
-                      }]
-              [:line {:fill           "white"
-                      :x1             (+ x-left width)
-                      :y1             y-left
-                      :x2             (+ x-left width)
-                      :y2             (+ y-left height)
-                      :stroke-width   "1"
-                      :stroke         "white"
-                      :stroke-linecap "round"
-                      }]
-              ]
-             ))
-         ]
-        )]
-     ]))
+                 :y2           (:y ticker-pos)}]])]]))
 
 (defn days [days tasks selected-period]
   (->> days
        (map (partial day tasks selected-period))))
-
-(defn task-list [tasks]
-  [:div.tasks-list {:style {:display "flex"}}
-   [ui/paper
-    [:div.task-list {:style {:overflow-y "scroll"}}
-     [ui/list
-      (->> tasks
-           (map
-             (fn [t]
-               [ui/list-item
-                {:key         (:id t)
-                 :primaryText (:name t)
-                 :onTouchTap  #(rf/dispatch
-                                 [:set-selected-task (:id t)])
-                 }
-                ])))]]]])
 
 (defn svg-mui-circle [color]
   [ui/svg-icon
@@ -598,11 +568,35 @@
     (if (< character-limit (count text))
       (str (string/join "" (take character-limit text)) " ...")
       text)
+    ;; returns empty message as an r/as-emelent because that is the only way to style
+    ;; text in a listem item primary-text attr
     (r/as-element
       [:span {:style {:text-decoration "italic"
                       :color           "grey"}}
-       if-empty-message]))
-  )
+       if-empty-message])))
+
+(defn duration-ms-to-string [time]
+  (str
+   (gstring/format "%.2f"
+                   (-> time
+                       (/ 1000)
+                       (/ 60)
+                       (/ 60)))
+   " hours"))
+
+(defn period-list-item-primary-text
+  "takes in a period and gives back a string to use as info in a list item element"
+  [period]
+
+  (let [description (:description period)]
+    (concatonated-text description 20 "no description...")))
+
+(defn period-list-item-secondary-text
+  [period]
+  (let [duration-ms (- (:stop period) (:start period))]
+    (str (utils/date-string (:start period))
+         " : "
+         (duration-ms-to-string duration-ms))))
 
 (defn queue [tasks selected]
   (let [periods-no-stamps (cutils/filter-periods-no-stamps tasks)
@@ -622,7 +616,8 @@
                    :key         (:id period)
                    :leftIcon    (r/as-element
                                   [ui/svg-icon [ic/action-list {:color (:color period)}]])
-                   :primaryText (concatonated-text (:description period) 10 "No period description ...")
+                   :primaryText (period-list-item-primary-text period)
+                   :secondaryText (period-list-item-secondary-text period)
                    :onTouchTap  (if (and period-selected
                                          (= sel-id (:id period)))
                                   (fn [e]
@@ -970,15 +965,6 @@
     )
   )
 
-(defn duration-ms-to-string [time]
-  (str
-   (gstring/format "%.2f"
-                   (-> time
-                       (/ 1000)
-                       (/ 60)
-                       (/ 60)))
-   " hours"))
-
 (defn stats-no-selection []
   (let [planned-time @(rf/subscribe [:planned-time :selected-day])
         accounted-time @(rf/subscribe [:accounted-time :selected-day])
@@ -1070,6 +1056,8 @@
         stop-used            (if use-adjustment
                                stop-angle-adjusted
                                stop-angle)]
+
+
     [ui/svg-icon
      {:viewBox "0 0 24 24"}
      [:g
@@ -1085,9 +1073,10 @@
     ))
 
 (defn agenda [selected periods]
-  (let [planned-periods (filter #(and (= :planned (:type %))
-                                      (some? (:start %)))
-                                periods)
+  (let [planned-periods (->> periods
+                             (filter #(and (= :planned (:type %))
+                                           (some? (:start %))))
+                             (filter #(> (:stop %) (.valueOf (new js/Date)))))
         planned-periods-sorted (sort-by #(.valueOf (:start %))
                                          planned-periods)
         period-selected (= :period
@@ -1105,8 +1094,8 @@
                                             {}))
                       :key         (:id period)
                       :leftIcon    (r/as-element (mini-arc period))
-                      :primaryText (concatonated-text (:description period)
-                                                      10 "No period description ...")
+                      :primaryText (period-list-item-primary-text period)
+                      :secondaryText (period-list-item-secondary-text period)
                       :onTouchTap  (if (and period-selected
                                             (= selected-id (:id period)))
                                      (fn [e]
@@ -1160,6 +1149,7 @@
         displayed-day       @(rf/subscribe [:displayed-day])
         periods             @(rf/subscribe [:periods])
         period-in-play      @(rf/subscribe [:period-in-play])
+        dashboard-tab       @(rf/subscribe [:dashboard-tab])
         ]
 
     [:div.app-container
@@ -1182,8 +1172,7 @@
                :justify-content "center"
                :align-items "center"
                :flex-direction "column"}}
-      [:div.day-label {:style {:color "grey"}}
-       (.toDateString displayed-day)]
+
       (day tasks selected displayed-day)]
 
      [:div.lower-container
@@ -1198,6 +1187,13 @@
                                             ;; at least on mobile
                                             ;; TODO add breakpoint rules
                          }}
+
+       [:div.day-label {:style {:color "grey" :padding "0.01em" :text-align "center"}}
+        [:span (.toDateString displayed-day)]]
+
+       [ui/divider {:style {:margin-top    "0"
+                            :margin-bottom "0"}}]
+
        [:div.navigation.zoom
         {:style {:display "flex"
                  :justify-content "space-between"}}
@@ -1221,7 +1217,7 @@
                      (rf/dispatch [:iterate-displayed-day :next]))}
          [ui/svg-icon
           {:viewBox "0 0 50 50" :style {:width "100%" :height "100%"}}
-          [:polyline {:points       "25,25 0,0 0,50"
+          [:polyline {:points       "50,25 25,0 25,50"
                       :fill         "grey"
                       :fill-opacity "1"
                       }]]]]
@@ -1230,14 +1226,21 @@
                             :margin-bottom "0"}}]
 
        [ui/tabs {:tabItemContainerStyle {:backgroundColor "white"}
-                 :inkBarStyle           {:backgroundColor (:primary app-theme)}}
-        [ui/tab {:label "agenda" :style {:color (:primary app-theme)}}
+                 :inkBarStyle           {:backgroundColor (:primary app-theme)}
+                 :value                 (name dashboard-tab)
+                 :on-change              (fn [v]
+                                           (rf/dispatch [:set-dashboard-tab (keyword v)]))}
+
+        [ui/tab {:label "agenda" :style {:color (:primary app-theme)}
+                 :value "agenda"}
          (agenda selected periods)
          ]
-        [ui/tab {:label "queue" :style {:color (:primary app-theme)}}
+        [ui/tab {:label "queue" :style {:color (:primary app-theme)}
+                 :value "queue"}
          (queue tasks selected)
          ]
-        [ui/tab {:label "stats" :style {:color (:primary app-theme)}}
+        [ui/tab {:label "stats" :style {:color (:primary app-theme)}
+                 :value "stats"}
          (if (= :period (get-in selected [:current-selection :type-or-nil]))
            (stats-selection selected periods tasks)
            (stats-no-selection)
@@ -1635,11 +1638,12 @@
     (r/as-element
      [ui/list-item
       (merge {:key         id
-              :primaryText (concatonated-text description 10 "no description provided ...")
+              :primaryText (period-list-item-primary-text period)
+              :secondaryText (period-list-item-secondary-text period)
               :style       (if is-selected {:backgroundColor "#dddddd"})
                :onClick     (fn [e]
                               (when-not is-selected
-                                (rf/dispatch [:set-selected {:type :period :id id}])))
+                                (rf/dispatch [:set-selected-period id])))
 
                :on-double-click (fn [e]
                                   (when is-selected
@@ -1693,7 +1697,7 @@
 
 
         :onClick       (fn [e]
-                         (rf/dispatch [:set-selected {:type :task :id id}]))
+                         (rf/dispatch [:set-selected-task id]))
 
         :onDoubleClick (fn [e]
                          (when is-selected
@@ -1739,7 +1743,7 @@
                    :style           (if is-selected {:backgroundColor "#dddddd"})
                    :onClick         (fn [e]
                                       (when-not is-selected
-                                        (rf/dispatch [:set-selected {:type :category :id id}])))
+                                        (rf/dispatch [:set-selected-category id])))
                    :on-double-click (fn [e]
                                       (when is-selected
                                         (hist/nav! (str "/edit/category/" id))
