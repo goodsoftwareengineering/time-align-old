@@ -12,7 +12,11 @@
             [time-align.history :as hist]
             [time-align.worker-handlers]
             [oops.core :refer [oget oset! ocall]]
-            [alandipert.storage-atom :refer [local-storage remove-local-storage!]]))
+            [alandipert.storage-atom :refer [local-storage remove-local-storage!]]
+            [com.rpl.specter :as s
+             :refer-macros [select select-one select-one! transform setval ALL if-path submap MAP-VALS filterer VAL NONE END]]
+           [clojure.pprint :as pprint]
+            ))
 
 (def persist-ls
   (->interceptor
@@ -597,93 +601,61 @@
   :save-period-form
   [persist-ls route send-analytic]
   (fn [cofx [_ _]]
-    (let [db (:db cofx)
+    (let [
+          db (:db cofx)
+          form (get-in db [:view :period-form])
+          start (:start form)
+          stop (:stop form)
+          start-v (.valueOf start)
+          stop-v (.valueOf stop)
+          task-id (:task-id form)
 
-          period-form (get-in db [:view :period-form])
-          period-id (if (some? (:id-or-nil period-form))
-                      (:id-or-nil period-form)
+          period-id (if (some? (:id-or-nil form))
+                      (:id-or-nil form)
                       (random-uuid))
-          start (:start period-form)
-          stop (:stop period-form)
-          start-v (if (some? start)
-                    (.valueOf start))
-          stop-v (if (some? stop)
-                   (.valueOf stop))
+          old-period    (some #(if (= period-id (:id %))%)
+                          (cutils/pull-periods db))
+          old-task-id (:task-id old-period)
+          period (merge old-period {:id period-id}
+                        (select-keys form [:start :stop :description :task-id]))
+          was-planned (= :planned (:type period))
+          is-planned (:planned form)
 
-          task-id (:task-id period-form)
-          tasks (cutils/pull-tasks db)
 
-          category-id (->> tasks
-                           (some #(if (= task-id (:id %)) %))
-                           (:category-id)
-                           )
+          clean-period (select-keys period [:id
+                                            (if (some? (:start form))
+                                              :start)
+                                            (if (some? (:stop form))
+                                              :stop)
+                                            :description])
 
-          other-categories (->> db
-                                (:categories)
-                                (filter #(not (= (:id %) category-id))))
-          this-category (->> db
-                             (:categories)
-                             (some #(if (= (:id %) category-id) %))
-                             )
+          removed-old-period-db (s/setval
+                                 [:categories s/ALL
+                                  :tasks s/ALL #(= old-task-id (:id %))
+                                  (if was-planned :planned-periods :actual-periods)
+                                  s/ALL
+                                  #(= period-id (:id %))]
 
-          other-tasks (->> this-category
-                           (:tasks)
-                           (filter #(not (= (:id %) task-id))))
-          this-task (some #(if (= (:id %) task-id) %) tasks)
+                                 s/NONE db)
+          new-db (s/setval
+                  [:categories s/ALL :tasks s/ALL #(= task-id (:id %))
+                   (if is-planned :planned-periods :actual-periods)
+                   s/END]
 
-          is-this-planned-period (->> this-task
-                                      (:planned-periods)
-                                      (some #(if (= period-id (:id %)) %)))
-          this-planned-period (assoc is-this-planned-period :actual false)
+                  [clean-period]
+                  removed-old-period-db)]
 
-          is-this-actual-period (->> this-task
-                                     (:actual-periods)
-                                     (some #(if (= period-id (:id %)) %)))
-          this-actual-period (assoc is-this-actual-period :actual true)
+      (pprint/pprint {:db db
+                      :removed-old-period-db removed-old-period-db
 
-          this-period (if (some? is-this-planned-period)
-                        this-planned-period
+                      :new-db new-db
+                      })
 
-                        (if (some? is-this-actual-period)
-                          this-actual-period
-
-                          {}))
-          other-periods-planned (filter #(not (= (:id %) period-id)) (:planned-periods this-task))
-          other-periods-actual (filter #(not (= (:id %) period-id)) (:actual-periods this-task))
-
-          is-actual (:actual this-period)
-          make-actual (and (not (or (nil? start)            ;; check for start and stop is to keep queue periods from being toggled actual
-                                    (nil? stop)))           ;; if a user tries it will silently fail to toggle
-                           ;; TODO throw an error message
-                           (not (get-in db [:view :period-form :planned])))
-
-          this-period-to-be-inserted (merge (dissoc this-period :actual)
-                                            (merge {:id          period-id
-                                                    :description (:description period-form)}
-                                                   (if (and (nil? start)
-                                                            (nil? stop))
-                                                     {}     ;; start & stop with nil fucks shit up
-                                                     ;;keys have to be absent for queue
-                                                     {:start start :stop stop})))
-
-          new-db (merge db ;; puts period where it needs to be
-                        {:categories
-                         (conj other-categories
-                               (merge this-category
-                                      {:tasks
-                                       (conj other-tasks
-                                             (merge (dissoc this-task :category-id :color)
-                                                    ;; below will handle when a period is being changed
-                                                    ;; from actual to planned
-                                                    ;; by always merging over both sets in a task
-                                                    {:actual-periods (if make-actual
-                                                                       (conj other-periods-actual
-                                                                             this-period-to-be-inserted)
-                                                                       other-periods-actual)}
-                                                    {:planned-periods (if (not make-actual)
-                                                                        (conj other-periods-planned
-                                                                              this-period-to-be-inserted)
-                                                                        other-periods-planned)}))}))})]
+      (pprint/pprint {:task-id task-id
+                      :old-task-id old-task-id
+                      :is-planned is-planned
+                      :was-planned was-planned
+                      :period-id period-id})
 
       (if (or (and (nil? start) (nil? stop))
               (< start-v stop-v))

@@ -47,6 +47,7 @@
                  [secretary "1.2.3"]
                  [selmer "1.10.7"]
                  [org.clojure/test.check "0.9.0"] ;;TODO find better solution, should only be in dev deps
+                 [com.rpl/specter "1.0.5"]
                  ]
 
 
