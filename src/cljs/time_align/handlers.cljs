@@ -1,5 +1,5 @@
 (ns time-align.handlers
-  (:require [clojure.spec.alpha :as s]
+  (:require [clojure.spec.alpha :as spec]
             [expound.alpha :as expound]
             [time-align.db :as db]
             [re-frame.core :refer [dispatch
@@ -15,7 +15,7 @@
             [time-align.worker-handlers]
             [oops.core :refer [oget oset! ocall]]
             [alandipert.storage-atom :refer [local-storage remove-local-storage!]]
-            [com.rpl.specter :as s
+            [com.rpl.specter :as specter
              :refer-macros [select select-one select-one! transform setval ALL if-path submap MAP-VALS filterer VAL NONE END]]
            [clojure.pprint :as pprint]
             ))
@@ -83,21 +83,21 @@
     :after (fn [{:keys [coeffects effects queue stack] :as context}]
              (let [old-db (:db coeffects)
                    new-db (:db effects)]
-               (println "Validating")
-               (if-not (s/valid? ::db/db new-db)
-                 (->> context
-                     (setval [:effects :db] old-db )
-                     (merge {:validation {:valid? false
-                                          :explanation (expound/expound ::db/db new-db)}}))
+               (if-not (spec/valid? ::db/db new-db)
+                 (do
+                   (pprint/pprint (expound/expound ::db/db new-db))
+                   (->> context
+                        (setval [:effects :db] old-db )
+                        (merge {:validation {:valid? false
+                                             :explanation (expound/expound ::db/db new-db)}}))
+                   )
                  (->> context
                       (merge {:validation {:valid? true
-                                           :explanation nil}})))))
-    ))
-
+                                           :explanation nil}})))))))
 
 (reg-event-db
   :initialize-db
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [_ _]
     (let [hot-garbage-let-var     (if (some #(= :app-db %) (store/store->keys))
                                     (->> :app-db
@@ -111,7 +111,6 @@
                                                                      "js/worker.js"))})]
       (time-align.worker-handlers/init! (:worker-pool hot-garbage-worker-pool))
       hot-garbage-worker-pool)))
-
 
 (reg-event-fx
   :set-active-page
@@ -148,7 +147,7 @@
 
 (reg-event-db
   :load-category-entity-form
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db [_ id]]
     (let [categories    (:categories db)
           this-category (some #(if (= id (:id %)) %) categories)
@@ -161,7 +160,7 @@
 
 (reg-event-db
   :load-task-entity-form
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db [_ id]]
     (let [tasks       (cutils/pull-tasks db)
           this-task   (some #(if (= id (:id %)) %) tasks)
@@ -180,7 +179,7 @@
 
 (reg-event-db
   :load-period-entity-form
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db [_ id]]
     (let [periods     (cutils/pull-periods db)
           this-period (some #(if (= id (:id %)) %)
@@ -203,13 +202,13 @@
 
 (reg-event-db
   :set-zoom
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db [_ quadrant]]
     (assoc-in db [:view :zoom] quadrant)))
 
 (reg-event-db
   :set-view-range-day
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db [_ _]]
     (assoc-in db [:view :range]
               {:start (new js/Date)
@@ -217,7 +216,7 @@
 
 (reg-event-db
   :set-view-range-week
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db [_ _]]
     (assoc-in db [:view :range]
               {:start (utils/one-week-ago (js/Date.))
@@ -225,24 +224,25 @@
 
 (reg-event-db
   :set-view-range-custom
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db [_ range]]
     (assoc-in db [:view :range] range)))
 
 (reg-event-db
   :toggle-main-drawer
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db [_ _]]
     (update-in db [:view :main-drawer] not)))
 
 (reg-event-db
   :set-main-drawer
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db [_ new-state]]
     (assoc-in db [:view :main-drawer] new-state)))
 
 (reg-event-db
  :set-selected-category
+ [persist-ls send-analytic validate-app-db]
  (fn [db [_ id]]
    (assoc-in db [:view :selected]
              {:current-selection  {:type-or-nil :category
@@ -251,7 +251,7 @@
 
 (reg-event-fx
   :set-selected-queue
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [cofx [_ period-id]]
     ;; TODO might need to set action-button state on nil to auto collapse
     (let [
@@ -268,10 +268,9 @@
       )
     ))
 
-;; not using this yet VVV
 (reg-event-fx
   :set-selected-task
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [cofx [_ task-id]]
     (let [db (:db cofx)]
 
@@ -288,7 +287,7 @@
 
 (reg-event-fx
  :set-selected-period
- [persist-ls send-analytic]
+ [persist-ls send-analytic validate-app-db]
  (fn [cofx [_ period-id]]
    (let [
          db (:db cofx)
@@ -312,7 +311,7 @@
 
 (reg-event-db
   :action-buttons-expand
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db [_ _]]
     (let [selection (get-in db [:view :selected :current-selection])
           s-type    (:type-or-nil selection)
@@ -326,7 +325,7 @@
 
 (reg-event-db
   :action-buttons-back
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db [_ _]]
     (let [cur-state (get-in db [:view :action-buttons])
           new-state
@@ -338,7 +337,7 @@
 
 (reg-event-db
   :set-moving-period
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db [_ is-moving-bool]]
     (assoc-in db [:view :continous-action :moving-period]
               is-moving-bool)))
@@ -433,7 +432,7 @@
 
 (reg-event-db
   :set-category-form-color
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db [_ color]]
     (assoc-in db [:view :category-form :color-map]
               (merge (get-in db [:view :category-form :color-map])
@@ -466,44 +465,44 @@
 
 (reg-event-db
   :clear-category-form
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db _]
     (assoc-in db [:view :category-form] {:id-or-nil nil :name "" :color-map {:red 0 :green 0 :blue 0}}))
   )
 
 (reg-event-db
   :set-category-form-name
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db [_ name]]
     (assoc-in db [:view :category-form :name] name)))
 
 (reg-event-db
   :set-task-form-category-id
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db [_ category-id]]
     (assoc-in db [:view :task-form :category-id] category-id)))
 
 (reg-event-db
   :set-task-form-name
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db [_ name]]
     (assoc-in db [:view :task-form :name] name)))
 
 (reg-event-db
   :set-task-form-description
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db [_ desc]]
     (assoc-in db [:view :task-form :description] desc)))
 
 (reg-event-db
   :set-task-form-complete
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db [_ comp]]
     (assoc-in db [:view :task-form :complete] comp)))
 
 (reg-event-fx
   :clear-entities
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [cofx _]
     {:dispatch-n (list [:clear-category-form]
                        [:clear-task-form]
@@ -566,7 +565,7 @@
 
 (reg-event-db
   :clear-task-form
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db _]
     (assoc-in db [:view :task-form] {:id-or-nil   nil
                                      :name        ""
@@ -578,7 +577,7 @@
 
 (reg-event-db
   :set-period-form-date
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db [_ [new-d start-or-stop]]]
     (let [o (get-in db [:view :period-form start-or-stop])]
       (if (some? o)
@@ -595,7 +594,7 @@
 
 (reg-event-db
   :set-period-form-time
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db [_ [new-s start-or-stop]]]
     (let [o (get-in db [:view :period-form start-or-stop])]
       (if (some? o)
@@ -619,14 +618,14 @@
 
 (reg-event-db
   :set-period-form-description
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db [_ desc]]
     (assoc-in db [:view :period-form :description] desc)
     ))
 
 (reg-event-db
   :set-period-form-task-id
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db [_ task-id]]
     (assoc-in db [:view :period-form :task-id] task-id))
   )
@@ -663,18 +662,18 @@
                                               :stop)
                                             :description])
 
-          removed-old-period-db (s/setval
-                                 [:categories s/ALL
-                                  :tasks s/ALL #(= old-task-id (:id %))
+          removed-old-period-db (specter/setval
+                                 [:categories specter/ALL
+                                  :tasks specter/ALL #(= old-task-id (:id %))
                                   (if was-planned :planned-periods :actual-periods)
-                                  s/ALL
+                                  specter/ALL
                                   #(= period-id (:id %))]
 
-                                 s/NONE db)
-          new-db (s/setval
-                  [:categories s/ALL :tasks s/ALL #(= task-id (:id %))
+                                 specter/NONE db)
+          new-db (specter/setval
+                  [:categories specter/ALL :tasks specter/ALL #(= task-id (:id %))
                    (if is-planned :planned-periods :actual-periods)
-                   s/END]
+                   specter/END]
 
                   [clean-period]
                   removed-old-period-db)]
@@ -707,7 +706,7 @@
 
 (reg-event-db
   :clear-period-form
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db _]
     (assoc-in db
               [:view :period-form]
@@ -815,13 +814,13 @@
 
 (reg-event-db
   :set-period-form-planned
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db [_ is-planned]]
     (assoc-in db [:view :period-form :planned] is-planned)))
 
 (reg-event-db
   :iterate-displayed-day
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db [_ direction]]
     (let [current      (get-in db [:view :displayed-day])
           current-date (.getDate current)
@@ -841,7 +840,7 @@
 
 (reg-event-fx
   :play-period
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [cofx [_ id]]
     (let [
           db                 (:db cofx)
@@ -896,14 +895,14 @@
 
 (reg-event-db
   :play-actual-or-planned-period
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db [_ id]]
 
     ))
 
 (reg-event-db
   :update-period-in-play
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db [_ _]]
     (let [playing-period     (get-in db [:view :period-in-play])
           is-playing         (some? playing-period)
@@ -956,15 +955,14 @@
 
 (reg-event-db
   :pause-period-play                    ;; TODO should probably be called stop
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db _]
     (assoc-in db [:view :period-in-play] nil) ;; TODO after specter add in an adjust selected period stop time
     ))
 
-
 (reg-event-db
   :set-dashboard-tab
-  [persist-ls send-analytic]
+  [persist-ls send-analytic validate-app-db]
   (fn [db [_ tab]]
     (assoc-in db [:view :dashboard-tab] tab))
   )
