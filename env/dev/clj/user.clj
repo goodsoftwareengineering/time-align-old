@@ -14,6 +14,6 @@
   (stop)
   (start))
 
-(defn reload-project.clj
+(defn reload-project.clj []
   (still/load-project))
 
