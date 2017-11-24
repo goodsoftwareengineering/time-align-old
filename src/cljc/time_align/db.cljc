@@ -87,17 +87,13 @@
 ;; (? and priority)
 ;; tasks that are not planned (:actual) cannot have periods in the future
 ;; adding date support is going to need some cljc trickery
-(s/def ::actual-period (s/and ::period
-                              (fn [period]
-                                (and (contains? period :start)
-                                     (contains? period :stop)))))
-(s/def ::actual-periods (s/coll-of ::actual-period :gen-max 5 :min-count 1))
-(s/def ::planned-periods ::periods)
-(s/def ::task (s/keys :req-un [::id ::name ::description ::complete ::periods]))
+(s/def ::task (s/keys :req-un [::id ::name ::description ::complete]
+                      :opt-un [::periods]))
 ;; TODO complete check (all periods are planned/actual are passed)
 (s/def ::tasks (s/coll-of ::task :gen-max 2 :min-count 1))
 (s/def ::user (s/keys :req-un [::name ::id ::email]))
-(s/def ::category (s/keys :req-un [::id ::name ::color ::tasks]))
+(s/def ::category (s/keys :req-un [::id ::name ::color]
+                          :opt-un [::tasks]))
 (s/def ::categories (s/coll-of ::category :gen-max 3 :min-count 0))
 (s/def ::type #{:category :task :period :queue})
 (s/def ::type-or-nil (s/with-gen

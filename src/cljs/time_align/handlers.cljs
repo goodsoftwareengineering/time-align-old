@@ -17,8 +17,9 @@
             [alandipert.storage-atom :refer [local-storage remove-local-storage!]]
             [com.rpl.specter :as specter
              :refer-macros [select select-one select-one! transform setval ALL if-path submap MAP-VALS filterer VAL NONE END]]
-           [clojure.pprint :as pprint]
-            ))
+            [clojure.pprint :as pprint]
+
+            [clojure.spec.alpha :as s]))
 
 ;; The event/interceptor lifecycle
 ;;                   [event-1    event-2   event-3]
@@ -521,40 +522,28 @@
           task-id (if (some? (:id-or-nil task-form))
                     (:id-or-nil task-form)
                     (random-uuid))
-          old-category-id (->> (cutils/pull-tasks db)
-                               (some #(if (= (:id %) task-id)
-                                        (:category-id %))))
-          old-category  (some #(if (= (:id %) old-category-id) %) (:categories db))
-          old-category-filtered-tasks (filter #(not= task-id (:id %)) ;; removes task from old category
-                                              (:tasks old-category))
-          old-category-filtered (merge old-category {:tasks old-category-filtered-tasks})
           category-id (:category-id task-form)
-          other-categories (remove nil?
-                                   (conj
-                                    (->> db
-                                         (:categories)
-                                         (remove #(= (:id %) category-id))
-                                         (remove #(= (:id %) old-category-id))) ;; gets all categories but old and new
+          old-task (->> (cutils/pull-tasks db)
+                        (some #(if (= (:id %) task-id) %)))
+          old-category-id  (:category-id old-task)
 
-                                    (if (and (not= category-id old-category-id)
-                                             (not (nil? old-category-id)))
-                                      old-category-filtered))) ;; puts back old doesn't matter if there wasn't an old
+          clean-task (merge old-task
+                            {:id task-id} ;; needed for new tasks and harmless for old
+                            (select-keys task-form [:name :complete :description]))
 
-          this-category (some #(if (= (:id %) category-id) %)
-                              (:categories db))
-          other-tasks (:tasks this-category)
-          this-task {:id              task-id
-                     :name            (:name task-form)
-                     :description     (:description task-form)
-                     :complete        (:complete task-form)
-                     :actual-periods  []
-                     :planned-periods []}
-          new-db (merge db
-                        {:categories
-                         (conj other-categories
-                               (merge this-category
-                                      {:tasks
-                                       (conj other-tasks this-task)}))})]
+          new-db-removed-old-task (specter/setval
+                                   [:categories specter/ALL
+                                    #(= old-category-id (:id %))
+                                    :tasks specter/ALL
+                                    #(= task-id (:id %))]
+
+                                   specter/NONE db)
+          new-db (specter/setval
+                  [:categories specter/ALL
+                   #(= category-id (:id %))
+                   :tasks specter/END]
+
+                  [clean-task] new-db-removed-old-task)]
 
       (if (some? category-id)           ;; secondary, view should not dispatch when nil
 
@@ -656,7 +645,6 @@
                         (select-keys form [:start :stop :description :task-id]))
           was-planned (= :planned (:type period))
           is-planned (:planned form)
-
 
           clean-period (select-keys period [:id
                                             (if (some? (:start form))
