@@ -85,6 +85,9 @@
                    new-db (:db effects)]
                (if-not (spec/valid? ::db/db new-db)
                  (do
+                   (println "------------------------------------------------------")
+                   (pprint/pprint {:dispatch (:dispatch effects)
+                                   :event    (:event coeffects)})
                    (pprint/pprint (expound/expound ::db/db new-db))
                    (->> context
                         (setval [:effects :db] old-db )
@@ -441,7 +444,7 @@
 
 (reg-event-fx
   :save-category-form
-  [persist-ls route send-analytic]
+  [persist-ls route send-analytic validate-app-db]
   (fn [cofx [_ _]]
     (let [db               (:db cofx)
           name             (get-in db [:view :category-form :name])
@@ -511,7 +514,7 @@
 
 (reg-event-fx
   :save-task-form
-  [persist-ls route send-analytic]
+  [persist-ls route send-analytic validate-app-db]
   (fn [cofx [_ _]]
     (let [db (:db cofx)
           task-form (get-in db [:view :task-form])
@@ -632,7 +635,7 @@
 
 (reg-event-fx
   :save-period-form
-  [persist-ls route send-analytic]
+  [persist-ls route send-analytic validate-app-db]
   (fn [cofx [_ _]]
     (let [
           db (:db cofx)
@@ -714,7 +717,7 @@
 
 (reg-event-fx
   :delete-category-form-entity
-  [persist-ls route send-analytic]
+  [persist-ls route send-analytic validate-app-db]
   (fn [cofx [_ _]]
     (let [db               (:db cofx)
           category-id      (get-in db [:view :category-form :id-or-nil])
@@ -729,7 +732,7 @@
 
 (reg-event-fx
   :delete-task-form-entity
-  [persist-ls route send-analytic]
+  [persist-ls route send-analytic validate-app-db]
   (fn [cofx [_ _]]
     (let [db               (:db cofx)
           task-id          (get-in db [:view :task-form :id-or-nil])
@@ -756,7 +759,7 @@
 
 (reg-event-fx
   :delete-period-form-entity
-  [persist-ls route send-analytic]
+  [persist-ls route send-analytic validate-app-db]
   (fn [cofx [_ _]]
     (let [db               (:db cofx)
           period-id        (get-in db [:view :period-form :id-or-nil])
