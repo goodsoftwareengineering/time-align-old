@@ -43,6 +43,7 @@
             (remove-local-storage! :app-db)
             (local-storage (atom (dissoc (get-in context [:effects :db]) :worker-pool)) :app-db)
             context)))
+
 (def route
   (->interceptor
    :id :route-after-event
