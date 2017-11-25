@@ -65,6 +65,12 @@ lein run migrate
 (start-autobuild worker)
 ```
  to compile the web worker clojurescript files
+ 
+## Running production
+- compile jar
+- set up database
+- set up webserver
+- run jar
 
 ## License
 gpl-3.0
