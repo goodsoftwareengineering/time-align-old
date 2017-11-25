@@ -593,7 +593,6 @@
          start-v (.valueOf start)
          stop-v (.valueOf stop)
          task-id (:task-id form)
-
          period-id (if (some? (:id-or-nil form))
                      (:id-or-nil form)
                      (random-uuid))
@@ -601,43 +600,27 @@
                              (cutils/pull-periods db))
          old-task-id (:task-id old-period)
          period (merge old-period {:id period-id}
-                       (select-keys form [:start :stop :description :task-id]))
-         was-planned (= :planned (:type period))
-         is-planned (:planned form)
-
+                       (select-keys form [:start :stop :description :task-id :planned]))
          clean-period (select-keys period [:id
                                            (if (some? (:start form))
                                              :start)
                                            (if (some? (:stop form))
                                              :stop)
-                                           :description])
-
+                                           :description
+                                           :planned])
          removed-old-period-db (specter/setval
                                 [:categories specter/ALL
                                  :tasks specter/ALL #(= old-task-id (:id %))
-                                 (if was-planned :planned-periods :actual-periods)
-                                 specter/ALL
-                                 #(= period-id (:id %))]
+                                 :periods specter/ALL #(= period-id (:id %))]
 
                                 specter/NONE db)
          new-db (specter/setval
                  [:categories specter/ALL :tasks specter/ALL #(= task-id (:id %))
-                  (if is-planned :planned-periods :actual-periods)
-                  specter/END]
+                  :periods specter/END]
 
                  [clean-period]
+
                  removed-old-period-db)]
-
-     (pprint/pprint {:db db
-                     :removed-old-period-db removed-old-period-db
-
-                     :new-db new-db})
-
-     (pprint/pprint {:task-id task-id
-                     :old-task-id old-task-id
-                     :is-planned is-planned
-                     :was-planned was-planned
-                     :period-id period-id})
 
      (if (or (and (nil? start) (nil? stop))
              (< start-v stop-v))
@@ -712,13 +695,6 @@
          other-periods    (->> periods
                                (filter #(and (= task-id (:task-id %))
                                              (not= period-id (:id %)))))
-         other-planned    (->> other-periods
-                               (filter #(= :planned (:type %)))
-                               (map #(dissoc % :type :category-id :task-id :color)))
-         other-actual     (->> other-periods
-                               (filter #(= :actual (:type %)))
-                               (map #(dissoc % :type :category-id :task-id :color)))
-
          tasks            (cutils/pull-tasks db)
          other-tasks      (->> tasks
                                (filter
@@ -737,12 +713,13 @@
                                   (conj other-categories
                                         (merge this-category
                                                {:tasks
-                                                (conj other-tasks (merge this-task (if is-actual
-                                                                                     {:actual-periods other-actual}
-                                                                                     {:planned-periods other-planned})))}))})] {:db         new-db
-                                                                                                                                :dispatch-n (list [:clear-period-form]
-                                                                                                                                                  [:set-selected-period nil])
-                                                                                                                                :route      [:back]})))
+                                                (conj other-tasks
+                                                      (merge this-task
+                                                             {:periods other-periods}))}))})]
+     {:db         new-db
+      :dispatch-n (list [:clear-period-form]
+                        [:set-selected-period nil])
+      :route      [:back]})))
 
 (reg-event-db
  :set-period-form-planned

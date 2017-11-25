@@ -20,17 +20,17 @@
 (s/def ::start ::moment)
 (s/def ::stop ::moment)
 (s/def ::priority int?)
-(s/def ::period-type #{:planned :actual})
+(s/def ::planned boolean?)
 (s/def ::period (s/with-gen (s/and
-                             (s/keys :req-un [::id ::period-type]
+                             (s/keys :req-un [::id ::planned]
                                      :opt-un [::start ::stop ::description])
 
                              (fn [period]
                                ;; actual has timestamps
-                               (if (= :actual (:period-type period))
+                               (if (not (:planned period))
                                  (and (contains? period :start)
                                       (contains? period :stop))
-                                 false))
+                                 true))
 
                              (fn [period]
                                ;; stop after start
