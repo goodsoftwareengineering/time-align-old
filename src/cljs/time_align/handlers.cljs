@@ -686,36 +686,16 @@
          period-id        (get-in db [:view :period-form :id-or-nil])
          periods          (cutils/pull-periods db)
          this-period      (some #(if (= period-id (:id %)) %) periods)
-         type             (:type this-period)
-         is-actual        (= type :actual)
 
          task-id          (:task-id this-period)
          category-id      (:category-id this-period)
+         new-db           (specter/setval
+                           [:categories specter/ALL #(= category-id (:id %))
+                            :tasks specter/ALL #(= task-id (:id %))
+                            :periods specter/ALL #(= period-id (:id %))]
 
-         other-periods    (->> periods
-                               (filter #(and (= task-id (:task-id %))
-                                             (not= period-id (:id %)))))
-         tasks            (cutils/pull-tasks db)
-         other-tasks      (->> tasks
-                               (filter
-                                #(and (= category-id (:category-id %))
-                                      (not= task-id (:id %))))
-                               (map #(dissoc % :category-id :color)))
-         this-task        (->> tasks
-                               (some #(if (= task-id (:id %)) %))
-                               (#(dissoc % :category-id :color)))
+                           specter/NONE db)]
 
-         categories       (:categories db)
-         other-categories (filter #(not= category-id (:id %)) categories)
-         this-category    (some #(if (= category-id (:id %)) %) categories)
-         new-db           (merge db
-                                 {:categories
-                                  (conj other-categories
-                                        (merge this-category
-                                               {:tasks
-                                                (conj other-tasks
-                                                      (merge this-task
-                                                             {:periods other-periods}))}))})]
      {:db         new-db
       :dispatch-n (list [:clear-period-form]
                         [:set-selected-period nil])

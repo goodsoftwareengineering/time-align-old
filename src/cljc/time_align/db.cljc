@@ -12,7 +12,10 @@
 #?(:clj (defn random-uuid [](java.util.UUID/randomUUID)))
 
 (s/def ::name (s/and string? #(> 256 (count %))))
-(s/def ::description string?)
+(s/def ::description (s/with-gen
+                       (s/or :has-desc string?
+                             :is-nil nil?)
+                       #(gen/return nil)))
 (s/def ::email string?)
 (s/def ::id uuid?)
 (s/def ::moment #?(:cljs (s/with-gen inst? #(s/gen utils/time-set))
@@ -68,7 +71,7 @@
                                  (merge stamps desc type {:id (random-uuid)})))
                              (s/gen ::moment))))
 
-(s/def ::periods (s/coll-of ::period :gen-max 5 :min-count 1))
+(s/def ::periods (s/coll-of ::period :gen-max 5))
 (s/def ::hex-digit (s/with-gen (s/and string? #(contains? (set "0123456789abcdef") %))
                       #(s/gen (set "0123456789abcdef"))))
 (s/def ::hex-str (s/with-gen (s/and string? (fn [s] (every? #(s/valid? ::hex-digit %) (seq s))))

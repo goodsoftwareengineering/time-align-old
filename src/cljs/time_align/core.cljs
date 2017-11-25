@@ -1668,12 +1668,9 @@
                              [ui/svg-icon [ic/action-list {:color color}]])}))])))
 
 (defn list-task [current-selection task]
-  (let [{:keys [id name actual-periods complete planned-periods color]} task
+  (let [{:keys [id name periods complete color]} task
 
-        periods            (concat
-                             (map #(assoc % :type :actual) actual-periods)
-                             (map #(assoc % :type :planned) planned-periods))
-
+        periods            periods
         periods-with-color (->> periods (map #(assoc % :color color)))
         periods-sorted     (reverse
                              (sort-by #(if (some? (:start %))
@@ -1683,9 +1680,7 @@
         sel-cat            (:type-or-nil current-selection)
         is-selected        (and (= :task sel-cat)
                                 (= id sel-id))
-        is-child-selected  (->> task
-                                ((fn [task]                                                                             ;; pulls periods into one seq
-                                   (concat (:planned-periods task) (:actual-periods task))))
+        is-child-selected  (->> periods
                                 (some #(if (= sel-id (:id %)) true nil))
                                 (some?))]
     (r/as-element
