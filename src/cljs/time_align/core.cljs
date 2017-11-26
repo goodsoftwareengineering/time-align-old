@@ -593,10 +593,14 @@
 
 (defn period-list-item-secondary-text
   [period]
-  (let [duration-ms (- (:stop period) (:start period))]
-    (str (utils/date-string (:start period))
-         " : "
-         (duration-ms-to-string duration-ms))))
+  (let [duration-ms (- (:stop period) (:start period))
+        has-stamps (cutils/period-has-stamps period)]
+    (if has-stamps
+      (str (utils/date-string (:start period))
+           " : "
+           (duration-ms-to-string duration-ms))
+      "Queue item"
+      )))
 
 (defn queue [tasks selected]
   (let [periods-no-stamps (cutils/filter-periods-no-stamps tasks)
@@ -627,9 +631,7 @@
                                                    :id      (:id period)}]))
                                   (fn [e]
                                     (rf/dispatch
-                                      [:set-selected-queue (:id period)])
-                                    )
-                                  )}])))]))
+                                      [:set-selected-queue (:id period)])))}])))]))
 
 (def basic-button {:style {}})
 (def basic-mini-button {:mini             true
@@ -1074,11 +1076,10 @@
 
 (defn agenda [selected periods]
   (let [planned-periods (->> periods
-                             (filter #(and (= :planned (:type %))
-                                           (some? (:start %))))
+                             (filter #(and (:planned %)
+                                           (cutils/period-has-stamps %)))
                              (filter #(> (:stop %) (.valueOf (new js/Date)))))
-        planned-periods-sorted (sort-by #(.valueOf (:start %))
-                                         planned-periods)
+        planned-periods-sorted (sort-by #(.valueOf (:start %)) planned-periods)
         period-selected (= :period
                            (get-in selected [:current-selection :type-or-nil]))
         selected-id (get-in selected [:current-selection :id-or-nil])]

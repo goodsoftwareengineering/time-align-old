@@ -99,12 +99,12 @@
   [tasks]
   (let [periods
         (->> tasks
-             (filter (fn [task] (contains? task :planned-periods)))
+             (filter (fn [task] (contains? task :periods)))
              (map (fn [task]
-                    (->> (:planned-periods task)
-                         (filter
-                           (fn [period] (and (not (contains? period :start))
-                                             (not (contains? period :stop)))))
+                    (->> task
+                         (:periods)
+                         (filter #(:planned %))
+                         (filter #(not (period-has-stamps %)))
                          (map
                            (fn [period] (merge period {:task-id   (:id task)
                                                        :task-name (:name task)

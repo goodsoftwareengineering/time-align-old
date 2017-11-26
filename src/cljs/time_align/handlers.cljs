@@ -213,13 +213,15 @@
          description (:description this-period)]
 
      (assoc-in db [:view :period-form]
-               {:id-or-nil    id
-                :task-id      task-id
-                :error-or-nil nil
-                :start        start
-                :stop         stop
-                :planned      is-planned
-                :description  description}))))
+               (merge {:id-or-nil    id
+                       :task-id      task-id
+                       :error-or-nil nil
+                       :planned      is-planned
+                       :description  description}
+
+                      (when (cutils/period-has-stamps this-period)
+                        {:start        start
+                         :stop         stop}))))))
 
 (reg-event-db
  :set-zoom
@@ -607,8 +609,10 @@
          form (get-in db [:view :period-form])
          start (:start form)
          stop (:stop form)
-         start-v (.valueOf start)
-         stop-v (.valueOf stop)
+         start-v (if (some? start)
+                   (.valueOf start))
+         stop-v (if (some? stop)
+                  (.valueOf stop))
          task-id (:task-id form)
          period-id (if (some? (:id-or-nil form))
                      (:id-or-nil form)
