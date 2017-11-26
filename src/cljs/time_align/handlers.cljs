@@ -186,7 +186,7 @@
    (let [periods     (cutils/pull-periods db)
          this-period (some #(if (= id (:id %)) %)
                            periods)
-         is-planned  (= :planned (:type this-period))
+         is-planned  (:planned this-period)
          task-id     (:task-id this-period)
          start       (:start this-period)
          stop        (:stop this-period)
