@@ -317,3 +317,9 @@
 
     {:red r :green g :blue b}
     ))
+
+(defn parse-overlapping-periods
+  "Takes a flat collection of periods. Returns a collection of collections of modified periods such that each leaf collection contains the segments of periods that overlap. [{p1} {p2} {p3} ] => [[{p1} {p2.1}] [{p2.2}] [{p3}]]"
+  [periods]
+
+  )
