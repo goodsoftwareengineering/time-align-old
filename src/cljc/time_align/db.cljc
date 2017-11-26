@@ -202,10 +202,15 @@
                              :moving-period])
 
                          (= :period
-                            (get-in
-                             view
-                             [:selected :current-selection
-                              :type-or-nil]))
+                            ;; use (last) because this
+                            ;; `{:type-or-nil [:is-nil nil],`
+                            ;; pulled from spec explain (is this what validation functions see?)
+                            ;; probably from (s/or) and the paths supplied
+                            ;; see handler comment #broken-expound
+                            (last (get-in
+                                   view
+                                   [:selected :current-selection
+                                    :type-or-nil])))
                          true))))
 (s/def ::db (s/keys :req-un [::user ::view ::categories]))
 

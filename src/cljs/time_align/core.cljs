@@ -316,8 +316,8 @@
     ))
 
 (defn periods [periods selected is-moving-period curr-time displayed-day]
-  (let [actual  (:actual-periods periods)
-        planned (:planned-periods periods)]
+  (let [actual (filter #(not (:planned %)) periods)
+        planned (filter #(:planned %) periods)]
     [:g
      [:g
       (if (some? actual)

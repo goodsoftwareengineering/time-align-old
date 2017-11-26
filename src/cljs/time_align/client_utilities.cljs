@@ -3,6 +3,8 @@
     [clojure.string :as string]
     [time-align.utilities :as utils]
     [oops.core :refer [oget oset! ocall]]
+    [com.rpl.specter :as specter
+     :refer-macros [select select-one select-one! transform setval ALL if-path submap MAP-VALS filterer VAL NONE END]]
     ))
 
 (defn polar-to-cartesian [cx cy r angle]
@@ -87,12 +89,10 @@
   "Takes a list of tasks and returns a list of tasks with only periods that have stamps."
   [tasks]
   (->> tasks
-       (filter (fn [task] (or (contains? task :actual-periods)
-                              (contains? task :planned-periods))))
-       (map (partial filter-out-stamps :actual-periods))
-       (map (partial filter-out-stamps :planned-periods))
-       )
-  )
+       (filter (fn [task]
+                 (and
+                  (contains? task :periods)
+                  (some? (some #(period-has-stamps %) (:periods task))))))))
 
 (defn filter-periods-no-stamps
   "Takes a list of tasks and returns a list of modified periods."
@@ -114,32 +114,33 @@
 
 (defn modify-and-pull-periods
   "Takes a keyword indicating period type, and the task containing periods. Returns a collection of periods with parent task info."
-  [type tasks]
+  [tasks]
   (->> tasks
        (map
          (fn [task]
            (let [id (:id task)
-                 periods (type task)
+                 periods (:periods task)
                  color (:color task)]
              (->> periods
                   (map #(assoc % :task-id id :color color))))))
-       (flatten))
-  )
+       (flatten)))
 
 (defn filter-periods-for-day
   "Takes a day and a list of tasks and returns a list of modified periods."
   [day tasks]
   (let [new-tasks (filter-periods-with-stamps tasks)
-        actual-periods (modify-and-pull-periods :actual-periods new-tasks)
-        actual-filtered (->> actual-periods
-                             (filter (partial period-in-day day)))
-        planned-periods (modify-and-pull-periods :planned-periods new-tasks)
-        planned-filtered (->> planned-periods
+        periods (modify-and-pull-periods new-tasks)
+        periods-filtered (->> periods
                               (filter (partial period-in-day day)))]
 
-    {:actual-periods  actual-filtered
-     :planned-periods planned-filtered}))
+    periods-filtered))
 
+;; (def tasks (pull-tasks @re-frame.db/app-db))
+;; (identity tasks)
+;; (def day (new js/Date))
+;; (identity day)
+;; (filter-periods-for-day day tasks)
+;; (filter-periods-with-stamps tasks)
 
 (defn client-to-view-box [id evt type]
   (let [pt (-> (ocall js/document "getElementById" id)

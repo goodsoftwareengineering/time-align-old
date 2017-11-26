@@ -17,9 +17,7 @@
             [alandipert.storage-atom :refer [local-storage remove-local-storage!]]
             [com.rpl.specter :as specter
              :refer-macros [select select-one select-one! transform setval ALL if-path submap MAP-VALS filterer VAL NONE END]]
-            [clojure.pprint :as pprint]
-
-            [clojure.spec.alpha :as s]))
+            [clojure.pprint :as pprint]))
 
 ;; The event/interceptor lifecycle
 ;;                   [event-1    event-2   event-3]
@@ -90,11 +88,33 @@
                   (println "------------------------------------------------------")
                   (pprint/pprint {:dispatch (:dispatch effects)
                                   :event    (:event coeffects)})
-                  (pprint/pprint (expound/expound ::db/db new-db))
+                  ;; (pprint/pprint new-db)
+                  (try
+                    (throw
+                     (pprint/pprint (expound/expound ::db/db new-db)))
+                    (catch :default e
+                      (pprint/pprint
+                       {:error-expounding e
+                        :spec-explain-data-instead (spec/explain-data ::db/db new-db)})))
+
                   (->> context
                        (setval [:effects :db] old-db)
                        (merge {:validation {:valid? false
-                                            :explanation (expound/expound ::db/db new-db)}})))
+                                            :explanation
+                                            ;; reason for the try #broken-expound
+                                            ;; when validation failed a custom validation
+                                            ;; function that relied on an (s/or) spec
+                                            ;; definition expound blew up see this
+                                            ;; https://github.com/bhb/expound/issues/41
+                                            ;; TODO when this ^^ github issue gets solved
+                                            ;; remove the try
+                                            (try
+                                              (throw
+                                               (expound/expound ::db/db new-db))
+                                              (catch :default e
+                                                 {:error-expounding e
+                                                  :spec-explain-data-instead
+                                                  (spec/explain-data ::db/db new-db)}))}})))
                 (->> context
                      (merge {:validation {:valid? true
                                           :explanation nil}})))))))
@@ -351,7 +371,7 @@
 
 (reg-event-db
  :move-selected-period
- [persist-ls]
+ [persist-ls validate-app-db]
  (fn [db [_ mid-point-time-ms]]
    (if (period-selected? db)
      (let [p-id             (get-in db [:view :selected :current-selection :id-or-nil])
@@ -362,11 +382,8 @@
            c-id             (:id category)
            _period          (:period chopped-tree)
            period-type      (:type _period)
-           type-coll        (case period-type
-                              :actual :actual-periods
-                              :planned :planned-periods)
            period           (dissoc _period :type)
-           other-periods    (->> (type-coll task)
+           other-periods    (->> (:periods task)
                                  (remove #(= p-id (:id %))))
            other-tasks      (->> (:tasks category)
                                  (remove #(= t-id (:id %))))
@@ -402,7 +419,7 @@
             ;; TODO if we don't user specter this is preferred to the massive
             ;; nested cons/merge mess in other places
            new-periods      (cons new-period other-periods)
-           new-task         (merge task {type-coll new-periods})
+           new-task         (merge task {:periods new-periods})
            new-tasks        (cons new-task other-tasks)
            new-category     (merge category {:tasks new-tasks})
            new-categories   (cons new-category other-categories)]
