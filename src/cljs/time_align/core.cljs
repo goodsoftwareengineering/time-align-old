@@ -1206,13 +1206,7 @@
                :align-items "center"
                :flex-direction "column"}}
 
-      (day tasks selected displayed-day)
-
-      [ui/dialog {:title "Add Period"
-                  :open inline-period-dialog
-                  :modal true
-                  :onRequestClose (fn [_]
-                                    (rf/dispatch [:set-inline-period-add-dialog false]))}]]
+      (day tasks selected displayed-day)]
 
      [:div.lower-container
       {:style {:display    "flex"
