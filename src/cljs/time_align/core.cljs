@@ -1874,11 +1874,11 @@
   (rf/dispatch [:set-active-page {:page-id :queue}]))
 
 (secretary/defroute add-category-route "/add" []
-  (rf/dispatch [:clear-entities])
-  (rf/dispatch [:set-active-page {:page-id :add-entity-forms
+  (rf/dispatch-sync [:clear-entities]) ;; should not have order dependent dispatches without sync
+                                       ;; think about putting these into handler dispatch
+  (rf/dispatch-sync [:set-active-page {:page-id :add-entity-forms
                                   :type    :category
                                   :id      nil}]))
-
 
 (secretary/defroute edit-category-route "/edit/category/:id" [id]
   (rf/dispatch [:set-active-page {:page-id :edit-entity-forms
