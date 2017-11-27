@@ -1340,55 +1340,6 @@
    ]
   )
 
-(defn entity-form-chooser [type]
-  [:div.entity-selection
-   [ui/flat-button {:label    "Category"
-                    :disabled (= type :category)
-                    :primary  (not= type :category)
-                    ;; TODO get sizing right
-                    ;; TODO disable coloring on icon
-                    ;; :icon (r/as-element
-                    ;;        (svg-mui-entity
-                    ;;         {:type :category
-                    ;;          :color (:primary app-theme)
-                    ;;          :style {}}))
-                    :onClick  (fn [e]
-                                (rf/dispatch
-                                  [:set-active-page
-                                   {:page-id :add-entity-forms
-                                    :type    :category
-                                    :id      nil}]))}]
-   [ui/flat-button {:label    "Task"
-                    :disabled (= type :task)
-                    :primary  (not= type :task)
-                    ;; :icon (r/as-element
-                    ;;        (svg-mui-entity
-                    ;;         {:type :task
-                    ;;          :color (:primary app-theme)
-                    ;;          :style {}}))
-                    :onClick  (fn [e]
-                                (rf/dispatch
-                                  [:set-active-page
-                                   {:page-id :add-entity-forms
-                                    :type    :task
-                                    :id      nil}]))}]
-   [ui/flat-button {:label    "Period"
-                    :disabled (= type :period)
-                    :primary  (not= type :period)
-                    ;; :icon (r/as-element
-                    ;;        (svg-mui-entity
-                    ;;         {:type :period
-                    ;;          :color (:primary app-theme)
-                    ;;          :style {}}))
-                    :onClick  (fn [e]
-                                (rf/dispatch
-                                  [:set-active-page
-                                   {:page-id :add-entity-forms
-                                    :type    :period
-                                    :id      nil}]))}]
-   ]
-  )
-
 (defn entity-form-buttons [save-dispatch-vec delete-dispatch-vec]
   [:div.buttons {:style {:display         "flex"
                          :justify-content "space-between"
@@ -1650,7 +1601,7 @@
         :period (period-form entity-id)
         [:div (str page-value " page value doesn't exist")]))
 
-(defn entity-forms [page add?]
+(defn entity-forms [page]
   (let [page-value (if-let [entity-type (:type-or-nil page)]
                      entity-type
                      :category)
@@ -1660,7 +1611,6 @@
      (app-bar)
      [div-name {:style {:padding         "0.5em"
                         :backgroundColor "white"}}
-      (when add? (entity-form-chooser page-value))
       (entity-form page-value entity-id)]
      ]
     )
@@ -1715,13 +1665,20 @@
                                 (= id sel-id))
         is-child-selected  (->> periods
                                 (some #(if (= sel-id (:id %)) true nil))
-                                (some?))]
+                                (some?))
+        children (into [(r/as-element
+                         [ui/raised-button {:href "#/add/period"
+                                            :label "Add Period"
+                                            :background-color "grey"
+                                            :style {:margin-top "1em"
+                                                    :margin-left "3em"}}])]
+                       (->> periods-sorted
+                            (map (partial list-period current-selection))))]
     (r/as-element
       [ui/list-item
        {:key           id
         :primaryText   (concatonated-text name 15 "no name entered ...")
-        :nestedItems   (->> periods-sorted
-                            (map (partial list-period current-selection)))
+        :nestedItems   children
         :leftIcon      (r/as-element
                          [ui/checkbox {:checked   complete
                                        :iconStyle {:fill color}}])
@@ -1762,15 +1719,21 @@
                                              0                                                                          ;; TODO use first character alphabet value of name to provide a two level order
                                              ;; using just sort by and no java comparator
                                              ))
-                                        tasks)]
+                                        tasks)
+        children  (into [(r/as-element
+                           [ui/raised-button {:href "#/add/task" :label "Add Task"
+                                              :background-color "grey"
+                                              :style {:margin-top "1em"
+                                                      :margin-left "2em"}}])]
+                        (->> ordered-tasks
+                             (map #(assoc % :color color))
+                             (map (partial list-task current-selection))))]
 
     [ui/list-item {:key             id
                    :primaryText     (concatonated-text name 20
                                                        "no name entered ...")
                    :leftIcon        (r/as-element (svg-mui-circle color))
-                   :nestedItems     (->> ordered-tasks
-                                         (map #(assoc % :color color))
-                                         (map (partial list-task current-selection)))
+                   :nestedItems     children
                    :open            (or is-selected
                                         is-child-selected
                                         is-grandchild-selected)
@@ -1793,6 +1756,10 @@
     [:div
      (app-bar)
      [ui/paper {:style {:width "100%"}}
+      [ui/raised-button {:href "#/add/category" :label "Add Category"
+                         :background-color "grey"
+                         :style {:margin-top "1em"
+                                 :margin-left "1em"}}]
       [ui/list
        (->> categories
             (map (partial list-category current-selection)))]
@@ -1841,8 +1808,8 @@
      [:div
       (case page-id
         :home (home-page)
-        :add-entity-forms (entity-forms this-page true)
-        :edit-entity-forms (entity-forms this-page false)
+        :add-entity-forms (entity-forms this-page)
+        :edit-entity-forms (entity-forms this-page)
         :list (list-page)
         :account (account-page)
         :agenda (agenda-page)
@@ -1873,26 +1840,15 @@
   (rf/dispatch [:set-main-drawer false])
   (rf/dispatch [:set-active-page {:page-id :queue}]))
 
-(secretary/defroute add-category-route "/add" []
-  (rf/dispatch-sync [:clear-entities]) ;; should not have order dependent dispatches without sync
-                                       ;; think about putting these into handler dispatch
-  (rf/dispatch-sync [:set-active-page {:page-id :add-entity-forms
-                                  :type    :category
+(secretary/defroute add-entity-route "/add/:entity-type" [entity-type]
+  (rf/dispatch [:clear-entities]) ;; TODO this feels like it should be sync but gets error when it is
+  (rf/dispatch [:set-active-page {:page-id :add-entity-forms
+                                  :type    (keyword entity-type)
                                   :id      nil}]))
 
-(secretary/defroute edit-category-route "/edit/category/:id" [id]
+(secretary/defroute edit-entity-route "/edit/:entity-type/:id" [entity-type id]
   (rf/dispatch [:set-active-page {:page-id :edit-entity-forms
-                                  :type    :category
-                                  :id      (uuid id)}]))
-
-(secretary/defroute edit-task-route "/edit/task/:id" [id]
-  (rf/dispatch [:set-active-page {:page-id :edit-entity-forms
-                                  :type    :task
-                                  :id      (uuid id)}]))
-
-(secretary/defroute edit-period-route "/edit/period/:id" [id]
-  (rf/dispatch [:set-active-page {:page-id :edit-entity-forms
-                                  :type    :period
+                                  :type    (keyword entity-type)
                                   :id      (uuid id)}]))
 
 ;; -------------------------
