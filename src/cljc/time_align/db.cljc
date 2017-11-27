@@ -193,6 +193,7 @@
                                     #(gen/return {:callback-id nil
                                                   :press-start nil
                                                   :press-on false})))
+(s/def ::inline-period-add-dialog boolean?)
 (s/def ::view (s/and (s/keys :req-un [::page
                                       ::selected
                                       ::period-in-play
@@ -205,6 +206,7 @@
                                       ::task-form
                                       ::period-form
                                       ::displayed-day
+                                      ::inline-period-add-dialog
                                       ])
                      (fn [view]
                        (if (get-in
@@ -234,6 +236,7 @@
  {:inline-period-long-press {:callback-id nil
                              :press-start nil
                              :press-on false}
+  :inline-period-add-dialog false
   :dashboard-tab :agenda
   :period-in-play nil,
   :zoom nil,

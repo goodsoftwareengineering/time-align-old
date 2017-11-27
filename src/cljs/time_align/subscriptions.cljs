@@ -471,3 +471,8 @@
  :inline-period-long-press
  (fn [db _]
    (get-in db [:view :inline-period-long-press])))
+
+(reg-sub
+ :inline-period-add-dialog
+ (fn [db _]
+   (get-in db [:view :inline-period-add-dialog])))

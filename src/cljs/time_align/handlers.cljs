@@ -871,3 +871,12 @@
  [persist-ls send-analytic validate-app-db]
  (fn [db [_ long-press-state]]
    (assoc-in db [:view :inline-period-long-press] long-press-state)))
+
+(reg-event-fx
+ :set-inline-period-add-dialog
+ [persist-ls send-analytic validate-app-db]
+ (fn [cofx [_ val]]
+   (merge {:db (assoc-in (:db cofx) [:view :inline-period-add-dialog] val)}
+          (when val {:dispatch [:set-inline-period-long-press {:press-start nil
+                                                               :callback-id nil
+                                                               :press-on false}]}))))

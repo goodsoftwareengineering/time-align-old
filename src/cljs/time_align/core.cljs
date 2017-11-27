@@ -490,11 +490,9 @@
                                                 js/window
                                                 (fn [_]
                                                   (println "start the inline period add!")
-                                                  (rf/dispatch [:set-inline-period-long-press
-                                                                {:press-start nil
-                                                                 :callback-id nil
-                                                                 :press-on false}]))
-                                                5000)]
+                                                  (rf/dispatch [:set-inline-period-add-dialog
+                                                                true]))
+                                                700)]
                                         (println "starting long press")
                                         (rf/dispatch [:set-inline-period-long-press
                                                       {:press-start (new js/Date)
@@ -1184,6 +1182,7 @@
         periods             @(rf/subscribe [:periods])
         period-in-play      @(rf/subscribe [:period-in-play])
         dashboard-tab       @(rf/subscribe [:dashboard-tab])
+        inline-period-dialog @(rf/subscribe [:inline-period-add-dialog])
         ]
 
     [:div.app-container
@@ -1207,7 +1206,13 @@
                :align-items "center"
                :flex-direction "column"}}
 
-      (day tasks selected displayed-day)]
+      (day tasks selected displayed-day)
+
+      [ui/dialog {:title "Add Period"
+                  :open inline-period-dialog
+                  :modal true
+                  :onRequestClose (fn [_]
+                                    (rf/dispatch [:set-inline-period-add-dialog false]))}]]
 
      [:div.lower-container
       {:style {:display    "flex"
