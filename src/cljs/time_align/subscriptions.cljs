@@ -466,3 +466,8 @@
  :dashboard-tab
  (fn [db _]
    (get-in db [:view :dashboard-tab])))
+
+(reg-sub
+ :inline-period-long-press
+ (fn [db _]
+   (get-in db [:view :inline-period-long-press])))

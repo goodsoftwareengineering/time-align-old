@@ -479,11 +479,40 @@
         is-moving-period         @(rf/subscribe [:is-moving-period])
         period-in-play           @(rf/subscribe [:period-in-play])
         period-in-play-color     @(rf/subscribe [:period-in-play-color])
+        long-press-state         @(rf/subscribe [:inline-period-long-press])
+        ;; start touch sets timeout callback
+        ;; passes id to view state along with time stamp
+        ;; when view state on set start stop to abort timeout callback using id from view
+        start-touch-click-handler (if (and (not is-moving-period)
+                                           (not (:press-on long-press-state)))
+                                    (fn [e]
+                                      (let [id (.setTimeout
+                                                js/window
+                                                (fn [_]
+                                                  (println "start the inline period add!")
+                                                  (rf/dispatch [:set-inline-period-long-press
+                                                                {:press-start nil
+                                                                 :callback-id nil
+                                                                 :press-on false}]))
+                                                5000)]
+                                        (println "starting long press")
+                                        (rf/dispatch [:set-inline-period-long-press
+                                                      {:press-start (new js/Date)
+                                                       :callback-id id
+                                                       :press-on true}]))))
         stop-touch-click-handler (if is-moving-period
                                    (fn [e]
                                      (.preventDefault e)
                                      (rf/dispatch
-                                       [:set-moving-period false])))
+                                      [:set-moving-period false]))
+                                   (if (:press-on long-press-state)
+                                     (fn [e]
+                                       (println "stopping long press")
+                                       (.clearTimeout js/window (:callback-id long-press-state))
+                                       (rf/dispatch [:set-inline-period-long-press
+                                                     {:press-start nil
+                                                      :callback-id nil
+                                                      :press-on false}]))))
         deselect                 (if (not is-moving-period)
                                    (fn [e]
                                      (.preventDefault e)
@@ -504,8 +533,12 @@
                                  }
                    :width       "100%"
                    :height      "100%"
+                   :onMouseDown  start-touch-click-handler
+                   :onTouchStart start-touch-click-handler
+
                    :onTouchEnd  stop-touch-click-handler
                    :onMouseUp   stop-touch-click-handler
+
                    :onTouchMove (if is-moving-period
                                   (partial handle-period-move
                                            date-str :touch))

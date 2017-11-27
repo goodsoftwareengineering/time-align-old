@@ -865,3 +865,9 @@
  [persist-ls send-analytic validate-app-db]
  (fn [db [_ tab]]
    (assoc-in db [:view :dashboard-tab] tab)))
+
+(reg-event-db
+ :set-inline-period-long-press
+ [persist-ls send-analytic validate-app-db]
+ (fn [db [_ long-press-state]]
+   (assoc-in db [:view :inline-period-long-press] long-press-state)))

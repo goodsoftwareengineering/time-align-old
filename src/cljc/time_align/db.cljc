@@ -182,6 +182,17 @@
                         #?(:cljs #(gen/return (new js/Date))
                            :clj #(gen/return (t/zoned-date-time)))))
 (s/def ::period-in-play ::id-or-nil)
+(s/def ::callback-id ::id-or-nil)
+(s/def ::press-start  (s/with-gen (s/or :some ::moment
+                                        :none nil?)
+                        #(gen/return nil)))
+(s/def ::press-on boolean?)
+(s/def ::inline-period-long-press (s/with-gen (s/keys ::req-un [::callback-id
+                                                                ::press-start
+                                                                ::press-on])
+                                    #(gen/return {:callback-id nil
+                                                  :press-start nil
+                                                  :press-on false})))
 (s/def ::view (s/and (s/keys :req-un [::page
                                       ::selected
                                       ::period-in-play
@@ -220,7 +231,10 @@
   :id (random-uuid),
   :email ""},
  :view
- {:dashboard-tab :agenda
+ {:inline-period-long-press {:callback-id nil
+                             :press-start nil
+                             :press-on false}
+  :dashboard-tab :agenda
   :period-in-play nil,
   :zoom nil,
   :selected
