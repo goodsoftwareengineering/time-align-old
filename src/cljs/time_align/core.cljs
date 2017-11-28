@@ -1629,7 +1629,7 @@
       (merge {:key         id
               :primaryText (period-list-item-primary-text period)
               :secondaryText (period-list-item-secondary-text period)
-              :style       (if is-selected {:backgroundColor "#dddddd"})
+              :style       (if is-selected {:backgroundColor "#ededed"})
                :onClick     (fn [e]
                               (when-not is-selected
                                 (rf/dispatch [:set-selected-period id])))
@@ -1671,7 +1671,8 @@
                                             :label "Add Period"
                                             :background-color "grey"
                                             :style {:margin-top "1em"
-                                                    :margin-left "3em"}}])]
+                                                    :margin-left "3em"
+                                                    :margin-bottom "1em"}}])]
                        (->> periods-sorted
                             (map (partial list-period current-selection))))]
     (r/as-element
@@ -1684,7 +1685,7 @@
                                        :iconStyle {:fill color}}])
         :open          (or is-selected
                            is-child-selected)
-        :style         (if is-selected {:backgroundColor "#dddddd"})
+        :style         (if is-selected {:backgroundColor "#ededed"})
 
 
         :onClick       (fn [e]
@@ -1710,7 +1711,7 @@
                                  (->> category
                                       (:tasks)
                                       (some #(if (= sel-id (:id %)) %))
-                                      ((fn [task]                                                                       ;; pulls periods into one seq
+                                      ((fn [task] ;; pulls periods into one seq
                                          (concat (:planned-periods task) (:actual-periods task))))
                                       (some #(if (= sel-id (:id %)) true nil))
                                       (some?)))
@@ -1724,7 +1725,8 @@
                            [ui/raised-button {:href "#/add/task" :label "Add Task"
                                               :background-color "grey"
                                               :style {:margin-top "1em"
-                                                      :margin-left "2em"}}])]
+                                                      :margin-left "2em"
+                                                      :margin-bottom "1em"}}])]
                         (->> ordered-tasks
                              (map #(assoc % :color color))
                              (map (partial list-task current-selection))))]
@@ -1737,16 +1739,13 @@
                    :open            (or is-selected
                                         is-child-selected
                                         is-grandchild-selected)
-                   :style           (if is-selected {:backgroundColor "#dddddd"})
+                   :style           (if is-selected {:backgroundColor "#ededed"})
                    :onClick         (fn [e]
                                       (when-not is-selected
                                         (rf/dispatch [:set-selected-category id])))
                    :on-double-click (fn [e]
                                       (when is-selected
-                                        (hist/nav! (str "/edit/category/" id))
-                                        ))
-                   }
-     ]))
+                                        (hist/nav! (str "/edit/category/" id))))}]))
 
 (defn list-page []
   (let [categories        @(rf/subscribe [:categories])
@@ -1759,12 +1758,12 @@
       [ui/raised-button {:href "#/add/category" :label "Add Category"
                          :background-color "grey"
                          :style {:margin-top "1em"
-                                 :margin-left "1em"}}]
+                                 :margin-left "1em"
+                                 :margin-bottom "1em"}}]
       [ui/list
        (->> categories
             (map (partial list-category current-selection)))]
-      ]
-     ]))
+      ]]))
 
 (defn agenda-page []
   (let [selected            @(rf/subscribe [:selected])
