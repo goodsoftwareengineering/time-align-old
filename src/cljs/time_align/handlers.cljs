@@ -769,7 +769,8 @@
                                           [:description])
                              {:id    new-id
                               :start start
-                              :stop  stop})
+                              :stop  stop
+                              :planned false})
           ;; TODO uuid gen funciton that checks for taken? or should that only be handled on the back end?
 
           ;; set up to place
@@ -785,11 +786,11 @@
                                   all-tasks)
          other-tasks        (filter #(not (= (:id %) task-id))
                                     all-tasks)
-         all-actual-periods (:actual-periods this-task)
+         periods (:periods this-task)
 
           ;; place
          new-task           (merge this-task
-                                   {:actual-periods (conj all-actual-periods new-actual-period)})
+                                   {:periods (conj periods new-actual-period)})
          new-category       (merge this-category
                                    {:tasks (conj other-tasks new-task)})
          new-db             (merge db
@@ -811,7 +812,7 @@
          is-playing         (some? playing-period)
          id                 playing-period
          periods            (cutils/pull-periods db)
-         all-actual-periods (filter #(= (:type %) :actual) periods)
+         all-actual-periods (filter #(not (:planned %)) periods)
          this-period        (some #(if (= (:id %) id) %) all-actual-periods)]
 
      (if (and is-playing (some? this-period))
@@ -838,13 +839,13 @@
                                         all-tasks)
              other-tasks          (filter #(not (= (:id %) task-id))
                                           all-tasks)
-             other-actual-periods (->> this-task
-                                       (:actual-periods)
-                                       (filter #(not (= (:id %) id))))
+             other-periods (->> this-task
+                                (:periods)
+                                (filter #(not (= (:id %) id))))
 
              new-task             (merge this-task
-                                         {:actual-periods (conj other-actual-periods
-                                                                new-this-period)})
+                                         {:periods (conj other-periods
+                                                         new-this-period)})
              new-category         (merge this-category
                                          {:tasks (conj other-tasks new-task)})
              new-db               (merge db

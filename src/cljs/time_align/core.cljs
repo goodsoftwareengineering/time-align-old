@@ -565,7 +565,9 @@
         [:g
          [:circle {:cx (:cx svg-consts) :cy (:cy svg-consts)
                    :r ".7"
-                   :fill "white"
+                   :fill (if (some? period-in-play)
+                           period-in-play-color
+                           "white")
                    :stroke "transparent"}]
          [:line {:fill         "transparent"
                  :stroke-width "1.4"
