@@ -88,7 +88,7 @@
                   (println "------------------------------------------------------")
                   (pprint/pprint {:dispatch (:dispatch effects)
                                   :event    (:event coeffects)})
-                  ;; (pprint/pprint new-db)
+                  (js/alert "There was an error and the last action didn't go through.")
                   (try
                     (throw
                      (pprint/pprint (expound/expound ::db/db new-db)))
