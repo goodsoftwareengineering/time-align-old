@@ -655,6 +655,9 @@
                                   [ui/svg-icon [ic/action-list {:color (:color period)}]])
                    :primaryText (period-list-item-primary-text period)
                    :secondaryText (period-list-item-secondary-text period)
+                   :on-double-click (fn [e]
+                                      (when period-selected
+                                        (hist/nav! (str "/edit/period/" (:id period)))))
                    :onTouchTap  (if (and period-selected
                                          (= sel-id (:id period)))
                                   (fn [e]
@@ -1130,6 +1133,10 @@
                       :leftIcon    (r/as-element (mini-arc period))
                       :primaryText (period-list-item-primary-text period)
                       :secondaryText (period-list-item-secondary-text period)
+                      :on-double-click (fn [e]
+                                         (when period-selected
+                                           (hist/nav! (str "/edit/period/" (:id period))))) ;; TODO should hist only be messed with in handler interceptor?
+
                       :onTouchTap  (if (and period-selected
                                             (= selected-id (:id period)))
                                      (fn [e]
