@@ -485,17 +485,25 @@
         ;; when view state on set start stop to abort timeout callback using id from view
         start-touch-click-handler (if (and (not is-moving-period)
                                            (not (:press-on long-press-state)))
-                                    (fn [e]
+                                    (fn [elem-id ui-type e]
                                       (let [id (.setTimeout
                                                 js/window
                                                 (fn [_]
                                                   (println "start the inline period add!")
                                                   (rf/dispatch [:set-inline-period-add-dialog
                                                                 true]))
-                                                700)]
-                                        (println "starting long press")
+                                                700)
+                                            svg-coords (cutils/client-to-view-box elem-id e ui-type)
+                                            circle-coords (cutils/point-to-centered-circle
+                                                           (merge (select-keys svg-consts [:cx :cy])
+                                                                  svg-coords))
+                                            angle (cutils/point-to-angle circle-coords)
+                                            relative-time (cutils/angle-to-ms)
+                                            absolute-time (+ relative-time
+                                                             (.valueOf (utils/zero-in-day day)))]
+
                                         (rf/dispatch [:set-inline-period-long-press
-                                                      {:press-start (new js/Date)
+                                                      {:press-time absolute-time
                                                        :callback-id id
                                                        :press-on true}]))))
         stop-touch-click-handler (if is-moving-period
@@ -508,7 +516,7 @@
                                        (println "stopping long press")
                                        (.clearTimeout js/window (:callback-id long-press-state))
                                        (rf/dispatch [:set-inline-period-long-press
-                                                     {:press-start nil
+                                                     {:press-time nil
                                                       :callback-id nil
                                                       :press-on false}]))))
         deselect                 (if (not is-moving-period)
@@ -516,8 +524,7 @@
                                      (.preventDefault e)
                                      (rf/dispatch
                                       [:set-selected-period nil])))
-        zoom @(rf/subscribe [:zoom])
-        ]
+        zoom @(rf/subscribe [:zoom])]
 
     [:div {:style {:height "100%" :width "100%"}}
      [:svg (merge {:key         date-str
@@ -531,8 +538,10 @@
                                  }
                    :width       "100%"
                    :height      "100%"
-                   :onMouseDown  start-touch-click-handler
-                   :onTouchStart start-touch-click-handler
+                   :onMouseDown (partial start-touch-click-handler
+                                         date-str :mouse)
+                   :onTouchStart (partial start-touch-click-handler
+                                          date-str :touch)
 
                    :onTouchEnd  stop-touch-click-handler
                    :onMouseUp   stop-touch-click-handler
@@ -1106,9 +1115,7 @@
        {:d            (describe-arc 12 12 11 start-used stop-used)
         :stroke       color
         :stroke-width "2"
-        :fill         "transparent"
-        }]]]
-    ))
+        :fill         "transparent"}]]]))
 
 (defn agenda [selected periods]
   (let [planned-periods (->> periods
@@ -1191,8 +1198,7 @@
         periods             @(rf/subscribe [:periods])
         period-in-play      @(rf/subscribe [:period-in-play])
         dashboard-tab       @(rf/subscribe [:dashboard-tab])
-        inline-period-dialog @(rf/subscribe [:inline-period-add-dialog])
-        ]
+        inline-period-dialog @(rf/subscribe [:inline-period-add-dialog])]
 
     [:div.app-container
      {:style {:display         "flex"

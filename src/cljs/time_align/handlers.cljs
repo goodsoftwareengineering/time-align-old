@@ -878,7 +878,7 @@
  [persist-ls route send-analytic validate-app-db]
  (fn [cofx [_ val]]
    (merge {:db (assoc-in (:db cofx) [:view :inline-period-add-dialog] val)}
-          (when val {:dispatch [:set-inline-period-long-press {:press-start nil
+          (when val {:dispatch [:set-inline-period-long-press {:press-time nil
                                                                :callback-id nil
                                                                :press-on false}]})
           (when val {:route [:add "/add/period"]}))))

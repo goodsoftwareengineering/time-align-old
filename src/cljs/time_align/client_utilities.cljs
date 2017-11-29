@@ -166,6 +166,9 @@
       {:x (oget trans-pt "x") :y (oget trans-pt "y")})))
 
 
+;; TODO point-to-centered-circle combined with point-to-angle and client-to-view-box to make a single call
+;; get time on click utility function (refactor all usages of these supporting functions)
+
 (defn point-to-centered-circle
   "converts an x,y coordinate from svg viewbox where (0,0) is at the top left
   to a coordinate where (0,0) would be in the center"
