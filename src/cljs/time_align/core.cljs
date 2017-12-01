@@ -316,8 +316,8 @@
     ))
 
 (defn periods [periods selected is-moving-period curr-time displayed-day]
-  (let [actual  (:actual-periods periods)
-        planned (:planned-periods periods)]
+  (let [actual (filter #(not (:planned %)) periods)
+        planned (filter #(:planned %) periods)]
     [:g
      [:g
       (if (some? actual)
@@ -479,11 +479,38 @@
         is-moving-period         @(rf/subscribe [:is-moving-period])
         period-in-play           @(rf/subscribe [:period-in-play])
         period-in-play-color     @(rf/subscribe [:period-in-play-color])
+        long-press-state         @(rf/subscribe [:inline-period-long-press])
+        ;; start touch sets timeout callback
+        ;; passes id to view state along with time stamp
+        ;; when view state on set start stop to abort timeout callback using id from view
+        start-touch-click-handler (if (and (not is-moving-period)
+                                           (not (:press-on long-press-state)))
+                                    (fn [e]
+                                      (let [id (.setTimeout
+                                                js/window
+                                                (fn [_]
+                                                  (println "start the inline period add!")
+                                                  (rf/dispatch [:set-inline-period-add-dialog
+                                                                true]))
+                                                700)]
+                                        (println "starting long press")
+                                        (rf/dispatch [:set-inline-period-long-press
+                                                      {:press-start (new js/Date)
+                                                       :callback-id id
+                                                       :press-on true}]))))
         stop-touch-click-handler (if is-moving-period
                                    (fn [e]
                                      (.preventDefault e)
                                      (rf/dispatch
-                                       [:set-moving-period false])))
+                                      [:set-moving-period false]))
+                                   (if (:press-on long-press-state)
+                                     (fn [e]
+                                       (println "stopping long press")
+                                       (.clearTimeout js/window (:callback-id long-press-state))
+                                       (rf/dispatch [:set-inline-period-long-press
+                                                     {:press-start nil
+                                                      :callback-id nil
+                                                      :press-on false}]))))
         deselect                 (if (not is-moving-period)
                                    (fn [e]
                                      (.preventDefault e)
@@ -504,8 +531,12 @@
                                  }
                    :width       "100%"
                    :height      "100%"
+                   :onMouseDown  start-touch-click-handler
+                   :onTouchStart start-touch-click-handler
+
                    :onTouchEnd  stop-touch-click-handler
                    :onMouseUp   stop-touch-click-handler
+
                    :onTouchMove (if is-moving-period
                                   (partial handle-period-move
                                            date-str :touch))
@@ -534,7 +565,9 @@
         [:g
          [:circle {:cx (:cx svg-consts) :cy (:cy svg-consts)
                    :r ".7"
-                   :fill "white"
+                   :fill (if (some? period-in-play)
+                           period-in-play-color
+                           "white")
                    :stroke "transparent"}]
          [:line {:fill         "transparent"
                  :stroke-width "1.4"
@@ -593,10 +626,14 @@
 
 (defn period-list-item-secondary-text
   [period]
-  (let [duration-ms (- (:stop period) (:start period))]
-    (str (utils/date-string (:start period))
-         " : "
-         (duration-ms-to-string duration-ms))))
+  (let [duration-ms (- (:stop period) (:start period))
+        has-stamps (cutils/period-has-stamps period)]
+    (if has-stamps
+      (str (utils/date-string (:start period))
+           " : "
+           (duration-ms-to-string duration-ms))
+      "Queue item"
+      )))
 
 (defn queue [tasks selected]
   (let [periods-no-stamps (cutils/filter-periods-no-stamps tasks)
@@ -618,6 +655,9 @@
                                   [ui/svg-icon [ic/action-list {:color (:color period)}]])
                    :primaryText (period-list-item-primary-text period)
                    :secondaryText (period-list-item-secondary-text period)
+                   :on-double-click (fn [e]
+                                      (when period-selected
+                                        (hist/nav! (str "/edit/period/" (:id period)))))
                    :onTouchTap  (if (and period-selected
                                          (= sel-id (:id period)))
                                   (fn [e]
@@ -627,9 +667,7 @@
                                                    :id      (:id period)}]))
                                   (fn [e]
                                     (rf/dispatch
-                                      [:set-selected-queue (:id period)])
-                                    )
-                                  )}])))]))
+                                      [:set-selected-queue (:id period)])))}])))]))
 
 (def basic-button {:style {}})
 (def basic-mini-button {:mini             true
@@ -1074,11 +1112,10 @@
 
 (defn agenda [selected periods]
   (let [planned-periods (->> periods
-                             (filter #(and (= :planned (:type %))
-                                           (some? (:start %))))
+                             (filter #(and (:planned %)
+                                           (cutils/period-has-stamps %)))
                              (filter #(> (:stop %) (.valueOf (new js/Date)))))
-        planned-periods-sorted (sort-by #(.valueOf (:start %))
-                                         planned-periods)
+        planned-periods-sorted (sort-by #(.valueOf (:start %)) planned-periods)
         period-selected (= :period
                            (get-in selected [:current-selection :type-or-nil]))
         selected-id (get-in selected [:current-selection :id-or-nil])]
@@ -1096,6 +1133,10 @@
                       :leftIcon    (r/as-element (mini-arc period))
                       :primaryText (period-list-item-primary-text period)
                       :secondaryText (period-list-item-secondary-text period)
+                      :on-double-click (fn [e]
+                                         (when period-selected
+                                           (hist/nav! (str "/edit/period/" (:id period))))) ;; TODO should hist only be messed with in handler interceptor?
+
                       :onTouchTap  (if (and period-selected
                                             (= selected-id (:id period)))
                                      (fn [e]
@@ -1150,6 +1191,7 @@
         periods             @(rf/subscribe [:periods])
         period-in-play      @(rf/subscribe [:period-in-play])
         dashboard-tab       @(rf/subscribe [:dashboard-tab])
+        inline-period-dialog @(rf/subscribe [:inline-period-add-dialog])
         ]
 
     [:div.app-container
@@ -1304,55 +1346,6 @@
                :onChange (fn [e v]
                            (rf/dispatch [:set-category-form-color
                                          {:blue (.ceil js/Math v)}]))}]
-   ]
-  )
-
-(defn entity-form-chooser [type]
-  [:div.entity-selection
-   [ui/flat-button {:label    "Category"
-                    :disabled (= type :category)
-                    :primary  (not= type :category)
-                    ;; TODO get sizing right
-                    ;; TODO disable coloring on icon
-                    ;; :icon (r/as-element
-                    ;;        (svg-mui-entity
-                    ;;         {:type :category
-                    ;;          :color (:primary app-theme)
-                    ;;          :style {}}))
-                    :onClick  (fn [e]
-                                (rf/dispatch
-                                  [:set-active-page
-                                   {:page-id :add-entity-forms
-                                    :type    :category
-                                    :id      nil}]))}]
-   [ui/flat-button {:label    "Task"
-                    :disabled (= type :task)
-                    :primary  (not= type :task)
-                    ;; :icon (r/as-element
-                    ;;        (svg-mui-entity
-                    ;;         {:type :task
-                    ;;          :color (:primary app-theme)
-                    ;;          :style {}}))
-                    :onClick  (fn [e]
-                                (rf/dispatch
-                                  [:set-active-page
-                                   {:page-id :add-entity-forms
-                                    :type    :task
-                                    :id      nil}]))}]
-   [ui/flat-button {:label    "Period"
-                    :disabled (= type :period)
-                    :primary  (not= type :period)
-                    ;; :icon (r/as-element
-                    ;;        (svg-mui-entity
-                    ;;         {:type :period
-                    ;;          :color (:primary app-theme)
-                    ;;          :style {}}))
-                    :onClick  (fn [e]
-                                (rf/dispatch
-                                  [:set-active-page
-                                   {:page-id :add-entity-forms
-                                    :type    :period
-                                    :id      nil}]))}]
    ]
   )
 
@@ -1553,13 +1546,19 @@
         "Start must come before Stop"])
 
      [ui/date-picker {:hintText "Stop Date"
-                      :value    stop-d
-                      :onChange
-                                (fn [_ new-d]
+                      :value    (if (and (some? start-d)
+                                         (nil? stop-d))
+                                  start-d
+                                  stop-d)
+                      :minDate (when (some? start-d)
+                                 start-d)
+                      :onChange (fn [_ new-d]
                                   (rf/dispatch [:set-period-form-date [new-d :stop]]))}]
 
      [ui/time-picker {:hintText "Stop Time"
-                      :value    stop-d
+                      :value    (if-not (some? stop-d)
+                                  start-d
+                                  stop-d)
                       :onChange
                                 (fn [_ new-s]
                                   (rf/dispatch [:set-period-form-time [new-s :stop]]))}]
@@ -1611,7 +1610,7 @@
         :period (period-form entity-id)
         [:div (str page-value " page value doesn't exist")]))
 
-(defn entity-forms [page add?]
+(defn entity-forms [page]
   (let [page-value (if-let [entity-type (:type-or-nil page)]
                      entity-type
                      :category)
@@ -1621,7 +1620,6 @@
      (app-bar)
      [div-name {:style {:padding         "0.5em"
                         :backgroundColor "white"}}
-      (when add? (entity-form-chooser page-value))
       (entity-form page-value entity-id)]
      ]
     )
@@ -1640,7 +1638,7 @@
       (merge {:key         id
               :primaryText (period-list-item-primary-text period)
               :secondaryText (period-list-item-secondary-text period)
-              :style       (if is-selected {:backgroundColor "#dddddd"})
+              :style       (if is-selected {:backgroundColor "#ededed"})
                :onClick     (fn [e]
                               (when-not is-selected
                                 (rf/dispatch [:set-selected-period id])))
@@ -1662,12 +1660,9 @@
                              [ui/svg-icon [ic/action-list {:color color}]])}))])))
 
 (defn list-task [current-selection task]
-  (let [{:keys [id name actual-periods complete planned-periods color]} task
+  (let [{:keys [id name periods complete color]} task
 
-        periods            (concat
-                             (map #(assoc % :type :actual) actual-periods)
-                             (map #(assoc % :type :planned) planned-periods))
-
+        periods            periods
         periods-with-color (->> periods (map #(assoc % :color color)))
         periods-sorted     (reverse
                              (sort-by #(if (some? (:start %))
@@ -1677,23 +1672,29 @@
         sel-cat            (:type-or-nil current-selection)
         is-selected        (and (= :task sel-cat)
                                 (= id sel-id))
-        is-child-selected  (->> task
-                                ((fn [task]                                                                             ;; pulls periods into one seq
-                                   (concat (:planned-periods task) (:actual-periods task))))
+        is-child-selected  (->> periods
                                 (some #(if (= sel-id (:id %)) true nil))
-                                (some?))]
+                                (some?))
+        children (into [(r/as-element
+                         [ui/raised-button {:href "#/add/period"
+                                            :label "Add Period"
+                                            :background-color "grey"
+                                            :style {:margin-top "1em"
+                                                    :margin-left "3em"
+                                                    :margin-bottom "1em"}}])]
+                       (->> periods-sorted
+                            (map (partial list-period current-selection))))]
     (r/as-element
       [ui/list-item
        {:key           id
         :primaryText   (concatonated-text name 15 "no name entered ...")
-        :nestedItems   (->> periods-sorted
-                            (map (partial list-period current-selection)))
+        :nestedItems   children
         :leftIcon      (r/as-element
                          [ui/checkbox {:checked   complete
                                        :iconStyle {:fill color}}])
         :open          (or is-selected
                            is-child-selected)
-        :style         (if is-selected {:backgroundColor "#dddddd"})
+        :style         (if is-selected {:backgroundColor "#ededed"})
 
 
         :onClick       (fn [e]
@@ -1719,7 +1720,7 @@
                                  (->> category
                                       (:tasks)
                                       (some #(if (= sel-id (:id %)) %))
-                                      ((fn [task]                                                                       ;; pulls periods into one seq
+                                      ((fn [task] ;; pulls periods into one seq
                                          (concat (:planned-periods task) (:actual-periods task))))
                                       (some #(if (= sel-id (:id %)) true nil))
                                       (some?)))
@@ -1728,28 +1729,32 @@
                                              0                                                                          ;; TODO use first character alphabet value of name to provide a two level order
                                              ;; using just sort by and no java comparator
                                              ))
-                                        tasks)]
+                                        tasks)
+        children  (into [(r/as-element
+                           [ui/raised-button {:href "#/add/task" :label "Add Task"
+                                              :background-color "grey"
+                                              :style {:margin-top "1em"
+                                                      :margin-left "2em"
+                                                      :margin-bottom "1em"}}])]
+                        (->> ordered-tasks
+                             (map #(assoc % :color color))
+                             (map (partial list-task current-selection))))]
 
     [ui/list-item {:key             id
                    :primaryText     (concatonated-text name 20
                                                        "no name entered ...")
                    :leftIcon        (r/as-element (svg-mui-circle color))
-                   :nestedItems     (->> ordered-tasks
-                                         (map #(assoc % :color color))
-                                         (map (partial list-task current-selection)))
+                   :nestedItems     children
                    :open            (or is-selected
                                         is-child-selected
                                         is-grandchild-selected)
-                   :style           (if is-selected {:backgroundColor "#dddddd"})
+                   :style           (if is-selected {:backgroundColor "#ededed"})
                    :onClick         (fn [e]
                                       (when-not is-selected
                                         (rf/dispatch [:set-selected-category id])))
                    :on-double-click (fn [e]
                                       (when is-selected
-                                        (hist/nav! (str "/edit/category/" id))
-                                        ))
-                   }
-     ]))
+                                        (hist/nav! (str "/edit/category/" id))))}]))
 
 (defn list-page []
   (let [categories        @(rf/subscribe [:categories])
@@ -1759,11 +1764,15 @@
     [:div
      (app-bar)
      [ui/paper {:style {:width "100%"}}
+      [ui/raised-button {:href "#/add/category" :label "Add Category"
+                         :background-color "grey"
+                         :style {:margin-top "1em"
+                                 :margin-left "1em"
+                                 :margin-bottom "1em"}}]
       [ui/list
        (->> categories
             (map (partial list-category current-selection)))]
-      ]
-     ]))
+      ]]))
 
 (defn agenda-page []
   (let [selected            @(rf/subscribe [:selected])
@@ -1807,8 +1816,8 @@
      [:div
       (case page-id
         :home (home-page)
-        :add-entity-forms (entity-forms this-page true)
-        :edit-entity-forms (entity-forms this-page false)
+        :add-entity-forms (entity-forms this-page)
+        :edit-entity-forms (entity-forms this-page)
         :list (list-page)
         :account (account-page)
         :agenda (agenda-page)
@@ -1839,26 +1848,15 @@
   (rf/dispatch [:set-main-drawer false])
   (rf/dispatch [:set-active-page {:page-id :queue}]))
 
-(secretary/defroute add-category-route "/add" []
-  (rf/dispatch [:clear-entities])
+(secretary/defroute add-entity-route "/add/:entity-type" [entity-type]
+  (rf/dispatch [:clear-entities]) ;; TODO this feels like it should be sync but gets error when it is
   (rf/dispatch [:set-active-page {:page-id :add-entity-forms
-                                  :type    :category
+                                  :type    (keyword entity-type)
                                   :id      nil}]))
 
-
-(secretary/defroute edit-category-route "/edit/category/:id" [id]
+(secretary/defroute edit-entity-route "/edit/:entity-type/:id" [entity-type id]
   (rf/dispatch [:set-active-page {:page-id :edit-entity-forms
-                                  :type    :category
-                                  :id      (uuid id)}]))
-
-(secretary/defroute edit-task-route "/edit/task/:id" [id]
-  (rf/dispatch [:set-active-page {:page-id :edit-entity-forms
-                                  :type    :task
-                                  :id      (uuid id)}]))
-
-(secretary/defroute edit-period-route "/edit/period/:id" [id]
-  (rf/dispatch [:set-active-page {:page-id :edit-entity-forms
-                                  :type    :period
+                                  :type    (keyword entity-type)
                                   :id      (uuid id)}]))
 
 ;; -------------------------

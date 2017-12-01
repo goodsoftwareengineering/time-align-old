@@ -19,6 +19,7 @@
                  [cprop "0.1.10"]
                  [day8.re-frame/async-flow-fx "0.0.6"]
                  [day8.re-frame/http-fx "0.1.2"]
+                 [expound "0.3.3"]
                  [funcool/struct "1.0.0"]
                  [luminus-immutant "0.2.3"]
                  [luminus-migrations "0.4.2"]
@@ -47,6 +48,7 @@
                  [secretary "1.2.3"]
                  [selmer "1.10.7"]
                  [org.clojure/test.check "0.9.0"] ;;TODO find better solution, should only be in dev deps
+                 [com.rpl/specter "1.0.5"]
                  ]
 
 
@@ -116,7 +118,8 @@
                                     [prone "1.1.4"]
                                     [re-frisk "0.5.0"]
                                     [ring/ring-devel "1.5.1"]
-                                    [ring/ring-mock "0.3.0"]]
+                                    [ring/ring-mock "0.3.0"]
+                                    [alembic "0.3.2"]]
 
                    :plugins        [[com.jakemccrary/lein-test-refresh "0.19.0"]
                                     [lein-doo "0.1.8"]

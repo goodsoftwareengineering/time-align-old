@@ -9,5 +9,7 @@
   (ra/stop-figwheel!))
 
 (defn cljs []
-  (ra/cljs-repl))
+  (when-not (ra/figwheel-running?)
+    (start-fw))
+  (ra/cljs-repl "app"))
 

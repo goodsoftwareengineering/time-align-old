@@ -9,11 +9,13 @@
             [clojure.string :as string])
   #?(:clj (:import java.util.UUID)))
 
-
 #?(:clj (defn random-uuid [](java.util.UUID/randomUUID)))
 
 (s/def ::name (s/and string? #(> 256 (count %))))
-(s/def ::description string?)
+(s/def ::description (s/with-gen
+                       (s/or :has-desc string?
+                             :is-nil nil?)
+                       #(gen/return nil)))
 (s/def ::email string?)
 (s/def ::id uuid?)
 (s/def ::moment #?(:cljs (s/with-gen inst? #(s/gen utils/time-set))
@@ -21,24 +23,33 @@
 (s/def ::start ::moment)
 (s/def ::stop ::moment)
 (s/def ::priority int?)
+(s/def ::planned boolean?)
 (s/def ::period (s/with-gen (s/and
-                             (s/keys :req-un [::id]
+                             (s/keys :req-un [::id ::planned]
                                      :opt-un [::start ::stop ::description])
+
                              (fn [period]
+                               ;; actual has timestamps
+                               (if (not (:planned period))
+                                 (and (contains? period :start)
+                                      (contains? period :stop))
+                                 true))
+
+                             (fn [period]
+                               ;; stop after start
                                (if (and
-                                    (contains? period :start)
-                                    (contains? period :stop))
+                                     (contains? period :start)
+                                     (contains? period :stop))
                                  (> (.valueOf (:stop period))
                                     (.valueOf (:start period)))
                                  true)))
 
-
-
                   ;; generator uses a generated moment and adds a random amount of time to it
                   ;; < 2 hrs
                   #(gen/fmap (fn [moment]
-                               (let [queue-chance (> 0.5 (rand))
-                                     desc-chance  (> 0.5 (rand))
+                               (let [queue-chance  (> 0.5 (rand))
+                                     desc-chance   (> 0.5 (rand))
+                                     actual-chance (> 0.5 (rand))
                                      start        (.valueOf moment)
                                      stop         (->> start
                                                        (+ (rand-int (* 2 utils/hour-ms))))
@@ -46,13 +57,21 @@
                                                     {}
                                                     #?(:cljs {:start (new js/Date start)
                                                               :stop (new js/Date stop)}))
+                                     type         (if-not (empty? stamps)
+                                                    (if actual-chance
+                                                      {:period-type :actual}
+                                                      {:period-type :planned}
+                                                      )
+                                                    {:period-type :planned}
+                                                    )
                                      desc         (if desc-chance
                                                     {:description (gen/generate (s/gen ::description))}
                                                     {})]
 
-                                 (merge stamps desc {:id (random-uuid)})))
+                                 (merge stamps desc type {:id (random-uuid)})))
                              (s/gen ::moment))))
-(s/def ::periods (s/coll-of ::period :gen-max 5 :min-count 1))
+
+(s/def ::periods (s/coll-of ::period :gen-max 5))
 (s/def ::hex-digit (s/with-gen (s/and string? #(contains? (set "0123456789abcdef") %))
                       #(s/gen (set "0123456789abcdef"))))
 (s/def ::hex-str (s/with-gen (s/and string? (fn [s] (every? #(s/valid? ::hex-digit %) (seq s))))
@@ -71,19 +90,14 @@
 ;; (? and priority)
 ;; tasks that are not planned (:actual) cannot have periods in the future
 ;; adding date support is going to need some cljc trickery
-(s/def ::actual-period (s/and ::period
-                              (fn [period]
-                                (and (contains? period :start)
-                                     (contains? period :stop)))))
-(s/def ::actual-periods (s/coll-of ::actual-period :gen-max 5 :min-count 1))
-(s/def ::planned-periods ::periods)
 (s/def ::task (s/keys :req-un [::id ::name ::description ::complete]
-                      :opt-un [::actual-periods ::planned-periods]))
+                      :opt-un [::periods]))
 ;; TODO complete check (all periods are planned/actual are passed)
 (s/def ::tasks (s/coll-of ::task :gen-max 2 :min-count 1))
 (s/def ::user (s/keys :req-un [::name ::id ::email]))
-(s/def ::category (s/keys :req-un [::id ::name ::color ::tasks]))
-(s/def ::categories (s/coll-of ::category :gen-max 3 :min-count 1))
+(s/def ::category (s/keys :req-un [::id ::name ::color]
+                          :opt-un [::tasks]))
+(s/def ::categories (s/coll-of ::category :gen-max 3 :min-count 0))
 (s/def ::type #{:category :task :period :queue})
 (s/def ::type-or-nil (s/with-gen
                        (s/or :is-type ::type
@@ -93,7 +107,7 @@
                        (s/or :is-id ::id
                              :is-nil nil?)
                        #(gen/return nil)))
-(s/def ::page-id (s/with-gen #{:home :add-entity-forms :edit-entity-forms}
+(s/def ::page-id (s/with-gen #{:home :add-entity-forms :edit-entity-forms :list :queue :agenda}
                    #(gen/return :home)))
 (s/def ::page  (s/keys :req-un [::page-id
                                 ::type-or-nil
@@ -140,6 +154,7 @@
                                        :name ""
                                        :color-map {:red 0 :green 0 :blue 0}})))
 (s/def ::category-id ::id-or-nil)
+;; TODO figure out a better default for category-id
 (s/def ::task-form (s/with-gen
                      (s/keys :req-un [::id-or-nil ::name ::description ::complete ::category-id])
                      #(gen/return {:id-or-nil nil
@@ -147,8 +162,6 @@
                                    :description ""
                                    :complete false
                                    :category-id nil})))
-                                   ;; TODO figure out a better default for category-id
-
 (s/def ::task-id ::id-or-nil)
 (s/def ::error #{:time-mismatch})
 (s/def ::error-or-nil (s/with-gen
@@ -169,6 +182,18 @@
                         #?(:cljs #(gen/return (new js/Date))
                            :clj #(gen/return (t/zoned-date-time)))))
 (s/def ::period-in-play ::id-or-nil)
+(s/def ::callback-id ::id-or-nil)
+(s/def ::press-start  (s/with-gen (s/or :some ::moment
+                                        :none nil?)
+                        #(gen/return nil)))
+(s/def ::press-on boolean?)
+(s/def ::inline-period-long-press (s/with-gen (s/keys ::req-un [::callback-id
+                                                                ::press-start
+                                                                ::press-on])
+                                    #(gen/return {:callback-id nil
+                                                  :press-start nil
+                                                  :press-on false})))
+(s/def ::inline-period-add-dialog boolean?)
 (s/def ::view (s/and (s/keys :req-un [::page
                                       ::selected
                                       ::period-in-play
@@ -181,6 +206,7 @@
                                       ::task-form
                                       ::period-form
                                       ::displayed-day
+                                      ::inline-period-add-dialog
                                       ])
                      (fn [view]
                        (if (get-in
@@ -189,10 +215,15 @@
                              :moving-period])
 
                          (= :period
-                            (get-in
-                             view
-                             [:selected :current-selection
-                              :type-or-nil]))
+                            ;; use (last) because this
+                            ;; `{:type-or-nil [:is-nil nil],`
+                            ;; pulled from spec explain (is this what validation functions see?)
+                            ;; probably from (s/or) and the paths supplied
+                            ;; see handler comment #broken-expound
+                            (last (get-in
+                                   view
+                                   [:selected :current-selection
+                                    :type-or-nil])))
                          true))))
 (s/def ::db (s/keys :req-un [::user ::view ::categories]))
 
@@ -202,7 +233,11 @@
   :id (random-uuid),
   :email ""},
  :view
- {:dashboard-tab :agenda
+ {:inline-period-long-press {:callback-id nil
+                             :press-start nil
+                             :press-on false}
+  :inline-period-add-dialog false
+  :dashboard-tab :agenda
   :period-in-play nil,
   :zoom nil,
   :selected
