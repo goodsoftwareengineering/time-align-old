@@ -485,20 +485,29 @@
         ;; when view state on set start stop to abort timeout callback using id from view
         start-touch-click-handler (if (and (not is-moving-period)
                                            (not (:press-on long-press-state)))
-                                    (fn [e]
+                                    (fn [elem-id ui-type e]
                                       (let [id (.setTimeout
                                                 js/window
                                                 (fn [_]
                                                   (println "start the inline period add!")
                                                   (rf/dispatch [:set-inline-period-add-dialog
                                                                 true]))
-                                                700)]
-                                        (println "starting long press")
+                                                700)
+                                            svg-coords    (cutils/client-to-view-box elem-id e ui-type)
+                                            circle-coords (cutils/point-to-centered-circle
+                                                           (merge (select-keys svg-consts [:cx :cy])
+                                                                  svg-coords))
+                                            angle         (cutils/point-to-angle circle-coords)
+                                            relative-time (.floor js/Math (cutils/angle-to-ms angle))
+                                            absolute-time (+ relative-time
+                                                             (.valueOf (utils/zero-in-day day)))
+                                            time-date-obj (new js/Date absolute-time)]
+
                                         (rf/dispatch [:set-inline-period-long-press
-                                                      {:press-start (new js/Date)
+                                                      {:press-time time-date-obj
                                                        :callback-id id
                                                        :press-on true}]))))
-        stop-touch-click-handler (if is-moving-period
+        stop-touch-click-handler  (if is-moving-period
                                    (fn [e]
                                      (.preventDefault e)
                                      (rf/dispatch
@@ -508,16 +517,15 @@
                                        (println "stopping long press")
                                        (.clearTimeout js/window (:callback-id long-press-state))
                                        (rf/dispatch [:set-inline-period-long-press
-                                                     {:press-start nil
+                                                     {:press-time nil
                                                       :callback-id nil
                                                       :press-on false}]))))
-        deselect                 (if (not is-moving-period)
+        deselect                  (if (not is-moving-period)
                                    (fn [e]
                                      (.preventDefault e)
                                      (rf/dispatch
                                       [:set-selected-period nil])))
-        zoom @(rf/subscribe [:zoom])
-        ]
+        zoom @(rf/subscribe [:zoom])]
 
     [:div {:style {:height "100%" :width "100%"}}
      [:svg (merge {:key         date-str
@@ -531,8 +539,10 @@
                                  }
                    :width       "100%"
                    :height      "100%"
-                   :onMouseDown  start-touch-click-handler
-                   :onTouchStart start-touch-click-handler
+                   :onMouseDown (partial start-touch-click-handler
+                                         date-str :mouse)
+                   :onTouchStart (partial start-touch-click-handler
+                                          date-str :touch)
 
                    :onTouchEnd  stop-touch-click-handler
                    :onMouseUp   stop-touch-click-handler
@@ -1106,9 +1116,7 @@
        {:d            (describe-arc 12 12 11 start-used stop-used)
         :stroke       color
         :stroke-width "2"
-        :fill         "transparent"
-        }]]]
-    ))
+        :fill         "transparent"}]]]))
 
 (defn agenda [selected periods]
   (let [planned-periods (->> periods
@@ -1191,8 +1199,7 @@
         periods             @(rf/subscribe [:periods])
         period-in-play      @(rf/subscribe [:period-in-play])
         dashboard-tab       @(rf/subscribe [:dashboard-tab])
-        inline-period-dialog @(rf/subscribe [:inline-period-add-dialog])
-        ]
+        inline-period-dialog @(rf/subscribe [:inline-period-add-dialog])]
 
     [:div.app-container
      {:style {:display         "flex"
@@ -1676,7 +1683,8 @@
                                 (some #(if (= sel-id (:id %)) true nil))
                                 (some?))
         children (into [(r/as-element
-                         [ui/raised-button {:href "#/add/period"
+                         [ui/raised-button {:key (str "add-period-for-task-" id)
+                                            :href "#/add/period"
                                             :label "Add Period"
                                             :background-color "grey"
                                             :style {:margin-top "1em"
@@ -1731,7 +1739,8 @@
                                              ))
                                         tasks)
         children  (into [(r/as-element
-                           [ui/raised-button {:href "#/add/task" :label "Add Task"
+                          [ui/raised-button {:key (str "add-task-for-category-" id)
+                                             :href "#/add/task" :label "Add Task"
                                               :background-color "grey"
                                               :style {:margin-top "1em"
                                                       :margin-left "2em"
@@ -1848,11 +1857,13 @@
   (rf/dispatch [:set-main-drawer false])
   (rf/dispatch [:set-active-page {:page-id :queue}]))
 
-(secretary/defroute add-entity-route "/add/:entity-type" [entity-type]
-  (rf/dispatch [:clear-entities]) ;; TODO this feels like it should be sync but gets error when it is
+(secretary/defroute add-entity-route "/add/:entity-type" [entity-type query-params]
+  ;; TODO this feels like it should be sync but gets error when it is
+  ;; (rf/dispatch [:clear-entities])
   (rf/dispatch [:set-active-page {:page-id :add-entity-forms
                                   :type    (keyword entity-type)
-                                  :id      nil}]))
+                                  :id      nil
+                                  :query-params query-params}]))
 
 (secretary/defroute edit-entity-route "/edit/:entity-type/:id" [entity-type id]
   (rf/dispatch [:set-active-page {:page-id :edit-entity-forms
