@@ -493,20 +493,21 @@
                                                   (rf/dispatch [:set-inline-period-add-dialog
                                                                 true]))
                                                 700)
-                                            svg-coords (cutils/client-to-view-box elem-id e ui-type)
+                                            svg-coords    (cutils/client-to-view-box elem-id e ui-type)
                                             circle-coords (cutils/point-to-centered-circle
                                                            (merge (select-keys svg-consts [:cx :cy])
                                                                   svg-coords))
-                                            angle (cutils/point-to-angle circle-coords)
-                                            relative-time (cutils/angle-to-ms)
+                                            angle         (cutils/point-to-angle circle-coords)
+                                            relative-time (.floor js/Math (cutils/angle-to-ms angle))
                                             absolute-time (+ relative-time
-                                                             (.valueOf (utils/zero-in-day day)))]
+                                                             (.valueOf (utils/zero-in-day day)))
+                                            time-date-obj (new js/Date absolute-time)]
 
                                         (rf/dispatch [:set-inline-period-long-press
-                                                      {:press-time absolute-time
+                                                      {:press-time time-date-obj
                                                        :callback-id id
                                                        :press-on true}]))))
-        stop-touch-click-handler (if is-moving-period
+        stop-touch-click-handler  (if is-moving-period
                                    (fn [e]
                                      (.preventDefault e)
                                      (rf/dispatch
@@ -519,7 +520,7 @@
                                                      {:press-time nil
                                                       :callback-id nil
                                                       :press-on false}]))))
-        deselect                 (if (not is-moving-period)
+        deselect                  (if (not is-moving-period)
                                    (fn [e]
                                      (.preventDefault e)
                                      (rf/dispatch
@@ -1682,7 +1683,8 @@
                                 (some #(if (= sel-id (:id %)) true nil))
                                 (some?))
         children (into [(r/as-element
-                         [ui/raised-button {:href "#/add/period"
+                         [ui/raised-button {:key (str "add-period-for-task-" id)
+                                            :href "#/add/period"
                                             :label "Add Period"
                                             :background-color "grey"
                                             :style {:margin-top "1em"
@@ -1737,7 +1739,8 @@
                                              ))
                                         tasks)
         children  (into [(r/as-element
-                           [ui/raised-button {:href "#/add/task" :label "Add Task"
+                          [ui/raised-button {:key (str "add-task-for-category-" id)
+                                             :href "#/add/task" :label "Add Task"
                                               :background-color "grey"
                                               :style {:margin-top "1em"
                                                       :margin-left "2em"
@@ -1854,11 +1857,13 @@
   (rf/dispatch [:set-main-drawer false])
   (rf/dispatch [:set-active-page {:page-id :queue}]))
 
-(secretary/defroute add-entity-route "/add/:entity-type" [entity-type]
-  (rf/dispatch [:clear-entities]) ;; TODO this feels like it should be sync but gets error when it is
+(secretary/defroute add-entity-route "/add/:entity-type" [entity-type query-params]
+  ;; TODO this feels like it should be sync but gets error when it is
+  ;; (rf/dispatch [:clear-entities])
   (rf/dispatch [:set-active-page {:page-id :add-entity-forms
                                   :type    (keyword entity-type)
-                                  :id      nil}]))
+                                  :id      nil
+                                  :query-params query-params}]))
 
 (secretary/defroute edit-entity-route "/edit/:entity-type/:id" [entity-type id]
   (rf/dispatch [:set-active-page {:page-id :edit-entity-forms

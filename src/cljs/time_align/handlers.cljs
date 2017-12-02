@@ -136,37 +136,46 @@
      (time-align.worker-handlers/init! (:worker-pool hot-garbage-worker-pool))
      hot-garbage-worker-pool)))
 
+(defn determine-page [page type id]
+  (case page
+    :edit-entity-forms {:page-id     page
+                        :type-or-nil type
+                        :id-or-nil   id}
+    :add-entity-forms {:page-id     page
+                       :type-or-nil type
+                       :id-or-nil   nil}
+    ;;default
+    {:page-id     page
+     :type-or-nil nil
+     :id-or-nil   nil}))
+
+(defn determine-dispatched [type id query-params]
+  (if (some? id)
+    (case type
+      :category [:load-category-entity-form id]
+      :task     [:load-task-entity-form id]
+      :period   [:load-period-entity-form id]
+      nil)
+    (case type
+      :category [:load-new-category-entity-form query-params]
+      :task [:load-new-task-entity-form query-params]
+      :period [:load-new-period-entity-form query-params]
+      nil)))
+
 (reg-event-fx
  :set-active-page
  [persist-ls send-analytic validate-app-db]
  (fn [cofx [_ params]]
-   (let [db        (:db cofx)
-         page      (:page-id params)
-         type      (:type params)
-         id        (:id params)
-         view-page (case page
-                     :edit-entity-forms {:page-id     page
-                                         :type-or-nil type
-                                         :id-or-nil   id}
-                     :add-entity-forms {:page-id     page
-                                        :type-or-nil type
-                                        :id-or-nil   nil}
-                      ;;default
-                     {:page-id     page
-                      :type-or-nil nil
-                      :id-or-nil   nil})
+   (let [db           (:db cofx)
+         page         (:page-id params)
+         type         (:type params)
+         id           (:id params)
+         query-params (:query-params params)
+         view-page    (determine-page page type id)
+         to-load      (determine-dispatched type id query-params)]
 
-         to-load   (case type
-                     :category [:load-category-entity-form id]
-                     :task [:load-task-entity-form id]
-                     :period [:load-period-entity-form id]
-                     nil)]
-     (merge {:db (assoc-in db [:view :page] view-page)}
-            (when (= page :add-entity-forms)
-              {:dispatch [:clear-entities]})
-            (if (some? id)
-              {:dispatch to-load}
-              {})))))
+     (merge {:db (assoc-in db [:view :page] view-page)
+             :dispatch-n (filter some? (list to-load))}))))
 
 (reg-event-db
  :load-category-entity-form
@@ -180,6 +189,18 @@
                {:id-or-nil id
                 :name      name
                 :color-map color}))))
+
+(reg-event-db
+ :load-new-category-entity-form
+ [persist-ls send-analytic validate-app-db]
+ (fn [db [_ query-params]]
+   (let [] ;; TODO pull query-params
+     (assoc-in db [:view :category-form]
+               {:id-or-nil nil
+                :name      ""
+                :color-map {:red 0 :blue 0 :green 0}}))))
+
+
 
 (reg-event-db
  :load-task-entity-form
@@ -198,6 +219,18 @@
                 :description description
                 :complete    complete
                 :category-id category-id}))))
+
+(reg-event-db
+ :load-new-task-entity-form
+ [persist-ls send-analytic validate-app-db]
+ (fn [db [_ query-params]]
+   (let [] ;; TODO parse query-params
+     (assoc-in db [:view :task-form]
+               {:id-or-nil   nil
+                :name        ""
+                :description ""
+                :complete    false
+                :category-id nil}))))
 
 (reg-event-db
  :load-period-entity-form
@@ -222,6 +255,45 @@
                       (when (cutils/period-has-stamps this-period)
                         {:start        start
                          :stop         stop}))))))
+
+(reg-event-db
+ :load-new-period-entity-form
+ [persist-ls send-analytic validate-app-db]
+ (fn [db [_ query-params]]
+   (let [is-planned  (if (contains? query-params :planned )
+                       (= "true" (:planned query-params))
+                       true)
+         task-id     (if (contains? query-params :task-id )
+                       (uuid (:task-id query-params))
+                       nil)
+         start       (if (contains? query-params :start-time)
+                       (->> query-params
+                            :start-time
+                            (js/parseInt)
+                            (new js/Date))
+                       nil)
+         stop        (if (contains? query-params :stop-time)
+                       (->> query-params
+                            :stop-time
+                            (js/parseInt)
+                            (new js/Date))
+                       nil)
+
+         description (if (contains? query-params :description-time)
+                       (:description query-params)
+                       nil)]
+
+     (pprint/pprint {:query-params query-params
+              :start start})
+     (assoc-in db [:view :period-form]
+               (merge {:id-or-nil    nil
+                       :task-id      task-id
+                       :error-or-nil nil
+                       :planned      is-planned
+                       :description  description}
+
+                      (when (some? start) {:start start})
+                      (when (some? stop) {:stop stop}))))))
 
 (reg-event-db
  :set-zoom
@@ -643,7 +715,7 @@
 
                  removed-old-period-db)]
 
-     (if (or (and (nil? start) (nil? stop))
+     (if (or (and (nil? start) (nil? stop))  ;; TODO add error state for not planned with no stamps
              (< start-v stop-v))
        (if (some? task-id)
          {:db    new-db
@@ -877,8 +949,15 @@
  :set-inline-period-add-dialog
  [persist-ls route send-analytic validate-app-db]
  (fn [cofx [_ val]]
-   (merge {:db (assoc-in (:db cofx) [:view :inline-period-add-dialog] val)}
-          (when val {:dispatch [:set-inline-period-long-press {:press-time nil
-                                                               :callback-id nil
-                                                               :press-on false}]})
-          (when val {:route [:add "/add/period"]}))))
+   (let [db       (:db cofx)
+         date-obj (get-in db [:view :inline-period-long-press :press-time])
+         time     (if (some? date-obj)
+                    (.valueOf date-obj))
+         route-str (str "/add/period"
+                        (when time (str "?start-time=" time)))]
+
+     (merge {:db (assoc-in db [:view :inline-period-add-dialog] val)}
+            (when val {:dispatch [:set-inline-period-long-press {:press-time nil
+                                                                 :callback-id nil
+                                                                 :press-on false}]
+                       :route [:add route-str]})))))
