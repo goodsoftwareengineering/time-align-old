@@ -964,3 +964,24 @@
                                                                  :callback-id nil
                                                                  :press-on false}]
                        :route [:add route-str]})))))
+
+(reg-event-fx
+  :import-app-db
+  [send-analytic]
+  (fn [cofx [_ file]]
+    {:load-db-to-import file}))
+
+(reg-event-db
+  :reset-app-db
+  [persist-ls send-analytic validate-app-db]
+  (fn [_ [_ new-db]]
+    new-db))
+
+(reg-fx
+  :load-db-to-import
+  (fn [imported-db-file]
+    (let [reader (js/FileReader.)]
+      (oset! reader "onload" #(let [result (oget % "target.result")
+                                    imported-app-db (time-align.storage/transit-json->map result)]
+                                (re-frame.core/dispatch [:reset-app-db imported-app-db])))
+      (.readAsText reader imported-db-file))))

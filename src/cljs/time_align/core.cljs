@@ -18,6 +18,7 @@
             [goog.string.format]
             [goog.string :as gstring]
             [time-align.utilities :as utils]
+            [oops.core :refer [oget oset!]]
             [cljs.pprint :refer [pprint]])
   )
 
@@ -1009,6 +1010,29 @@
        [ic/social-person {:style {:marginRight "0.5em"
                                   :color       "grey"}}]
        [:span "Account"]]
+
+      [ui/menu-item {:innerDivStyle {:display "flex" :align-items "center"}
+                     :on-click      (fn []
+                                      (let [input (-> (.getElementsByClassName js/document "import-file-input")
+                                                      (aget 0))]
+                                        (.click input)))}
+       [:input.import-file-input {:type      "file"
+                                  :style     {:display "none"}
+                                  :on-change (fn [e]
+                                               (let [inputter (-> (.getElementsByClassName js/document "import-file-input")
+                                                                  (aget 0)
+                                                                  (oget "files")
+                                                                  (aget 0))]
+                                                 (rf/dispatch [:import-app-db inputter])))}]
+       [ic/file-cloud-upload {:style {:marginRight "0.5em"}}]
+       [:span "Import"]]
+
+      [ui/menu-item {:innerDivStyle {:display "flex" :align-items "center"}
+                     :on-click time-align.storage/export-app-db}
+       [ic/content-save {:style {:marginRight "0.5em"}}]
+       [:span "Export"]]
+
+
       ]]
     )
   )

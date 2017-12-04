@@ -8,6 +8,7 @@
                  [buddy "1.3.0"]
                  [binaryage/oops "0.5.6"]
                  [cljs-ajax "0.5.9"]
+                 [cljsjs/filesaverjs "1.3.3-0"]
                  [cljs-react-material-ui "0.2.43"]
                  [cljsjs/js-joda "1.5.0-0"]
                  [cljsjs/moment-timezone "0.5.11-1"]
@@ -62,7 +63,7 @@
   :main ^:skip-aot time-align.core
   :migratus {:store :database :db ~(get (System/getenv) "DATABASE_URL")}
 
-  :plugins [[lein-cprop "1.0.1"]
+  :plugins [[lein-cprop "1.0.3"]
             [migratus-lein "0.5.2"]
             [lein-cljsbuild "1.1.5"]
             [lein-immutant "2.1.0"]]

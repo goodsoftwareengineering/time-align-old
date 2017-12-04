@@ -1,5 +1,6 @@
 (ns time-align.storage
   (:require [cognitect.transit :as t]
+            [cljsjs.filesaverjs]
             [com.cognitect.transit.types :as ty]))
 
 (extend-type ty/UUID
@@ -24,3 +25,10 @@
   [transit-str]
   (let [r (t/reader :json {:handlers {"u" cljs.core/uuid} })]
     (t/read r transit-str)))
+
+(defn export-app-db
+  []
+  (js/saveAs (js/File. [(time-align.storage/key->transit-str @re-frame.db/app-db)]
+                       "export.json"
+                       (clj->js {:type "application/json+transit;charset=utf-8"}))))
+
