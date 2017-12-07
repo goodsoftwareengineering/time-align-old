@@ -39,7 +39,10 @@
    :id :persist-to-localstorage
    :after (fn [context]
             (remove-local-storage! :app-db)
-            (local-storage (atom (dissoc (get-in context [:effects :db]) :worker-pool)) :app-db)
+            (local-storage (-> context
+                               (get-in [:effects :db])
+                               atom)
+                           :app-db)
             context)))
 
 (def route
@@ -119,22 +122,22 @@
                      (merge {:validation {:valid? true
                                           :explanation nil}})))))))
 
-(reg-event-db
- :initialize-db
- [persist-ls send-analytic validate-app-db]
- (fn [_ _]
-   (let [hot-garbage-let-var     (if (some #(= :app-db %) (store/store->keys))
-                                   (->> :app-db
-                                        store/key->transit-str
-                                        (.getItem js/localStorage)
-                                        store/transit-json->map)
-                                   db/default-db)
-         hot-garbage-worker-pool (merge hot-garbage-let-var
-                                        {:worker-pool (js/Worker. (if js/goog.DEBUG
-                                                                    "/bootstrap_worker.js"
-                                                                    "js/worker.js"))})]
-     (time-align.worker-handlers/init! (:worker-pool hot-garbage-worker-pool))
-     hot-garbage-worker-pool)))
+(reg-fx :init-worker
+        (fn [worker-src-url]
+          (time-align.worker-handlers/init! (js/Worker. worker-src-url))))
+
+(defn initialize-db [cofx _]
+  (let [initial-db (if (some #(= :app-db %) (store/store->keys))
+                              (->> :app-db
+                                   store/key->transit-str
+                                   (.getItem js/localStorage)
+                                   store/transit-json->map)
+                              db/default-db)]
+    {:db initial-db
+     :init-worker (if js/goog.DEBUG "/bootstrap_worker.js" "js/worker.js") }))
+
+(reg-event-fx :initialize-db
+ [persist-ls send-analytic validate-app-db] initialize-db)
 
 (defn determine-page [page type id]
   (case page
@@ -961,3 +964,24 @@
                                                                  :callback-id nil
                                                                  :press-on false}]
                        :route [:add route-str]})))))
+
+(reg-event-fx
+  :import-app-db
+  [send-analytic]
+  (fn [cofx [_ file]]
+    {:load-db-to-import file}))
+
+(reg-event-db
+  :reset-app-db
+  [persist-ls send-analytic validate-app-db]
+  (fn [_ [_ new-db]]
+    new-db))
+
+(reg-fx
+  :load-db-to-import
+  (fn [imported-db-file]
+    (let [reader (js/FileReader.)]
+      (oset! reader "onload" #(let [result (oget % "target.result")
+                                    imported-app-db (time-align.storage/transit-json->map result)]
+                                (re-frame.core/dispatch [:reset-app-db imported-app-db])))
+      (.readAsText reader imported-db-file))))

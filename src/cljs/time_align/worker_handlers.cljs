@@ -2,6 +2,7 @@
   (:require [re-frame.core :refer [dispatch reg-event-fx reg-fx]]
             [oops.core :refer [oget oset!]]))
 
+(def worker-atom (atom nil))
 
 (def succ-fail (atom {}))
 
@@ -21,6 +22,7 @@
 
 (defn init!
   [worker]
+  (reset! worker-atom worker)
   (oset! worker "onmessage" handle-request!))
 
 (reg-fx
@@ -30,8 +32,7 @@
     (swap! succ-fail merge {handler {:on-success on-success
                                      :on-error on-error}})
     (.postMessage pool (clj->js {:arguments arguments
-                                 :handler handler}))
-    ))
+                                 :handler handler}))))
 
 (reg-event-fx
   :on-worker-fx-success
@@ -48,6 +49,5 @@
 (reg-event-fx
   :test-worker-fx
   (fn [coeffects [_ task]]
-    (let [worker-pool (-> coeffects :db :worker-pool)
-          task-with-pool (assoc task :pool worker-pool)]
+    (let [task-with-pool (assoc task :pool @worker-atom)]
       {:worker task-with-pool})))
