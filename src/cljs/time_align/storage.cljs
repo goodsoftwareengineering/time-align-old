@@ -29,6 +29,6 @@
 (defn export-app-db
   []
   (js/saveAs (js/File. [(time-align.storage/key->transit-str @re-frame.db/app-db)]
-                       "export.json"
+                       (str (.toLocaleString (new js/Date)) " time align export.json")
                        (clj->js {:type "application/json+transit;charset=utf-8"}))))
 
