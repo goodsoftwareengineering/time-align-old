@@ -207,17 +207,18 @@
 
 
 (defn action-buttons [state selected period-in-play]
-  (let [forceable @forcer]
-    (case state
-      :collapsed
-      (action-buttons-collapsed)
-      :no-selection
-      (action-buttons-no-selection)
+  (let [forceable @forcer
+        selection (get-in selected [:current-selection :type-or-nil])]
+    (case selection
+      ;; :collapsed
+      ;; (action-buttons-collapsed)
+      ;; :no-selection
+      ;; (action-buttons-no-selection)
       :period
       (action-buttons-period-selection selected period-in-play)
       :queue
       (action-buttons-queue-selection selected period-in-play)
-      [:div "no buttons!"]
+      [:div.buttons-empty]
       )
     )
   )
