@@ -206,10 +206,11 @@
          ]
         [ui/tab {:label "stats" :style {:color (:primary uic/app-theme)}
                  :value "stats"}
-         (if (= :period (get-in selected [:current-selection :type-or-nil]))
-           (stats-selection selected periods tasks)
-           (stats-no-selection)
-           )
+         "nothing here"
+         ;; (if (= :period (get-in selected [:current-selection :type-or-nil]))
+         ;;   (stats-selection selected periods tasks)
+         ;;   (stats-no-selection)
+         ;;   )
          ]
         ]
        ]

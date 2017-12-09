@@ -5,7 +5,9 @@
             [reagent.core :as r]
             [cljs-react-material-ui.reagent :as ui]
             [time-align.client-utilities :as cutils]
-            [time-align.js-interop :as jsi]))
+            [time-align.js-interop :as jsi]
+            [cljs-react-material-ui.core :refer [color]]
+            ))
 
 (defn agenda [selected periods]
   (let [planned-periods (->> periods
