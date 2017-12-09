@@ -73,5 +73,8 @@ lein run migrate
 - run jar
 
 ## License
-gpl-3.0
+Copyright © 2017 Justin Good  
+
+Distributed under the GNU General Public License v3 (GPL-3)
+
 
