@@ -855,11 +855,9 @@
          other-categories   (filter #(not (= (:id %) category-id))
                                     all-categories)
          all-tasks          (:tasks this-category)
-         this-task          (some #(if (= (:id %) task-id) %)
-                                  all-tasks)
-         other-tasks        (filter #(not (= (:id %) task-id))
-                                    all-tasks)
-         periods (:periods this-task)
+         this-task          (some #(if (= (:id %) task-id) %) all-tasks)
+         other-tasks        (filter #(not (= (:id %) task-id)) all-tasks)
+         periods            (:periods this-task)
 
           ;; place
          new-task           (merge this-task
