@@ -388,11 +388,8 @@
      {:db       (assoc-in db [:view :selected]
                           {:current-selection  curr
                            :previous-selection prev})
-      :dispatch-n (filter some? (list ;; TODO upgrade re-frame and remove filter
-                                 (when (and (some? in-play-id)
-                                            (= in-play-id period-id))
-                                   [:pause-period-play])
-                                 [:action-buttons-back]))})))
+      :dispatch  (when (and (some? in-play-id) (= in-play-id period-id))
+                   [:pause-period-play])})))
 
 (reg-event-db
  :action-buttons-expand
