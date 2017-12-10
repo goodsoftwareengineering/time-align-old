@@ -385,11 +385,12 @@
          curr {:type-or-nil type :id-or-nil period-id}
          in-play-id (get-in db [:view :period-in-play])]
 
-     {:db       (assoc-in db [:view :selected]
-                          {:current-selection  curr
-                           :previous-selection prev})
-      :dispatch  (when (and (some? in-play-id) (= in-play-id period-id))
-                   [:pause-period-play])})))
+     (merge
+      {:db       (assoc-in db [:view :selected]
+                           {:current-selection  curr
+                            :previous-selection prev})}
+      (when (and (some? in-play-id) (= in-play-id period-id))
+        {:dispatch [:pause-period-play]})))))
 
 (reg-event-db
  :action-buttons-expand
