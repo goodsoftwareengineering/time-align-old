@@ -834,7 +834,7 @@
          new-id             (random-uuid)
          start              (new js/Date)
          stop               (as-> (new js/Date) d
-                                  (.setMinutes d (+ 1 (.getMinutes d))) ;; TODO adjustable increment
+                                  (.setMinutes d (+ 5 (.getMinutes d))) ;; TODO adjustable increment
                                   (new js/Date d))    ;; TODO we need to abstract out this mutative toxin
 
          new-actual-period  (merge
