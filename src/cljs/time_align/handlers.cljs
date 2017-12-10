@@ -823,9 +823,10 @@
 (reg-event-fx
  :play-period
  [persist-ls send-analytic validate-app-db]
- (fn [cofx [_ id]]
+ (fn [cofx [_ _]]
    (let [db                 (:db cofx)
           ;; find the period
+         id                  (get-in db [:view :selected :current-selection :id-or-nil])
          periods            (cutils/pull-periods db)
          this-period        (some #(if (= (:id %) id) %) periods)
 
