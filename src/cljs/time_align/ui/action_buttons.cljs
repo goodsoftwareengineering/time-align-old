@@ -35,6 +35,24 @@
                         :background-color "grey"
                         :style            {:marginBottom "20px"}})
 
+(defn play-button []
+  [ui/floating-action-button
+   (merge basic-button
+          {:onTouchTap
+           (fn [e]
+             (rf/dispatch
+              [:play-period]))})
+   [ic/av-play-arrow uic/basic-ic]])
+
+(defn pause-button []
+  [ui/floating-action-button
+   (merge basic-button
+          {:onTouchTap
+           (fn [e]
+             (rf/dispatch
+              [:pause-period-play]))})
+   [ic/av-pause uic/basic-ic]])
+
 (defn back-button []
   [ui/floating-action-button (merge
                                basic-button
@@ -110,53 +128,11 @@
      ]
   )
 
-(defn action-buttons-period-selection [selected period-in-play]
-  (if @action-buttons-collapsed-click
-    (do (reset! action-buttons-collapsed-click false)
-        (reset! margin-action-expanded 20)))
+(defn action-buttons-period-selection []
+  [:div (if (some? period-in-play) (pause-button) (play-button))])
 
-  [:div expanded-buttons-style
-
-   (if (some? period-in-play)
-     [ui/floating-action-button
-      (merge basic-mini-button
-             {:style (merge (:style basic-mini-button)
-                            {:marginBottom "20"})
-              :onTouchTap (fn [e]
-                            (rf/dispatch
-                             [:pause-period-play]))
-              })
-      [ic/av-pause uic/basic-ic]]
-
-     [ui/floating-action-button
-      (merge basic-mini-button
-             {:style (merge (:style basic-mini-button)
-                            {:marginBottom "20"})
-              :onTouchTap (fn [e]
-                            (rf/dispatch
-                             [:play-period
-                              (:id-or-nil (:current-selection selected))
-                              ]))
-              })
-      [ic/av-play-arrow uic/basic-ic]]
-     )
-
-   [ui/floating-action-button
-    (merge basic-mini-button
-           {:style      (merge (:style basic-mini-button)
-                               {:marginBottom "20"})
-            :onTouchTap (fn [e]
-                            (hist/nav! (str "/edit/period/" (get-in
-                                                             selected
-                                                             [:current-selection
-                                                              :id-or-nil]))))
-            })
-
-    [ic/editor-mode-edit uic/basic-ic]]
-
-   (back-button)
-   ]
-  )
+(defn action-buttons-period-in-play []
+  [:div (pause-button)])
 
 (defn action-buttons-queue-selection [selected period-in-play]
   (if @action-buttons-collapsed-click
@@ -205,20 +181,14 @@
    ]
   )
 
-
 (defn action-buttons [state selected period-in-play]
-  (let [forceable @forcer
+  (let [forceable @forcer ;; TODO idk what this is for
         selection (get-in selected [:current-selection :type-or-nil])]
     (case selection
-      ;; :collapsed
-      ;; (action-buttons-collapsed)
-      ;; :no-selection
-      ;; (action-buttons-no-selection)
-      :period
-      (action-buttons-period-selection selected period-in-play)
+      :period (action-buttons-period-selection)
       :queue
       (action-buttons-queue-selection selected period-in-play)
-      [:div.buttons-empty]
-      )
-    )
-  )
+      ;; else
+      (if (some? period-in-play)
+        (action-buttons-period-in-play selected period-in-play)
+        [:div.buttons-empty]))))
