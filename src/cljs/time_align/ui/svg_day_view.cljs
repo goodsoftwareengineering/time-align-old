@@ -397,10 +397,13 @@
                                  }
                    :width       "100%"
                    :height      "100%"
-                   :onMouseDown (partial start-touch-click-handler
-                                         date-str :mouse)
-                   :onTouchStart (partial start-touch-click-handler
-                                          date-str :touch)
+                   :onMouseDown (if (some? start-touch-handler) ;; catch the case when handler is nil otherwise partial freaks out when called
+                                                                ;; TODO this should be moved up into the let
+                                  (partial start-touch-click-handler
+                                           date-str :mouse))
+                   :onTouchStart (if (some? start-touch-handler)
+                                   (partial start-touch-click-handler
+                                            date-str :touch))
 
                    :onTouchEnd  stop-touch-click-handler
                    :onMouseUp   stop-touch-click-handler
