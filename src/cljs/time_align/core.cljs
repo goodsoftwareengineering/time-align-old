@@ -27,8 +27,7 @@
             [time-align.ui.entity-forms :as ef]
             [time-align.ui.list :as lp]
             [time-align.ui.queue :as qp]
-            [time-align.js-interop :as jsi])
-  )
+            [time-align.js-interop :as jsi]))
 
 ;;Forward declarations to make file linting easier
 
@@ -39,20 +38,20 @@
         r-int     (js/parseInt r)
         r-int-adj (* 0.70 r-int)
 
-        x1        (+ cx-int (* r-int-adj (Math/cos  (* pi (/ 3 4)))))
-        y1        (+ cy-int (* r-int-adj (Math/sin  (* pi (/ 3 4)))))
-        x2        (+ cx-int (* r-int-adj (Math/cos  (* pi (/ 7 4)))))
-        y2        (+ cy-int (* r-int-adj (Math/sin  (* pi (/ 7 4)))))
+        x1 (+ cx-int (* r-int-adj (Math/cos  (* pi (/ 3 4)))))
+        y1 (+ cy-int (* r-int-adj (Math/sin  (* pi (/ 3 4)))))
+        x2 (+ cx-int (* r-int-adj (Math/cos  (* pi (/ 7 4)))))
+        y2 (+ cy-int (* r-int-adj (Math/sin  (* pi (/ 7 4)))))
 
-        x3        (+ cx-int (* r-int-adj (Math/cos  (* pi (/ 1 4)))))
-        y3        (+ cy-int (* r-int-adj (Math/sin  (* pi (/ 1 4)))))
-        x4        (+ cx-int (* r-int-adj (Math/cos  (* pi (/ 5 4)))))
-        y4        (+ cy-int (* r-int-adj (Math/sin  (* pi (/ 5 4)))))
+        x3 (+ cx-int (* r-int-adj (Math/cos  (* pi (/ 1 4)))))
+        y3 (+ cy-int (* r-int-adj (Math/sin  (* pi (/ 1 4)))))
+        x4 (+ cx-int (* r-int-adj (Math/cos  (* pi (/ 5 4)))))
+        y4 (+ cy-int (* r-int-adj (Math/sin  (* pi (/ 5 4)))))
 
-        generic   {:fill           "transparent"
-                   :stroke         stroke
-                   :stroke-width   "1"
-                   :stroke-linecap "round"}]
+        generic {:fill           "transparent"
+                 :stroke         stroke
+                 :stroke-width   "1"
+                 :stroke-linecap "round"}]
 
     [:g {:onClick click}
      [:circle (merge {:fill fill :cx cx :cy cy :r r}
@@ -63,8 +62,7 @@
      [:path (merge generic
                    {:d (str "M " x1 " " y1 " " "L " x2 " " y2 " ")})]
      [:path (merge generic
-                   {:d (str "M " x3 " " y3 " " "L " x4 " " y4 " ")})]
-     ]))
+                   {:d (str "M " x3 " " y3 " " "L " x4 " " y4 " ")})]]))
 
 (defn +-svg [{:keys [cx cy r fill stroke shadow click]}]
   (let [pi        (Math/PI)
@@ -73,20 +71,20 @@
         r-int     (js/parseInt r)
         r-int-adj (* 0.70 r-int)
 
-        x1        (+ cx-int (* r-int-adj (Math/cos  (* pi (/ 1 2)))))
-        y1        (+ cy-int (* r-int-adj (Math/sin  (* pi (/ 1 2)))))
-        x2        (+ cx-int (* r-int-adj (Math/cos  (* pi (/ 3 2)))))
-        y2        (+ cy-int (* r-int-adj (Math/sin  (* pi (/ 3 2)))))
+        x1 (+ cx-int (* r-int-adj (Math/cos  (* pi (/ 1 2)))))
+        y1 (+ cy-int (* r-int-adj (Math/sin  (* pi (/ 1 2)))))
+        x2 (+ cx-int (* r-int-adj (Math/cos  (* pi (/ 3 2)))))
+        y2 (+ cy-int (* r-int-adj (Math/sin  (* pi (/ 3 2)))))
 
-        x3        (+ cx-int (* r-int-adj (Math/cos  pi)))
-        y3        (+ cy-int (* r-int-adj (Math/sin  pi)))
-        x4        (+ cx-int (* r-int-adj (Math/cos  (* pi 2))))
-        y4        (+ cy-int (* r-int-adj (Math/sin  (* pi 2))))
+        x3 (+ cx-int (* r-int-adj (Math/cos  pi)))
+        y3 (+ cy-int (* r-int-adj (Math/sin  pi)))
+        x4 (+ cx-int (* r-int-adj (Math/cos  (* pi 2))))
+        y4 (+ cy-int (* r-int-adj (Math/sin  (* pi 2))))
 
-        generic   {:fill           "transparent"
-                   :stroke         stroke
-                   :stroke-width   "1"
-                   :stroke-linecap "round"}]
+        generic {:fill           "transparent"
+                 :stroke         stroke
+                 :stroke-width   "1"
+                 :stroke-linecap "round"}]
 
     [:g {:onClick click}
      [:circle (merge {:fill fill :cx cx :cy cy :r r}
@@ -96,8 +94,7 @@
      [:path (merge generic
                    {:d (str "M " x1 " " y1 " " "L " x2 " " y2 " ")})]
      [:path (merge generic
-                   {:d (str "M " x3 " " y3 " " "L " x4 " " y4 " ")})]
-     ]))
+                   {:d (str "M " x3 " " y3 " " "L " x4 " " y4 " ")})]]))
 
 (defn --svg [{:keys [cx cy r fill stroke shadow click]}]
   (let [pi        (Math/PI)
@@ -106,15 +103,15 @@
         r-int     (js/parseInt r)
         r-int-adj (* 0.70 r-int)
 
-        x3        (+ cx-int (* r-int-adj (Math/cos  pi)))
-        y3        (+ cy-int (* r-int-adj (Math/sin  pi)))
-        x4        (+ cx-int (* r-int-adj (Math/cos  (* pi 2))))
-        y4        (+ cy-int (* r-int-adj (Math/sin  (* pi 2))))
+        x3 (+ cx-int (* r-int-adj (Math/cos  pi)))
+        y3 (+ cy-int (* r-int-adj (Math/sin  pi)))
+        x4 (+ cx-int (* r-int-adj (Math/cos  (* pi 2))))
+        y4 (+ cy-int (* r-int-adj (Math/sin  (* pi 2))))
 
-        generic   {:fill           "transparent"
-                   :stroke         stroke
-                   :stroke-width   "1"
-                   :stroke-linecap "round"}]
+        generic {:fill           "transparent"
+                 :stroke         stroke
+                 :stroke-width   "1"
+                 :stroke-linecap "round"}]
 
     [:g {:onClick click}
      [:circle (merge {:fill fill :cx cx :cy cy :r r}
@@ -131,8 +128,7 @@
    [:g
     [:polyline {:points "7,2 2,12 7,22"}]
     [:polyline {:points "11,2 13,2 13,22 11,22"}]
-    [:polyline {:points "17,2 22,12 17,22"}]
-    ]])
+    [:polyline {:points "17,2 22,12 17,22"}]]])
 
 (defn svg-mui-shrink []
   [ui/svg-icon
@@ -140,9 +136,7 @@
    [:g
     [:polyline {:points "2,2 7,12 2,22"}]
     [:polyline {:points "11,2 13,2 13,22 11,22"}]
-    [:polyline {:points "22,2 17,12 22,22"}]
-    ]]
-  )
+    [:polyline {:points "22,2 17,12 22,22"}]]])
 
 (defn current-quadrant []
   :q1)
@@ -152,15 +146,12 @@
                      entity-type
                      :category)
         entity-id  (:id-or-nil page)
-        div-name (keyword (str "div." page-value "-form"))]
+        div-name   (keyword (str "div." page-value "-form"))]
     [:div.entity-form-container
      (app-bar)
      [div-name {:style {:padding         "0.5em"
                         :backgroundColor "white"}}
-      (ef/entity-form page-value entity-id)]
-     ]
-    )
-  )
+      (ef/entity-form page-value entity-id)]]))
 
 (defn list-page []
   (let [categories        @(rf/subscribe [:categories])
@@ -170,27 +161,26 @@
     [:div
      (app-bar)
      [ui/paper {:style {:width "100%"}}
-      [ui/raised-button {:href "#/add/category" :label "Add Category"
+      [ui/raised-button {:href             "#/add/category" :label "Add Category"
                          :background-color "grey"
-                         :style {:margin-top "1em"
-                                 :margin-left "1em"
-                                 :margin-bottom "1em"}}]
+                         :style            {:margin-top    "1em"
+                                            :margin-left   "1em"
+                                            :margin-bottom "1em"}}]
       [ui/list
        (->> categories
-            (map (partial lp/list-category current-selection)))]
-      ]]))
+            (map (partial lp/list-category current-selection)))]]]))
 
 (defn agenda-page []
-  (let [selected            @(rf/subscribe [:selected])
-        periods             @(rf/subscribe [:periods])]
+  (let [selected @(rf/subscribe [:selected])
+        periods  @(rf/subscribe [:periods])]
     [:div
      (app-bar)
      [ui/paper {:style {:width "100%"}}
       (ap/agenda selected periods)]]))
 
 (defn queue-page []
-  (let [tasks     @(rf/subscribe [:tasks])
-        selected  @(rf/subscribe [:selected])]
+  (let [tasks    @(rf/subscribe [:tasks])
+        selected @(rf/subscribe [:selected])]
     [:div
      (app-bar)
      [ui/paper {:style {:width "100%"}}
@@ -206,33 +196,27 @@
       [ui/text-field {:floating-label-text "Name"
                       :fullWidth           true}]
       [ui/text-field {:floating-label-text "Email"
-                      :fullWidth           true}]]
-     ])
-  )
+                      :fullWidth           true}]]]))
 
 (defn page []
   (let [this-page @(rf/subscribe [:page])
         page-id   (:page-id this-page)]
     [ui/mui-theme-provider
      {:mui-theme (get-mui-theme
-                   {:palette
-                    {:primary1-color (:primary uic/app-theme)
-                     :accent1-color  (:secondary uic/app-theme)}
-                    })}
+                  {:palette
+                   {:primary1-color (:primary uic/app-theme)
+                    :accent1-color  (:secondary uic/app-theme)}})}
      [:div
       (case page-id
-        :home (hp/home-page)
-        :add-entity-forms (entity-forms this-page)
+        :home              (hp/home-page)
+        :add-entity-forms  (entity-forms this-page)
         :edit-entity-forms (entity-forms this-page)
-        :list (list-page)
-        :account (account-page)
-        :agenda (agenda-page)
-        :queue (queue-page)
+        :list              (list-page)
+        :account           (account-page)
+        :agenda            (agenda-page)
+        :queue             (queue-page)
         ;; default
-        (hp/home-page))]
-     ]
-    )
-  )
+        (hp/home-page))]]))
 
 ;; -------------------------
 ;; Routes
@@ -257,9 +241,9 @@
 (secretary/defroute add-entity-route "/add/:entity-type" [entity-type query-params]
   ;; TODO this feels like it should be sync but gets error when it is
   ;; (rf/dispatch [:clear-entities])
-  (rf/dispatch [:set-active-page {:page-id :add-entity-forms
-                                  :type    (keyword entity-type)
-                                  :id      nil
+  (rf/dispatch [:set-active-page {:page-id      :add-entity-forms
+                                  :type         (keyword entity-type)
+                                  :id           nil
                                   :query-params query-params}]))
 
 (secretary/defroute edit-entity-route "/edit/:entity-type/:id" [entity-type id]
