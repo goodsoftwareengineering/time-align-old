@@ -4,6 +4,7 @@
             [goog.history.EventType :as HistoryEventType])
   (:import goog.History))
 
+;; TODO this needs to be a separate library
 (declare history)
 
 (defn hook-browser-navigation! []
