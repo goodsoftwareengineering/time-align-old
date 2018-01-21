@@ -78,7 +78,10 @@
                  :fill "white"
                  :stroke "#bcbcbc" ;; TODO grey400 when global styles are in place
                  :stroke-width "0.10"}]
-         [:circle {:cx 3 :cy 3 :r 1 :fill "blue"}]]))
+         [:circle {:cx 3 :cy 3 :r 2 :fill "blue"}]
+         [:text {:x "2" :y "3.7"
+                 :stroke "white" :stroke-width "0.1"
+                 :fill "white" :font-size "2"} (.getDate d)]]))
 
     days)])
 
