@@ -6,8 +6,6 @@
             [time-align.js-interop :as jsi]
             [clojure.string :as string]))
 
-
-
 (def shadow-filter
   [:defs
    [:filter {:id    "shadow-2dp"

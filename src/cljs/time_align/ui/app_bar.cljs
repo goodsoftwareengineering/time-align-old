@@ -60,12 +60,20 @@
 
    {:on-touch-tap time-align.storage/export-app-db
     :icon [ic/content-save {:style {:marginRight "0.5em"}}]
-    :label [:span "Export"]}])
+    :label [:span "Export"]}
+
+   {:href "#/calendar"
+    :icon [ic/action-date-range {:style {:marginRight "0.5em"}}]
+    :label [:span "Calendar"]}])
 
 (defn app-bar-option [{:keys [href label icon on-touch-tap child]}]
-  [:a {:href href}
-   [ui/menu-item {:onTouchTap on-touch-tap
-                  :innerDivStyle {:display "flex" :align-items "center"}}
+  [:a (merge (when (some? href)
+               {:href href})
+             {:key label})
+   [ui/menu-item (merge
+                  {:innerDivStyle {:display "flex" :align-items "center"}}
+                  (when (some? on-touch-tap)
+                    {:onTouchTap on-touch-tap} ))
     child icon label]])
 
 (defn app-bar []

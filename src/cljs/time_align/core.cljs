@@ -27,6 +27,7 @@
             [time-align.ui.entity-forms :as ef]
             [time-align.ui.list :as lp]
             [time-align.ui.queue :as qp]
+            [time-align.ui.calendar :as cp]
             [time-align.js-interop :as jsi]))
 
 ;;Forward declarations to make file linting easier
@@ -198,6 +199,8 @@
       [ui/text-field {:floating-label-text "Email"
                       :fullWidth           true}]]]))
 
+(defn calendar-page [] (cp/calendar-temp))
+
 (defn page []
   (let [this-page @(rf/subscribe [:page])
         page-id   (:page-id this-page)]
@@ -215,6 +218,7 @@
         :account           (account-page)
         :agenda            (agenda-page)
         :queue             (queue-page)
+        :calendar          (calendar-page)
         ;; default
         (hp/home-page))]]))
 
@@ -250,6 +254,10 @@
   (rf/dispatch [:set-active-page {:page-id :edit-entity-forms
                                   :type    (keyword entity-type)
                                   :id      (uuid id)}]))
+
+(secretary/defroute calendar-route "/calendar" []
+  (rf/dispatch [:set-main-drawer false])
+  (rf/dispatch [:set-active-page {:page-id :calendar}]))
 
 ;; -------------------------
 ;; History
