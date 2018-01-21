@@ -1,10 +1,28 @@
 (ns time-align.ui.calendar)
 
-(def days (->> (range 1 32)
-               (map #(new js/Date 2018 0 %))))
+(def year 2018)
+(def month 0)
 
-(def data [])
+(def days (->> (range 1 32)
+               (map #(new js/Date year month %))))
+
+(def data
+  (->> (range 1 32)
+       (map (fn [date-num]
+              (->> (if (> (rand) 0.1) (range 1 15) '())
+                   (map (fn [_] (let [start-hour (.floor js/Math (rand 20))
+                                      start-minute (.floor js/Math (rand 50))
+                                      stop-hour (.floor js/Math (+ (rand 3) start-hour))
+                                      stop-minute (.floor js/Math (+ (rand 9) start-minute))
+                                      colors (cons "#"
+                                                   (map #(.floor js/Math (rand 9)) (range 1 7)))]
+                                  {:start (new js/Date year month date-num start-hour start-minute)
+                                   :stop (new js/Date year month date-num stop-hour stop-minute)
+                                   :color (apply str colors)}))))))))
+
+
 (def cell-width (* (/ 100 7)))  ;; ~14
+
 (def cell-height (* (/ 100 5))) ;; 20
 
 (defn indices
@@ -55,10 +73,8 @@
          :xmlns "http://www.w3.org/2000/svg"
          :version  "1.1"
          :style       {:display      "inline-box"
-                       :touch-action "pinch-zoom"
-                       ;; this stops scrolling
-                       ;; for moving period
-}
+                       ;; this stops scrolling for moving period
+                       :touch-action "pinch-zoom"}
          :width       "100%"
          :height      "100%"
          :viewBox      "0 0 100 100"}
@@ -81,7 +97,11 @@
          [:circle {:cx 3 :cy 3 :r 2 :fill "blue"}]
          [:text {:x "2" :y "3.7"
                  :stroke "white" :stroke-width "0.1"
-                 :fill "white" :font-size "2"} (.getDate d)]]))
+                 :fill "white" :font-size "2"} (.getDate d)]
+
+         (->> data
+              (filter (fn [periods])))
+         ]))
 
     days)])
 
