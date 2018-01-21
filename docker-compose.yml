@@ -1,0 +1,20 @@
+version: "3"
+services:
+
+  app:
+    build:
+      context: .
+      dockerfile: development.dockerfile
+    ports:
+      - 3000:3000
+      - 3449:3449
+      - 7000:7000
+      - 7002:7002
+    user: "${UID}:0"
+    volumes:
+      - .:/usr/app/time-align
+      - /home/$USER/.lein:/.lein
+    working_dir: /usr/app/time-align
+    command: ["lein", "repl", ":headless", ":host", "0.0.0.0", ":port", "7000"]
+
+
