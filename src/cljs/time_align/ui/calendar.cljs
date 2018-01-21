@@ -4,9 +4,8 @@
                (map #(new js/Date 2018 0 %))))
 
 (def data [])
-
-(def cell-width (* (/ 100 7)))
-(def cell-height (* (/ 100 5)))
+(def cell-width (* (/ 100 7)))  ;; ~14
+(def cell-height (* (/ 100 5))) ;; 20
 
 (defn indices
   "From [stack overflow](https://stackoverflow.com/a/8642069/5040125)"
@@ -59,28 +58,29 @@
                        :touch-action "pinch-zoom"
                        ;; this stops scrolling
                        ;; for moving period
-                       }
+}
          :width       "100%"
          :height      "100%"
          :viewBox      "0 0 100 100"}
 
    (map-indexed
 
-    (fn [i d] [:rect {:x (-> d
-                             (get-day)
-                             (- 1)
-                             (* cell-width))
-                      :y (* cell-height (week-number d))
-                      :width cell-width
-                      :height cell-height
-                      :fill "green"
-                      :stroke "white"
-                      :id (.toDateString d)
-                      :key (.toDateString d)}])
+    (fn [i d]
+      (let [x (-> d (get-day) (- 1) (* cell-width))
+            y (* cell-height (week-number d))]
+        [:g {:transform (str "translate(" x " " y ")")
+             :id  (.toDateString d)
+             :key (.toDateString d)}
+         [:rect {:x "0"
+                 :y "0"
+                 :width cell-width
+                 :height cell-height
+                 :fill "white"
+                 :stroke "#bcbcbc" ;; TODO grey400 when global styles are in place
+                 :stroke-width "0.10"}]
+         [:circle {:cx 3 :cy 3 :r 1 :fill "blue"}]]))
 
-    days)
-   ]
-  )
+    days)])
 
 (defn calendar-temp [] (calendar days data))
 
