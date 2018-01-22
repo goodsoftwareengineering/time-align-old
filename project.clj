@@ -3,16 +3,29 @@
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
 
-  :dependencies [[buddy "2.0.0"]
+  :dependencies [
+                 [alandipert/storage-atom "2.0.1"]
+                 [binaryage/oops "0.5.6"]
+                 [buddy "2.0.0"]
                  [ch.qos.logback/logback-classic "1.2.3"]
                  [cider/cider-nrepl "0.15.1"]
                  [clj-oauth "1.5.4"]
                  [clj-time "0.14.2"]
                  [cljs-ajax "0.7.3"]
+                 [cljsjs/filesaverjs "1.3.3-0"]
+                 [cljs-react-material-ui "0.2.43"]
+                 [cljsjs/js-joda "1.5.0-0"]
+                 [cljsjs/moment-timezone "0.5.11-1"]
+                 [clojure.java-time "0.3.0"]
+                 [com.cognitect/transit-cljs "0.8.239"]
+                 [com.rpl/specter "1.0.5"]
                  [com.walmartlabs/lacinia "0.21.0"]
                  [compojure "1.6.0"]
                  [conman "0.7.5"]
                  [cprop "0.1.11"]
+                 [day8.re-frame/async-flow-fx "0.0.6"]
+                 [day8.re-frame/http-fx "0.1.2"]
+                 [expound "0.3.4"]
                  [funcool/struct "1.2.0"]
                  [luminus-aleph "0.1.5"]
                  [luminus-migrations "0.4.5"]
@@ -25,6 +38,7 @@
                  [mount "0.1.11"]
                  [org.clojure/clojure "1.9.0"]
                  [org.clojure/clojurescript "1.9.946" :scope "provided"]
+                 [org.clojure/core.async "0.3.443"]
                  [org.clojure/tools.cli "0.3.5"]
                  [org.clojure/tools.logging "0.4.0"]
                  [org.clojure/tools.reader "1.1.2"]
@@ -32,14 +46,18 @@
                  [org.webjars.bower/tether "1.4.3"]
                  [org.webjars/bootstrap "4.0.0"]
                  [org.webjars/font-awesome "5.0.2"]
+                 ;; [org.webjars/webjars-locator-jboss-vfs "0.1.0"] ;; ported from old luminus version kept it because i dont' know what it is
                  [re-frame "0.10.2"]
                  [reagent "0.7.0"]
                  [reagent-utils "0.2.1"]
+                 [reanimated "0.5.1"] ;; TODO: don't know if we need this
                  [ring-webjars "0.2.0"]
                  [ring/ring-core "1.6.3"]
                  [ring/ring-defaults "0.3.1"]
                  [secretary "1.2.3"]
-                 [selmer "1.11.5"]]
+                 [selmer "1.11.5"]
+                 [org.clojure/test.check "0.9.0"] ;; TODO: move to dev deps when we don't need generation of data
+               ]
 
   :min-lein-version "2.0.0"
   
