@@ -1,89 +1,281 @@
 (ns time-align.core
   (:require [reagent.core :as r]
+            [cljsjs.material-ui]
+            [cljs-react-material-ui.core :refer [get-mui-theme color]]
+            [cljs-react-material-ui.reagent :as ui]
+            [cljs-react-material-ui.icons :as ic]
             [re-frame.core :as rf]
+            [reanimated.core :as anim]
             [secretary.core :as secretary]
-            [goog.events :as events]
-            [goog.history.EventType :as HistoryEventType]
             [markdown.core :refer [md->html]]
             [ajax.core :refer [GET POST]]
             [time-align.ajax :refer [load-interceptors!]]
-            [time-align.events])
-  (:import goog.History))
+            [time-align.handlers]
+            [time-align.ui.app-bar :as ab :refer [app-bar]]
+            [time-align.ui.home :as hp]
+            [time-align.ui.common :as uic]
+            [time-align.ui.svg-day-view :as day-view]
+            [time-align.history :as hist]
+            [time-align.subscriptions]
+            [clojure.string :as string]
+            [time-align.client-utilities :as cutils]
+            [goog.string.format]
+            [time-align.utilities :as utils]
+            [oops.core :refer [oget oset!]]
+            [cljs.pprint :refer [pprint]]
+            [time-align.ui.agenda :as ap]
+            [time-align.ui.entity-forms :as ef]
+            [time-align.ui.list :as lp]
+            [time-align.ui.queue :as qp]
+            [time-align.ui.calendar :as cp]
+            [time-align.js-interop :as jsi]))
 
-(defn nav-link [uri title page]
-  [:li.nav-item
-   {:class (when (= page @(rf/subscribe [:page])) "active")}
-   [:a.nav-link {:href uri} title]])
+;;Forward declarations to make file linting easier
 
-(defn navbar []
-  [:nav.navbar.navbar-dark.bg-primary.navbar-expand-md
-   {:role "navigation"}
-   [:button.navbar-toggler.hidden-sm-up
-    {:type "button"
-     :data-toggle "collapse"
-     :data-target "#collapsing-navbar"} "☰"]
-   [:a.navbar-brand {:href "#/"} "time-align"]
-   [:div#collapsing-navbar.collapse.navbar-collapse
-    [:ul.nav.navbar-nav.mr-auto
-     [nav-link "#/" "Home" :home]
-     [nav-link "#/about" "About" :about]]]])
+(defn x-svg [{:keys [cx cy r fill stroke shadow click]}]
+  (let [pi        (Math/PI)
+        cx-int    (js/parseInt cx)
+        cy-int    (js/parseInt cy)
+        r-int     (js/parseInt r)
+        r-int-adj (* 0.70 r-int)
 
-(defn about-page []
-  [:div.container
-   [:div.row
-    [:div.col-md-12
-     [:img {:src (str js/context "/img/warning_clojure.png")}]]]])
+        x1 (+ cx-int (* r-int-adj (Math/cos  (* pi (/ 3 4)))))
+        y1 (+ cy-int (* r-int-adj (Math/sin  (* pi (/ 3 4)))))
+        x2 (+ cx-int (* r-int-adj (Math/cos  (* pi (/ 7 4)))))
+        y2 (+ cy-int (* r-int-adj (Math/sin  (* pi (/ 7 4)))))
 
-(defn home-page []
-  [:div.container
-   (when-let [docs @(rf/subscribe [:docs])]
-     [:div.row>div.col-sm-12
-      [:div "hello world!"]
-      [:div {:dangerouslySetInnerHTML
-             {:__html (md->html docs)}}]])])
+        x3 (+ cx-int (* r-int-adj (Math/cos  (* pi (/ 1 4)))))
+        y3 (+ cy-int (* r-int-adj (Math/sin  (* pi (/ 1 4)))))
+        x4 (+ cx-int (* r-int-adj (Math/cos  (* pi (/ 5 4)))))
+        y4 (+ cy-int (* r-int-adj (Math/sin  (* pi (/ 5 4)))))
 
-(def pages
-  {:home #'home-page
-   :about #'about-page})
+        generic {:fill           "transparent"
+                 :stroke         stroke
+                 :stroke-width   "1"
+                 :stroke-linecap "round"}]
+
+    [:g {:onClick click}
+     [:circle (merge {:fill fill :cx cx :cy cy :r r}
+                     (if shadow
+                       {:filter "url(#shadow-2dp)"}
+                       {}))]
+
+     [:path (merge generic
+                   {:d (str "M " x1 " " y1 " " "L " x2 " " y2 " ")})]
+     [:path (merge generic
+                   {:d (str "M " x3 " " y3 " " "L " x4 " " y4 " ")})]]))
+
+(defn +-svg [{:keys [cx cy r fill stroke shadow click]}]
+  (let [pi        (Math/PI)
+        cx-int    (js/parseInt cx)
+        cy-int    (js/parseInt cy)
+        r-int     (js/parseInt r)
+        r-int-adj (* 0.70 r-int)
+
+        x1 (+ cx-int (* r-int-adj (Math/cos  (* pi (/ 1 2)))))
+        y1 (+ cy-int (* r-int-adj (Math/sin  (* pi (/ 1 2)))))
+        x2 (+ cx-int (* r-int-adj (Math/cos  (* pi (/ 3 2)))))
+        y2 (+ cy-int (* r-int-adj (Math/sin  (* pi (/ 3 2)))))
+
+        x3 (+ cx-int (* r-int-adj (Math/cos  pi)))
+        y3 (+ cy-int (* r-int-adj (Math/sin  pi)))
+        x4 (+ cx-int (* r-int-adj (Math/cos  (* pi 2))))
+        y4 (+ cy-int (* r-int-adj (Math/sin  (* pi 2))))
+
+        generic {:fill           "transparent"
+                 :stroke         stroke
+                 :stroke-width   "1"
+                 :stroke-linecap "round"}]
+
+    [:g {:onClick click}
+     [:circle (merge {:fill fill :cx cx :cy cy :r r}
+                     (if shadow
+                       {:filter "url(#shadow-2dp)"}
+                       {}))]
+     [:path (merge generic
+                   {:d (str "M " x1 " " y1 " " "L " x2 " " y2 " ")})]
+     [:path (merge generic
+                   {:d (str "M " x3 " " y3 " " "L " x4 " " y4 " ")})]]))
+
+(defn --svg [{:keys [cx cy r fill stroke shadow click]}]
+  (let [pi        (Math/PI)
+        cx-int    (js/parseInt cx)
+        cy-int    (js/parseInt cy)
+        r-int     (js/parseInt r)
+        r-int-adj (* 0.70 r-int)
+
+        x3 (+ cx-int (* r-int-adj (Math/cos  pi)))
+        y3 (+ cy-int (* r-int-adj (Math/sin  pi)))
+        x4 (+ cx-int (* r-int-adj (Math/cos  (* pi 2))))
+        y4 (+ cy-int (* r-int-adj (Math/sin  (* pi 2))))
+
+        generic {:fill           "transparent"
+                 :stroke         stroke
+                 :stroke-width   "1"
+                 :stroke-linecap "round"}]
+
+    [:g {:onClick click}
+     [:circle (merge {:fill fill :cx cx :cy cy :r r}
+                     (if shadow
+                       {:filter "url(#shadow-2dp)"}
+                       {}))]
+     [:path (merge generic
+                   {:d (str "M " x3 " " y3 " " "L " x4 " " y4 " ")})]
+     ]))
+
+(defn svg-mui-stretch []
+  [ui/svg-icon
+   {:viewBox "0 0 24 24"}
+   [:g
+    [:polyline {:points "7,2 2,12 7,22"}]
+    [:polyline {:points "11,2 13,2 13,22 11,22"}]
+    [:polyline {:points "17,2 22,12 17,22"}]]])
+
+(defn svg-mui-shrink []
+  [ui/svg-icon
+   {:viewBox "0 0 24 24"}
+   [:g
+    [:polyline {:points "2,2 7,12 2,22"}]
+    [:polyline {:points "11,2 13,2 13,22 11,22"}]
+    [:polyline {:points "22,2 17,12 22,22"}]]])
+
+(defn current-quadrant []
+  :q1)
+
+(defn entity-forms [page]
+  (let [page-value (if-let [entity-type (:type-or-nil page)]
+                     entity-type
+                     :category)
+        entity-id  (:id-or-nil page)
+        div-name   (keyword (str "div." page-value "-form"))]
+    [:div.entity-form-container
+     (app-bar)
+     [div-name {:style {:padding         "0.5em"
+                        :backgroundColor "white"}}
+      (ef/entity-form page-value entity-id)]]))
+
+(defn list-page []
+  (let [categories        @(rf/subscribe [:categories])
+        selected          @(rf/subscribe [:selected])
+        current-selection (:current-selection selected)]
+
+    [:div
+     (app-bar)
+     [ui/paper {:style {:width "100%"}}
+      [ui/raised-button {:href             "#/add/category" :label "Add Category"
+                         :background-color "grey"
+                         :style            {:margin-top    "1em"
+                                            :margin-left   "1em"
+                                            :margin-bottom "1em"}}]
+      [ui/list
+       (->> categories
+            (map (partial lp/list-category current-selection)))]]]))
+
+(defn agenda-page []
+  (let [selected @(rf/subscribe [:selected])
+        periods  @(rf/subscribe [:periods])]
+    [:div
+     (app-bar)
+     [ui/paper {:style {:width "100%"}}
+      (ap/agenda selected periods)]]))
+
+(defn queue-page []
+  (let [tasks    @(rf/subscribe [:tasks])
+        selected @(rf/subscribe [:selected])]
+    [:div
+     (app-bar)
+     [ui/paper {:style {:width "100%"}}
+      (qp/queue tasks selected)]]))
+
+(defn account-page []
+  (let []
+
+    [:div
+     (app-bar)
+     [ui/paper {:style {:width   "100%"
+                        :padding "1em"}}
+      [ui/text-field {:floating-label-text "Name"
+                      :fullWidth           true}]
+      [ui/text-field {:floating-label-text "Email"
+                      :fullWidth           true}]]]))
+
+(defn calendar-page [] (cp/calendar-temp))
 
 (defn page []
-  [:div
-   [navbar]
-   [(pages @(rf/subscribe [:page]))]])
+  (let [this-page @(rf/subscribe [:page])
+        page-id   (:page-id this-page)]
+    [ui/mui-theme-provider
+     {:mui-theme (get-mui-theme
+                  {:palette
+                   {:primary1-color (:primary uic/app-theme)
+                    :accent1-color  (:secondary uic/app-theme)}})}
+     [:div
+      (case page-id
+        :home              (hp/home-page)
+        :add-entity-forms  (entity-forms this-page)
+        :edit-entity-forms (entity-forms this-page)
+        :list              (list-page)
+        :account           (account-page)
+        :agenda            (agenda-page)
+        :queue             (queue-page)
+        :calendar          (calendar-page)
+        ;; default
+        (hp/home-page))]]))
 
 ;; -------------------------
 ;; Routes
 (secretary/set-config! :prefix "#")
 
-(secretary/defroute "/" []
-  (rf/dispatch [:set-active-page :home]))
+(secretary/defroute home-route "/" []
+  (rf/dispatch [:set-active-page {:page-id :home}]))
 
-(secretary/defroute "/about" []
-  (rf/dispatch [:set-active-page :about]))
+(secretary/defroute agenda-route "/agenda" []
+  (rf/dispatch [:set-main-drawer false])
+  (rf/dispatch [:set-active-page {:page-id :agenda}])
+  )
+
+(secretary/defroute list-route "/list" []
+  (rf/dispatch [:set-main-drawer false])
+  (rf/dispatch [:set-active-page {:page-id :list}]))
+
+(secretary/defroute queue-route "/queue" []
+  (rf/dispatch [:set-main-drawer false])
+  (rf/dispatch [:set-active-page {:page-id :queue}]))
+
+(secretary/defroute add-entity-route "/add/:entity-type" [entity-type query-params]
+  ;; TODO this feels like it should be sync but gets error when it is
+  ;; (rf/dispatch [:clear-entities])
+  (rf/dispatch [:set-active-page {:page-id      :add-entity-forms
+                                  :type         (keyword entity-type)
+                                  :id           nil
+                                  :query-params query-params}]))
+
+(secretary/defroute edit-entity-route "/edit/:entity-type/:id" [entity-type id]
+  (rf/dispatch [:set-active-page {:page-id :edit-entity-forms
+                                  :type    (keyword entity-type)
+                                  :id      (uuid id)}]))
+
+(secretary/defroute calendar-route "/calendar" []
+  (rf/dispatch [:set-main-drawer false])
+  (rf/dispatch [:set-active-page {:page-id :calendar}]))
 
 ;; -------------------------
 ;; History
 ;; must be called after routes have been defined
-(defn hook-browser-navigation! []
-  (doto (History.)
-    (events/listen
-      HistoryEventType/NAVIGATE
-      (fn [event]
-        (secretary/dispatch! (.-token event))))
-    (.setEnabled true)))
+
 
 ;; -------------------------
 ;; Initialize app
-(defn fetch-docs! []
-  (GET "/docs" {:handler #(rf/dispatch [:set-docs %])}))
 
 (defn mount-components []
   (rf/clear-subscription-cache!)
-  (r/render [#'page] (.getElementById js/document "app")))
+  (r/render [#'page] (jsi/get-element-by-id "app")))
 
 (defn init! []
   (rf/dispatch-sync [:initialize-db])
   (load-interceptors!)
-  (fetch-docs!)
-  (hook-browser-navigation!)
-  (mount-components))
+  (hist/hook-browser-navigation!)
+  (mount-components)
+  (js/setInterval uic/clock-tick 5000) ;; TODO this is bad
+  )
+

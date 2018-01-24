@@ -14,7 +14,7 @@
 (defn load-interceptors! []
   (swap! ajax/default-interceptors
          conj
-         (ajax/to-interceptor {:name "default headers"
+         (ajax/to-interceptor {:name    "default headers"
                                :request default-headers})))
 
 
