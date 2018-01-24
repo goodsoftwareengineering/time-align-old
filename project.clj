@@ -47,7 +47,7 @@
                  [org.webjars.bower/tether "1.4.3"]
                  [org.webjars/bootstrap "4.0.0"]
                  [org.webjars/font-awesome "5.0.2"]
-                 ;; [org.webjars/webjars-locator-jboss-vfs "0.1.0"] ;; ported from old luminus version kept it because i dont' know what it is
+                 [org.webjars/webjars-locator-jboss-vfs "0.1.0"] ;; ported from old luminus version kept it because i dont' know what it is
                  [re-frame "0.10.2"]
                  [reagent "0.7.0"]
                  [reagent-utils "0.2.1"]
@@ -63,7 +63,7 @@
   :min-lein-version "2.0.0"
   
   :source-paths ["src/clj" "src/cljc"]
-  :test-paths ["test/clj"]
+  :test-paths ["test/clj" "test/cljc"]
   :resource-paths ["resources" "target/cljsbuild"]
   :target-path "target/%s/"
   :main ^:skip-aot time-align.core
@@ -72,19 +72,23 @@
   :plugins [[migratus-lein "0.5.4"]
             [lein-cljsbuild "1.1.5"]]
   :clean-targets ^{:protect false}
-  [:target-path [:cljsbuild :builds :app :compiler :output-dir] [:cljsbuild :builds :app :compiler :output-to]]
+  [:target-path
+   [:cljsbuild :builds :app :worker :output-dir]
+   [:cljsbuild :builds :app :worker :output-to]
+   [:cljsbuild :builds :app :compiler :output-dir]
+   [:cljsbuild :builds :app :compiler :output-to]]
   :figwheel
   {:http-server-root "public"
+   :server-ip   "0.0.0.0"
    :nrepl-port 7002
    :css-dirs ["resources/public/css"]
    :nrepl-middleware
-   [cemerick.piggieback/wrap-cljs-repl cider.nrepl/cider-middleware]}
-  
-
+   [cemerick.piggieback/wrap-cljs-repl
+    cider.nrepl/cider-middleware]}
   :profiles
   { 
    :uberjar {:omit-source true
-             :prep-tasks ["compile" ["cljsbuild" "once" "min"]]
+             :prep-tasks ["compile" ["cljsbuild" "once" "min" "min-worker"]]
              :cljsbuild
              {:builds
               {:min
@@ -95,8 +99,10 @@
                  :source-map "target/cljsbuild/public/js/app.js.map"
                  :optimizations :advanced
                  :pretty-print false
+                 :pseudo-names    true
                  :closure-warnings
                  {:externs-validation :off :non-standard-jsdoc :off}
+                 :closure-defines {goog.DEBUG false}
                  :externs ["react/externs/react.js"]}}
                :min-worker
                {:source-paths ["src_worker/cljs"]
@@ -143,7 +149,16 @@
                       :source-map true
                       :optimizations :none
                       :pretty-print true
-                      :preloads [re-frisk.preload]}}}}
+                      :preloads [re-frisk.preload]}}
+                    :worker
+                    {:source-paths ["src_worker/cljs"]
+                     :figwheel     {:websocket-url "ws://[[server-ip]]:[[server-port]]/figwheel-ws"}
+                     :compiler     {:output-to     "target/cljsbuild/public/js/worker.js"
+                                    :output-dir    "target/cljsbuild/public/js/out_worker"
+                                    :source-map    true
+                                    :optimizations :none}
+                     }
+                    }}
 
                   :doo {:build "test"}
                   :source-paths ["env/dev/clj"]
@@ -157,7 +172,7 @@
                   :cljsbuild
                   {:builds
                    {:test
-                    {:source-paths ["src/cljc" "src/cljs" "test/cljs"]
+                    {:source-paths ["src/cljc" "src/cljs" "src_worker/cljs" "test/cljc" "test/cljs"]
                      :compiler
                      {:output-to "target/test.js"
                       :main "time-align.doo-runner"
