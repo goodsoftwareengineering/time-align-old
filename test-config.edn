@@ -2,4 +2,4 @@
 ;; The test-config.edn file is used for local environment variables, such as database credentials.
 ;; This file is listed in .gitignore and will be excluded from version control by Git.
 
-{:database-url "postgresql://localhost/time_align_test?user=db_user_name_here&password=db_user_password_here"}
+{:database-url "postgresql://db/time_align?user=time_align&password=time_align"}
