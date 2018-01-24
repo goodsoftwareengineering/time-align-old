@@ -97,7 +97,14 @@
                  :pretty-print false
                  :closure-warnings
                  {:externs-validation :off :non-standard-jsdoc :off}
-                 :externs ["react/externs/react.js"]}}}}
+                 :externs ["react/externs/react.js"]}}
+               :min-worker
+               {:source-paths ["src_worker/cljs"]
+                :compiler     {:main          time-align.worker
+                               :output-dir    "target/cljsbuild/public/js/out_worker"
+                               :output-to     "target/cljsbuild/public/js/worker.js"
+                               :optimizations :advanced
+                               :pretty-print  false}}}}
              
              
              :aot :all
