@@ -140,7 +140,8 @@
                   {:builds
                    {:app
                     {:source-paths ["src/cljs" "src/cljc" "env/dev/cljs"]
-                     :figwheel {:on-jsload "time-align.core/mount-components"}
+                     :figwheel {:websocket-url "ws://[[client-hostname]]:[[server-port]]/figwheel-ws"
+                                :on-jsload "time-align.core/mount-components"}
                      :compiler
                      {:main "time-align.app"
                       :asset-path "/js/out"
