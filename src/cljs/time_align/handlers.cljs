@@ -982,3 +982,32 @@
                                     imported-app-db (time-align.storage/transit-json->map result)]
                                 (re-frame.core/dispatch [:reset-app-db imported-app-db])))
       (.readAsText reader imported-db-file))))
+
+(defn set-displayed-month [db [year month]]
+  (assoc-in db [:view :displayed-month] [year month]))
+(reg-event-db
+ :set-displayed-month
+ [persist-ls send-analytic validate-app-db] set-displayed-month)
+
+
+(defn advance-displayed-month [db _]
+  ;; TODO use specter here
+  (let [[year month] (get-in db [:view :displayed-month])
+        month-inc (mod (inc month) 12)]
+    (assoc-in db [:view :displayed-month] [year month-inc])))
+
+(reg-event-db
+ :advance-displayed-month
+ [persist-ls send-analytic validate-app-db]
+ advance-displayed-month)
+
+(defn decrease-displayed-month [db _]
+  ;; TODO use specter here
+  (let [[year month] (get-in db [:view :displayed-month])
+        month-inc (mod (dec month) 12)]
+    (assoc-in db [:view :displayed-month] [year month-inc])))
+
+(reg-event-db
+ :decrease-displayed-month
+ [persist-ls send-analytic validate-app-db]
+ decrease-displayed-month)

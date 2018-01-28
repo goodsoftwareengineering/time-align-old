@@ -1,4 +1,5 @@
-(ns time-align.ui.calendar)
+(ns time-align.ui.calendar
+  (:require [re-frame.core :as rf]))
 
 (def year 2018)
 (def month 0)
@@ -20,7 +21,6 @@
                                    :stop (new js/Date year month date-num stop-hour stop-minute)
                                    :color (apply str colors)}))))))))
 
-
 (def cell-width (* (/ 100 7)))  ;; ~14
 
 (def cell-height (* (/ 100 5))) ;; 20
@@ -34,7 +34,8 @@
   "A monday 1 based index where sunday is 7"
   [date]
   (let [date (.getDay date)]
-    (if (= date 0) 7 date)))
+    (if (= date 0) 7 date)
+    ))
 
 (defn week-has-day [week {:keys [year month date]}]
   (not (empty? (indices (fn [day] (let [this-days-year  (.getFullYear day)
@@ -51,59 +52,88 @@
         date                   (.getDate ts)
         day                    (get-day ts)
         month-coll             (->> (range 1 32)
-                                    (map #(new js/Date year month %)))
-        month-starts-sunday    (= 7 (get-day (first month-coll)))
-        partitioned-by-sundays (partition-by #(= (get-day %) 7) month-coll)
-        regular-fuser          (fn [[rest-of-week sunday]]
-                                 (into rest-of-week sunday))
-        sunday-first-fuser     (fn [[sunday rest-of-week]]
-                                 (into rest-of-week sunday))
-        fuser                  (if month-starts-sunday
-                                 sunday-first-fuser regular-fuser)
-        ;; help form this https://stackoverflow.com/a/12806697/5040125
-        partitioned-by-weeks   (map fuser (partition-all 2 partitioned-by-sundays))]
+                                    (map #(new js/Date year month %))
+                                    (filter #(and (= year (.getFullYear %))
+                                                  (= month (.getMonth %)))))
+        month-starts-monday    (= 1 (get-day (first month-coll)))
+        partitioned-by-mondays (partition-by #(= (get-day %) 1) month-coll)
+        fuser                  (fn [[monday rest-of-week]]
+                                 (into rest-of-week monday))
+        ;; help from this https://stackoverflow.com/a/12806697/5040125
+        partitioned-by-weeks   (->> partitioned-by-mondays
+                                    (#(if month-starts-monday
+                                         %
+                                         (rest %)))
+                                    (partition-all 2)
+                                    (map fuser)
+                                    (#(if month-starts-monday
+                                        %
+                                        (cons
+                                         (first partitioned-by-mondays)
+                                         %))))]
 
     (first (indices
             #(week-has-day % {:year year :month month :date date})
             partitioned-by-weeks))))
 
-(defn calendar [days data]
-  [:svg {:key "calendar-svg"
-         :id "calendar-svg"
-         :xmlns "http://www.w3.org/2000/svg"
-         :version  "1.1"
-         :style       {:display      "inline-box"
-                       ;; this stops scrolling for moving period
-                       :touch-action "pinch-zoom"}
-         :width       "100%"
-         :height      "100%"
-         :viewBox      "0 0 100 100"}
+(defn calendar [data]
+  (let [displayed-day @(rf/subscribe [:displayed-day])
+        dd-year (.getFullYear displayed-day)
+        dd-month (.getMonth displayed-day)
+        [year month] @(rf/subscribe [:displayed-month])
+        days (->> (range 1 32)
+                  (map #(new js/Date year month %))
+                  (filter #(and (= year (.getFullYear %))
+                                (= month (.getMonth %)))))]
 
-   (map-indexed
+    [:div
+     {:style
+      {:display "flex" :justify-content "center" :flex-wrap "wrap"}}
+     [:span (str year "/" (inc month))]
+     [:svg {:key "calendar-svg"
+            :id "calendar-svg"
+            :xmlns "http://www.w3.org/2000/svg"
+            :version  "1.1"
+            :style       {:display      "inline-box"
+                          ;; this stops scrolling for moving period
+                          :touch-action "pinch-zoom"}
+            :width       "100%"
+            :height      "100%"
+            :viewBox      "0 0 100 100"}
 
-    (fn [i d]
-      (let [x (-> d (get-day) (- 1) (* cell-width))
-            y (* cell-height (week-number d))]
-        [:g {:transform (str "translate(" x " " y ")")
-             :id  (.toDateString d)
-             :key (.toDateString d)}
-         [:rect {:x "0"
-                 :y "0"
-                 :width cell-width
-                 :height cell-height
-                 :fill "white"
-                 :stroke "#bcbcbc" ;; TODO grey400 when global styles are in place
-                 :stroke-width "0.10"}]
-         [:circle {:cx 3 :cy 3 :r 2 :fill "blue"}]
-         [:text {:x "2" :y "3.7"
-                 :stroke "white" :stroke-width "0.1"
-                 :fill "white" :font-size "2"} (.getDate d)]
+      (map-indexed
 
-         (->> data
-              (filter (fn [periods])))
-         ]))
+       (fn [i d]
+         (let [this-day-date (.getDate d)
+               displayed-day-date (.getDate displayed-day)
+               this-day-is-today (and (= this-day-date displayed-day-date)
+                                      (= dd-year (.getFullYear d))
+                                      (= dd-month (.getMonth d)))
+               x (-> d (get-day) (- 1) (* cell-width))
+               y (* cell-height (week-number d))]
+           [:g {:transform (str "translate(" x " " y ")")
+                :id  (.toDateString d)
+                :key (.toDateString d)}
+            [:rect {:x "0"
+                    :y "0"
+                    :width cell-width
+                    :height cell-height
+                    :fill "white"
+                    :stroke "#bcbcbc" ;; TODO grey400 when global styles are in place
+                    :stroke-width "0.10"}]
+            [:circle {:cx 3 :cy 3 :r 2 :fill (if this-day-is-today
+                                               "red"
+                                               "blue")}]
+            [:text {:x 3 :y 3.75
+                    :text-anchor "middle"
+                    :stroke "white" :stroke-width "0.1"
+                    :fill "white" :font-size "2"} (.getDate d)]
 
-    days)])
+            ;; (->> data
+            ;;      (filter (fn [periods])))
+            ]))
 
-(defn calendar-temp [] (calendar days data))
+       days)]]
+    ))
+
 

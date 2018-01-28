@@ -476,3 +476,7 @@
  :inline-period-add-dialog
  (fn [db _]
    (get-in db [:view :inline-period-add-dialog])))
+
+(defn displayed-month [db _]
+  (get-in db [:view :displayed-month]))
+(reg-sub :displayed-month displayed-month)

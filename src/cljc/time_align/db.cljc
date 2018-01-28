@@ -187,6 +187,8 @@
 (s/def ::displayed-day (s/with-gen inst?
                         #?(:cljs #(gen/return (new js/Date))
                            :clj #(gen/return (t/zoned-date-time)))))
+(s/def ::displayed-month (s/with-gen (s/coll-of int? :min-count 2 :max-count 2 :gen-max 2)
+                           #(gen/return [2018 1]))) ;; TODO make this dynamically today
 (s/def ::period-in-play ::id-or-nil)
 (s/def ::callback-id ::id-or-nil)
 (s/def ::press-start  (s/with-gen (s/or :some ::moment
@@ -212,6 +214,7 @@
                                       ::task-form
                                       ::period-form
                                       ::displayed-day
+                                      ::displayed-month
                                       ::inline-period-add-dialog
                                       ])
                      (fn [view]
@@ -257,6 +260,7 @@
   :action-buttons :collapsed,
   :continous-action {:moving-period false},
   :displayed-day (utils/make-date),
+  :displayed-month [2018 1],
   :category-form
   {:id-or-nil nil, :name "", :color-map {:red 0, :green 0, :blue 0}},
   :task-form

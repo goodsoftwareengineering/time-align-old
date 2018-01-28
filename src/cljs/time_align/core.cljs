@@ -199,7 +199,7 @@
       [ui/text-field {:floating-label-text "Email"
                       :fullWidth           true}]]]))
 
-(defn calendar-page [] (cp/calendar-temp))
+(defn calendar-page [] (cp/calendar []))
 
 (defn page []
   (let [this-page @(rf/subscribe [:page])

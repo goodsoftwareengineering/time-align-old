@@ -4,6 +4,8 @@
             [time-align.ui.app-bar :as ab :refer [app-bar]]
             [time-align.ui.queue :as qp]
             [cljs-react-material-ui.reagent :as ui]
+            [cljs-react-material-ui.icons :as ic]
+            [time-align.ui.calendar :as cp]
             [time-align.ui.common :as uic]
             [time-align.client-utilities :as cutils]
             [time-align.ui.action-buttons :as actb]
@@ -153,7 +155,8 @@
                                             ;; TODO add breakpoint rules
                          }}
 
-       [:div.day-label {:style {:color "grey" :padding "0.01em" :text-align "center"}}
+       [:div.day-label {:style
+                        {:color "grey" :padding "0.01em" :text-align "center"}}
         [:span (jsi/->date-string displayed-day)]]
 
        [ui/divider {:style {:margin-top    "0"
@@ -161,16 +164,25 @@
 
        [:div.navigation.zoom
         {:style {:display "flex"
-                 :justify-content "space-between"}}
+                 :justify-content "space-between"
+                 :flex-wrap "nowrap"}}
+
+        [ui/icon-button
+         {:onClick (fn [e] (rf/dispatch [:decrease-displayed-month]))}
+         [ic/av-fast-rewind]]
+
         [ui/icon-button
          {:onClick (fn [e]
                      (rf/dispatch [:iterate-displayed-day :prev]))}
-         [ui/svg-icon
-          {:viewBox "0 0 50 50" :style {:width "100%" :height "100%"}}
-          [:polyline {:points       "25,0 0,25 25,50"
-                      :fill         "grey"
-                      :fill-opacity "1"
-                      }]]]
+         [ic/image-navigate-before]
+         ;; TODO style these buttons similar to below
+         ;; [ui/svg-icon
+         ;;  {:viewBox "0 0 50 50" :style {:width "100%" :height "100%"}}
+         ;;  [:polyline {:points       "25,0 0,25 25,50"
+         ;;              :fill         "grey"
+         ;;              :fill-opacity "1"
+         ;;              }]]
+         ]
 
         (svg-mui-zoom 1)
         (svg-mui-zoom 4)
@@ -180,12 +192,11 @@
         [ui/icon-button
          {:onClick (fn [e]
                      (rf/dispatch [:iterate-displayed-day :next]))}
-         [ui/svg-icon
-          {:viewBox "0 0 50 50" :style {:width "100%" :height "100%"}}
-          [:polyline {:points       "50,25 25,0 25,50"
-                      :fill         "grey"
-                      :fill-opacity "1"
-                      }]]]]
+         [ic/image-navigate-next]]
+
+        [ui/icon-button
+         {:onClick (fn [e] (rf/dispatch [:advance-displayed-month]))}
+         [ic/av-fast-forward]]]
 
        [ui/divider {:style {:margin-top    "0"
                             :margin-bottom "0"}}]
@@ -198,7 +209,8 @@
 
         [ui/tab {:label "agenda" :style {:color (:primary uic/app-theme)}
                  :value "agenda"}
-         (ap/agenda selected periods)
+         ;; (ap/agenda selected periods)
+         (cp/calendar [])
          ]
         [ui/tab {:label "queue" :style {:color (:primary uic/app-theme)}
                  :value "queue"}
