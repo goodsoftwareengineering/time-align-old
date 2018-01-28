@@ -93,7 +93,7 @@
 (s/def ::task (s/keys :req-un [::id ::name ::description ::complete]
                       :opt-un [::periods]))
 ;; TODO complete check (all periods are planned/actual are passed)
-(s/def ::tasks (s/coll-of ::task :gen-max 2 :min-count 1))
+(s/def ::tasks (s/coll-of ::task :gen-max 2 :min-count 0))
 (s/def ::user (s/keys :req-un [::name ::id ::email]))
 (s/def ::category (s/keys :req-un [::id ::name ::color]
                           :opt-un [::tasks]))
@@ -182,8 +182,8 @@
                                      :task-id nil
                                      :error-or-nil nil
                                      :planned false})))
-(s/def ::dashboard-tab (s/with-gen #{:agenda :queue :stats}
-                         #(gen/return :agenda)))
+(s/def ::dashboard-tab (s/with-gen #{:agenda :queue :calendar}
+                         #(gen/return :calendar)))
 (s/def ::displayed-day (s/with-gen inst?
                         #?(:cljs #(gen/return (new js/Date))
                            :clj #(gen/return (t/zoned-date-time)))))
@@ -246,7 +246,7 @@
                              :press-start nil
                              :press-on false}
   :inline-period-add-dialog false
-  :dashboard-tab :agenda
+  :dashboard-tab :calendar
   :period-in-play nil,
   :zoom nil,
   :selected
