@@ -1,5 +1,8 @@
 (ns time-align.ui.calendar
-  (:require [re-frame.core :as rf]))
+  (:require [re-frame.core :as rf]
+            [cljs-react-material-ui.reagent :as ui]
+            [cljs-react-material-ui.icons :as ic]
+            ))
 
 (def year 2018)
 (def month 0)
@@ -89,7 +92,20 @@
     [:div
      {:style
       {:display "flex" :justify-content "center" :flex-wrap "wrap"}}
-     [:span (str year "/" (inc month))]
+
+     [:div.navigation
+      {:style {:display "flex" :justify-content "space-around"
+               :flex-wrap "nowrap" :width "100%"}}
+      [ui/icon-button
+       {:onClick (fn [e] (rf/dispatch [:decrease-displayed-month]))}
+       [ic/image-navigate-before]]
+
+      [:span (str year "/" (inc month))]
+
+      [ui/icon-button
+       {:onClick (fn [e] (rf/dispatch [:advance-displayed-month]))}
+       [ic/image-navigate-next]]]
+
      [:svg {:key "calendar-svg"
             :id "calendar-svg"
             :xmlns "http://www.w3.org/2000/svg"

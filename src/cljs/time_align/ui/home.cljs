@@ -142,7 +142,7 @@
 
       (day-view/day tasks selected displayed-day)]
 
-     [:div.lower-container
+     [:div.dashboard
       {:style {:display    "flex"
                :flex       "1 0 100%"
                ;; :border "blue solid 0.1em"
@@ -167,9 +167,7 @@
                  :justify-content "space-between"
                  :flex-wrap "nowrap"}}
 
-        [ui/icon-button
-         {:onClick (fn [e] (rf/dispatch [:decrease-displayed-month]))}
-         [ic/av-fast-rewind]]
+        
 
         [ui/icon-button
          {:onClick (fn [e]
@@ -192,11 +190,7 @@
         [ui/icon-button
          {:onClick (fn [e]
                      (rf/dispatch [:iterate-displayed-day :next]))}
-         [ic/image-navigate-next]]
-
-        [ui/icon-button
-         {:onClick (fn [e] (rf/dispatch [:advance-displayed-month]))}
-         [ic/av-fast-forward]]]
+         [ic/image-navigate-next]]]
 
        [ui/divider {:style {:margin-top    "0"
                             :margin-bottom "0"}}]
@@ -205,28 +199,19 @@
                  :inkBarStyle           {:backgroundColor (:primary uic/app-theme)}
                  :value                 (name dashboard-tab)
                  :on-change             (fn [v]
-                                           (rf/dispatch [:set-dashboard-tab (keyword v)]))}
+                                          (rf/dispatch
+                                           [:set-dashboard-tab (keyword v)]))}
+        [ui/tab {:label "calendar" :style {:color (:primary uic/app-theme)}
+                 :value "calendar"}
+         (cp/calendar [])]
 
         [ui/tab {:label "agenda" :style {:color (:primary uic/app-theme)}
                  :value "agenda"}
-         ;; (ap/agenda selected periods)
-         (cp/calendar [])
-         ]
+         (ap/agenda selected periods)]
+
         [ui/tab {:label "queue" :style {:color (:primary uic/app-theme)}
                  :value "queue"}
-         (qp/queue tasks selected)
-         ]
-        [ui/tab {:label "stats" :style {:color (:primary uic/app-theme)}
-                 :value "stats"}
-         "nothing here"
-         ;; (if (= :period (get-in selected [:current-selection :type-or-nil]))
-         ;;   (stats-selection selected periods tasks)
-         ;;   (stats-no-selection)
-         ;;   )
-         ]
-        ]
-       ]
-      ]
+         (qp/queue tasks selected)]]]]
 
      [:div.action-container
       {:style {:position   "fixed"
