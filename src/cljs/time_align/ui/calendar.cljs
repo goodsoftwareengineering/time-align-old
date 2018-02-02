@@ -155,12 +155,7 @@
 
                                             :fill "blue"
                                             :stroke "#bcbcbc"
-                                            :stroke-width "0.10"
-
-                                            }] )))]))
-                 )
-
-            ]))
+                                            :stroke-width "0.10"}] )))])))]))
 
        days)]]))
 
