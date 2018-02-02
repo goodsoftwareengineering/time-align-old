@@ -2,27 +2,7 @@
   (:require [re-frame.core :as rf]
             [cljs-react-material-ui.reagent :as ui]
             [cljs-react-material-ui.icons :as ic]
-            ))
-
-(def year 2018)
-(def month 0)
-
-(def days (->> (range 1 32)
-               (map #(new js/Date year month %))))
-
-(def data
-  (->> (range 1 32)
-       (map (fn [date-num]
-              (->> (if (> (rand) 0.1) (range 1 15) '())
-                   (map (fn [_] (let [start-hour (.floor js/Math (rand 20))
-                                      start-minute (.floor js/Math (rand 50))
-                                      stop-hour (.floor js/Math (+ (rand 3) start-hour))
-                                      stop-minute (.floor js/Math (+ (rand 9) start-minute))
-                                      colors (cons "#"
-                                                   (map #(.floor js/Math (rand 9)) (range 1 7)))]
-                                  {:start (new js/Date year month date-num start-hour start-minute)
-                                   :stop (new js/Date year month date-num stop-hour stop-minute)
-                                   :color (apply str colors)}))))))))
+            [time-align.utilities :as utils]))
 
 (def cell-width (* (/ 100 7)))  ;; ~14
 
@@ -37,8 +17,7 @@
   "A monday 1 based index where sunday is 7"
   [date]
   (let [date (.getDay date)]
-    (if (= date 0) 7 date)
-    ))
+    (if (= date 0) 7 date)))
 
 (defn week-has-day [week {:keys [year month date]}]
   (not (empty? (indices (fn [day] (let [this-days-year  (.getFullYear day)
@@ -79,6 +58,20 @@
             #(week-has-day % {:year year :month month :date date})
             partitioned-by-weeks))))
 
+(defn calendar-nav [year month]
+  [:div.navigation
+   {:style {:display "flex" :justify-content "space-around"
+            :flex-wrap "nowrap" :width "100%"}}
+   [ui/icon-button
+    {:onClick (fn [e] (rf/dispatch [:decrease-displayed-month]))}
+    [ic/image-navigate-before]]
+
+   [:span (str year "/" (inc month))]
+
+   [ui/icon-button
+    {:onClick (fn [e] (rf/dispatch [:advance-displayed-month]))}
+    [ic/image-navigate-next]]])
+
 (defn calendar [data]
   (let [displayed-day @(rf/subscribe [:displayed-day])
         dd-year (.getFullYear displayed-day)
@@ -87,24 +80,14 @@
         days (->> (range 1 32)
                   (map #(new js/Date year month %))
                   (filter #(and (= year (.getFullYear %))
-                                (= month (.getMonth %)))))]
+                                (= month (.getMonth %)))))
+        periods @(rf/subscribe [:periods])]
 
     [:div
      {:style
       {:display "flex" :justify-content "center" :flex-wrap "wrap"}}
 
-     [:div.navigation
-      {:style {:display "flex" :justify-content "space-around"
-               :flex-wrap "nowrap" :width "100%"}}
-      [ui/icon-button
-       {:onClick (fn [e] (rf/dispatch [:decrease-displayed-month]))}
-       [ic/image-navigate-before]]
-
-      [:span (str year "/" (inc month))]
-
-      [ui/icon-button
-       {:onClick (fn [e] (rf/dispatch [:advance-displayed-month]))}
-       [ic/image-navigate-next]]]
+     (calendar-nav year month)
 
      [:svg {:key "calendar-svg"
             :id "calendar-svg"
@@ -137,19 +120,48 @@
                     :fill "white"
                     :stroke "#bcbcbc" ;; TODO grey400 when global styles are in place
                     :stroke-width "0.10"}]
-            [:circle {:cx 3 :cy 3 :r 2 :fill (if this-day-is-today
-                                               "red"
-                                               "blue")}]
-            [:text {:x 3 :y 3.75
-                    :text-anchor "middle"
-                    :stroke "white" :stroke-width "0.1"
-                    :fill "white" :font-size "2"} (.getDate d)]
 
-            ;; (->> data
-            ;;      (filter (fn [periods])))
+            [:text {:x 1 :y 2.5
+                    ;; :text-anchor "middle"
+                    :stroke "white" :stroke-width "0.1"
+                    :fill "grey" :font-size "3"} (.getDate d)]
+
+            (->> periods
+                 (filter (fn [p]
+                           (and
+                            (or
+                             (= this-day-date (.getDate (:start p)))
+                             (= this-day-date (.getDate (:stop p))))
+                            ;; shouldn't matter that we only check start
+                            ;; TODO period max of 24 hours or better checks here
+                            (= month (.getMonth (:start p)))
+                            (= year (.getFullYear (:start p))))))
+                 ((fn [periods]
+                    [:g (->> periods
+                             (map (fn [p]
+                                    [:rect {:x "0"
+                                            :y (->>
+                                                ;; relative position
+                                                (/ (utils/get-ms (:start p))
+                                                   utils/ms-in-day)
+                                                (* cell-height))
+
+                                            :width cell-width
+                                            :height (-> (.valueOf (:stop p))
+                                                        (- (.valueOf (:start p)))
+                                                        ;; relative height
+                                                        (/ utils/ms-in-day)
+                                                        (* cell-height))
+
+                                            :fill "blue"
+                                            :stroke "#bcbcbc"
+                                            :stroke-width "0.10"
+
+                                            }] )))]))
+                 )
+
             ]))
 
-       days)]]
-    ))
+       days)]]))
 
 
