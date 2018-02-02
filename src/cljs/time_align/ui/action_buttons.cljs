@@ -128,10 +128,10 @@
      ]
   )
 
-(defn action-buttons-period-selection []
+(defn action-buttons-period-selection [period-in-play]
   [:div (if (some? period-in-play) (pause-button) (play-button))])
 
-(defn action-buttons-period-in-play []
+(defn action-buttons-period-in-play [selected period-in-play]
   [:div (pause-button)])
 
 (defn action-buttons-queue-selection [selected period-in-play]
@@ -185,7 +185,7 @@
   (let [forceable @forcer ;; TODO idk what this is for
         selection (get-in selected [:current-selection :type-or-nil])]
     (case selection
-      :period (action-buttons-period-selection)
+      :period (action-buttons-period-selection period-in-play)
       :queue
       (action-buttons-queue-selection selected period-in-play)
       ;; else

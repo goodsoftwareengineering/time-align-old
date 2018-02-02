@@ -2,6 +2,7 @@
   (:require [time-align.utilities :as utils]
             [time-align.client-utilities :as cutils]
             [re-frame.core :as rf]
+            [time-align.history :as hist]
             [time-align.ui.common :as uic]
             [time-align.js-interop :as jsi]
             [clojure.string :as string]))
@@ -145,7 +146,8 @@
                                        (jsi/stop-propagation e)
                                        (jsi/prevent-default e)
                                        (rf/dispatch
-                                         [:set-selected-period id])))
+                                        [:set-selected-period id]))
+                                     )
         movement-trigger-handler   (if (and is-period-selected
                                             (= selected-period id))
                                      (fn [e]
