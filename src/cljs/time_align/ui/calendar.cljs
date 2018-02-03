@@ -112,7 +112,8 @@
                y (* cell-height (week-number d))]
            [:g {:transform (str "translate(" x " " y ")")
                 :id  (.toDateString d)
-                :key (.toDateString d)}
+                :key (.toDateString d)
+                :onClick (fn [_] (rf/dispatch [:set-displayed-day d]))}
             [:rect {:x "0"
                     :y "0"
                     :width cell-width

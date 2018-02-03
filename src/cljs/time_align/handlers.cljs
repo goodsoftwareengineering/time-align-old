@@ -801,6 +801,14 @@
  (fn [db [_ is-planned]]
    (assoc-in db [:view :period-form :planned] is-planned)))
 
+(defn set-displayed-day [db [_ day]]
+  (assoc-in db [:view :displayed-day] day))
+
+(reg-event-db
+ :set-displayed-day
+ [persist-ls send-analytic validate-app-db]
+ set-displayed-day)
+
 (reg-event-db
  :iterate-displayed-day
  [persist-ls send-analytic validate-app-db]
