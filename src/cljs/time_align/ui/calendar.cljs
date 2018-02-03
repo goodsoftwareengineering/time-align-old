@@ -122,11 +122,6 @@
                     :stroke "#bcbcbc" ;; TODO grey400 when global styles are in place
                     :stroke-width "0.10"}]
 
-            [:text {:x 1 :y 2.5
-                    ;; :text-anchor "middle"
-                    :stroke "white" :stroke-width "0.1"
-                    :fill "grey" :font-size "3"} (.getDate d)]
-
             (->> periods
                  (filter (fn [p]
                            (and
@@ -164,7 +159,15 @@
 
                                             :fill (:color p)
                                             :stroke "#bcbcbc"
-                                            :stroke-width "0.10"}] )))])))]))
+                                            :stroke-width "0.10"}] )))])))
+
+            [:circle {:cx 2 :cy 2.5 :r 1.5 :fill "white"}]
+            [:text {:x 2 :y 3
+                    :text-anchor "middle"
+                    ;; :stroke "white" :stroke-width "0.1"
+                    :font-weight "bold"
+                    :fill "grey" :font-size "2"} (.getDate d)]
+            ]))
 
        days)]]))
 
