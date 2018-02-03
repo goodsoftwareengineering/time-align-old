@@ -141,19 +141,27 @@
                              (map (fn [p]
                                     [:rect {:x "0"
                                             :y (->>
+                                                (#(if (< (.getDate (:start p))
+                                                         this-day-date)
+                                                    (merge p {:start (new js/Date year month this-day-date 0 0 1)})
+                                                    p))
                                                 ;; relative position
-                                                (/ (utils/get-ms (:start p))
-                                                   utils/ms-in-day)
+                                                (#(/ (utils/get-ms (:start %))
+                                                     utils/ms-in-day))
                                                 (* cell-height))
 
                                             :width cell-width
-                                            :height (-> (.valueOf (:stop p))
+                                            :height (-> (#(if (> (.getDate (:stop p))
+                                                                 this-day-date)
+                                                            (merge p {:stop (new js/Date year month this-day-date 23 59 59)})
+                                                            p))
+                                                        (#(.valueOf (:stop %)))
                                                         (- (.valueOf (:start p)))
                                                         ;; relative height
                                                         (/ utils/ms-in-day)
                                                         (* cell-height))
 
-                                            :fill "blue"
+                                            :fill (:color p)
                                             :stroke "#bcbcbc"
                                             :stroke-width "0.10"}] )))])))]))
 
