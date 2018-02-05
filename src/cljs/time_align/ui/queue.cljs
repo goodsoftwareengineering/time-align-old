@@ -15,7 +15,9 @@
         period-selected   (= :queue (:type-or-nil sel))
         sel-id            (:id-or-nil sel)
         ]
-    [ui/list {:style {:width "100%"}}
+    [ui/list {:style {:width "100%"
+                      :min-height "20em" ;; TODO remove the need to fill in an empty queue to keep the day navigation from spacing weird
+                      }}
      (->> periods-no-stamps
           (map (fn [period]
                  [ui/list-item
