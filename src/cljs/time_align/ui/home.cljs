@@ -1,5 +1,6 @@
 (ns time-align.ui.home
   (:require [re-frame.core :as rf]
+            [reagent.core :as r]
             [time-align.ui.svg-day-view :as day-view]
             [time-align.ui.app-bar :as ab :refer [app-bar]]
             [time-align.ui.queue :as qp]
@@ -41,9 +42,9 @@
       {:viewBox "0 0 50 50" :style {:width "100%" :height "100%"}}
       [:circle {:cx 25 :cy 25 :r 22
                 :fill (if invert "grey" "white")
-                :stroke (if invert "white" "grey")
+                :stroke (if invert "white" (:primary uic/app-theme))
                 :stroke-width "4"}]
-      [:path (merge {:fill (if invert "white" "grey")}
+      [:path (merge {:fill (if invert "white" (:primary uic/app-theme))}
                     d)]]]))
 
 (defn stats-selection [selected periods tasks]
@@ -130,6 +131,42 @@
 
      (app-bar)
 
+     [ui/paper {:style {:width "100%"}}
+      [:div.day-label {:style
+                       {:color (:primary uic/app-theme) :padding "0.01em" :text-align "center"}}
+       [:span (jsi/->date-string displayed-day)]]
+
+      [ui/divider {:style {:margin-top    "0"
+                           :margin-bottom "0"}}]
+
+      [:div.navigation.zoom
+       {:style {:display "flex"
+                :justify-content "space-between"
+                :flex-wrap "nowrap"}}
+
+       [ui/icon-button
+        {:onClick (fn [e]
+                    (rf/dispatch [:iterate-displayed-day :prev]))}
+        [ic/image-navigate-before {:color (:primary uic/app-theme)}]
+        ;; TODO style these buttons similar to below
+        ;; [ui/svg-icon
+        ;;  {:viewBox "0 0 50 50" :style {:width "100%" :height "100%"}}
+        ;;  [:polyline {:points       "25,0 0,25 25,50"
+        ;;              :fill         "grey"
+        ;;              :fill-opacity "1"
+        ;;              }]]
+        ]
+
+       (svg-mui-zoom 1)
+       (svg-mui-zoom 4)
+       (svg-mui-zoom 3)
+       (svg-mui-zoom 2)
+
+       [ui/icon-button
+        {:onClick (fn [e]
+                    (rf/dispatch [:iterate-displayed-day :next]))}
+        [ic/image-navigate-next {:color (:primary uic/app-theme)}]]]]
+
      [:div.day-container
       {:style {:display    "flex"
                :flex       "1 0 100%"
@@ -155,43 +192,6 @@
                                             ;; TODO add breakpoint rules
                          }}
 
-       [:div.day-label {:style
-                        {:color "grey" :padding "0.01em" :text-align "center"}}
-        [:span (jsi/->date-string displayed-day)]]
-
-       [ui/divider {:style {:margin-top    "0"
-                            :margin-bottom "0"}}]
-
-       [:div.navigation.zoom
-        {:style {:display "flex"
-                 :justify-content "space-between"
-                 :flex-wrap "nowrap"}}
-
-        
-
-        [ui/icon-button
-         {:onClick (fn [e]
-                     (rf/dispatch [:iterate-displayed-day :prev]))}
-         [ic/image-navigate-before]
-         ;; TODO style these buttons similar to below
-         ;; [ui/svg-icon
-         ;;  {:viewBox "0 0 50 50" :style {:width "100%" :height "100%"}}
-         ;;  [:polyline {:points       "25,0 0,25 25,50"
-         ;;              :fill         "grey"
-         ;;              :fill-opacity "1"
-         ;;              }]]
-         ]
-
-        (svg-mui-zoom 1)
-        (svg-mui-zoom 4)
-        (svg-mui-zoom 3)
-        (svg-mui-zoom 2)
-
-        [ui/icon-button
-         {:onClick (fn [e]
-                     (rf/dispatch [:iterate-displayed-day :next]))}
-         [ic/image-navigate-next]]]
-
        [ui/divider {:style {:margin-top    "0"
                             :margin-bottom "0"}}]
 
@@ -201,15 +201,15 @@
                  :on-change             (fn [v]
                                           (rf/dispatch
                                            [:set-dashboard-tab (keyword v)]))}
-        [ui/tab {:label "calendar" :style {:color (:primary uic/app-theme)}
+        [ui/tab {:label ""
+                 :icon (r/as-element [ui/svg-icon [ic/action-date-range {:color (:primary uic/app-theme)}]])
+                 :style {:color (:primary uic/app-theme)}
                  :value "calendar"}
          (cp/calendar [])]
 
-        [ui/tab {:label "agenda" :style {:color (:primary uic/app-theme)}
-                 :value "agenda"}
-         (ap/agenda selected periods)]
-
-        [ui/tab {:label "queue" :style {:color (:primary uic/app-theme)}
+        [ui/tab {:label ""
+                 :icon (r/as-element [ui/svg-icon [ic/editor-format-list-bulleted {:color (:primary uic/app-theme)}]])
+                 :style {:color (:primary uic/app-theme)}
                  :value "queue"}
          (qp/queue tasks selected)]]]]
 
