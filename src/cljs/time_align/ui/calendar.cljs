@@ -1,6 +1,7 @@
 (ns time-align.ui.calendar
   (:require [re-frame.core :as rf]
             [cljs-react-material-ui.reagent :as ui]
+            [time-align.ui.common :as uic]
             [cljs-react-material-ui.icons :as ic]
             [time-align.utilities :as utils]))
 
@@ -58,19 +59,26 @@
             #(week-has-day % {:year year :month month :date date})
             partitioned-by-weeks))))
 
-(defn calendar-nav [year month]
-  [:div.navigation
-   {:style {:display "flex" :justify-content "space-around"
-            :flex-wrap "nowrap" :width "100%"}}
-   [ui/icon-button
-    {:onClick (fn [e] (rf/dispatch [:decrease-displayed-month]))}
-    [ic/image-navigate-before]]
+(defn calendar-nav [year month dd-year dd-month]
+  (let [honed-in (and (= year dd-year)
+                      (= month dd-month))]
+    [:div.navigation
+     {:style {:display "flex" :justify-content "space-around"
+              :flex-wrap "nowrap" :width "100%"}}
 
-   [:span (str year "/" (inc month))]
+     [ui/icon-button
+      {:onClick (fn [e] (rf/dispatch [:decrease-displayed-month]))}
+      [ic/image-navigate-before {:color (:primary uic/app-theme)}]]
 
-   [ui/icon-button
-    {:onClick (fn [e] (rf/dispatch [:advance-displayed-month]))}
-    [ic/image-navigate-next]]])
+     [ui/icon-button
+      {:onClick (fn [e] (rf/dispatch [:set-displayed-month [dd-year dd-month]]))}
+      (if honed-in
+        [ic/device-gps-fixed {:color (:primary uic/app-theme)}]
+        [ic/device-gps-not-fixed {:color (:primary uic/app-theme)}])]
+
+     [ui/icon-button
+      {:onClick (fn [e] (rf/dispatch [:advance-displayed-month]))}
+      [ic/image-navigate-next {:color (:primary uic/app-theme)}]]]))
 
 (defn calendar [data]
   (let [displayed-day @(rf/subscribe [:displayed-day])
@@ -85,9 +93,12 @@
 
     [:div
      {:style
-      {:display "flex" :justify-content "center" :flex-wrap "wrap"}}
+      {:display "flex" :justify-content "center" :flex-wrap "wrap"
+       :margin-top "0.5em"}}
 
-     (calendar-nav year month)
+     [:span {:style {:color (:primary uic/app-theme)}} (str year "/" (inc month))]
+
+     (calendar-nav year month dd-year dd-month)
 
      [:svg {:key "calendar-svg"
             :id "calendar-svg"
@@ -135,7 +146,8 @@
                  ((fn [periods]
                     [:g (->> periods
                              (map (fn [p]
-                                    [:rect {:x "0"
+                                    [:rect {:key (str (:id p))
+                                            :x "0"
                                             :y (->>
                                                 (#(if (< (.getDate (:start p))
                                                          this-day-date)
