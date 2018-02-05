@@ -803,7 +803,6 @@
 
 (defn set-displayed-day [db [_ day]]
   (assoc-in db [:view :displayed-day] day))
-
 (reg-event-db
  :set-displayed-day
  [persist-ls send-analytic validate-app-db]
@@ -991,12 +990,11 @@
                                 (re-frame.core/dispatch [:reset-app-db imported-app-db])))
       (.readAsText reader imported-db-file))))
 
-(defn set-displayed-month [db [year month]]
+(defn set-displayed-month [db [_ [year month]]]
   (assoc-in db [:view :displayed-month] [year month]))
 (reg-event-db
  :set-displayed-month
  [persist-ls send-analytic validate-app-db] set-displayed-month)
-
 
 (defn advance-displayed-month [db _]
   ;; TODO use specter here
