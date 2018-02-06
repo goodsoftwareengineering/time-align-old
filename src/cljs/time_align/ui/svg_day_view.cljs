@@ -112,14 +112,7 @@
 
                                      :else opacity-minor)
 
-        color                      (cond
-                                     (or (nil? selected-period)
-                                         (= selected-period id))
-                                     (:color period)
-                                     (and (some? selected-period)
-                                          (not= selected-period id))
-                                     "#aaaaaa"
-                                     :else "#000000")
+        color                      (:color period)
         period-width               (js/parseInt (:period-width uic/svg-consts))
         cx                         (js/parseInt (:cx uic/svg-consts))
         cy                         (js/parseInt (:cy uic/svg-consts))
@@ -186,6 +179,7 @@
               (= (utils/zero-in-day displayed-day)
                  (utils/zero-in-day (new js/Date)))
               (not is-period-selected))
+       ;; broken arc
        [:g
         [:path
          {:d            broken-arc-before
@@ -195,8 +189,7 @@
           :fill         "transparent"
           :onClick      touch-click-handler
           :onTouchStart movement-trigger-handler
-          :onMouseDown  movement-trigger-handler
-          }]
+          :onMouseDown  movement-trigger-handler}]
         [:path
          {:d            broken-arc-after
           :stroke       color
@@ -205,10 +198,20 @@
           :fill         "transparent"
           :onClick      touch-click-handler
           :onTouchStart movement-trigger-handler
-          :onMouseDown  movement-trigger-handler
-          }]
-        ]
+          :onMouseDown  movement-trigger-handler}]]
+
+       ;; solid arc
        [:g
+
+        ;; when selected
+        (when  (= selected-period id)
+          [:path
+           {:d            arc
+            :stroke       (:secondary uic/app-theme)
+            :opacity      opacity
+            :stroke-width (* 1.1 period-width)
+            :fill         "transparent"}])
+
         [:path
          {:d            arc
           :stroke       color
@@ -217,10 +220,9 @@
           :fill         "transparent"
           :onClick      touch-click-handler
           :onTouchStart movement-trigger-handler
-          :onMouseDown  movement-trigger-handler
-          }]
-        ])
+          :onMouseDown  movement-trigger-handler}]])
 
+     ;; yesterday arrows TODO change all yesterdays and tomorrows to next and previous days
      (if starts-yesterday
        [:g
         [:polyline {:fill           "transparent"
@@ -233,10 +235,8 @@
                                       (:x yesterday-arrow-point) ","
                                       (:y yesterday-arrow-point) " "
                                       (:x yesterday-arrow-point-bb) ","
-                                      (:y yesterday-arrow-point-bb) " "
-                                      )
+                                      (:y yesterday-arrow-point-bb) " ")}]
 
-                    }]
         [:polyline {:fill           "transparent"
                     :stroke         "white"
                     :stroke-width   "0.5"
@@ -247,13 +247,9 @@
                                       (:x yesterday-2-arrow-point) ","
                                       (:y yesterday-2-arrow-point) " "
                                       (:x yesterday-2-arrow-point-bb) ","
-                                      (:y yesterday-2-arrow-point-bb) " "
-                                      )
+                                      (:y yesterday-2-arrow-point-bb) " ")}]])
 
-                    }]
-        ]
-       )
-
+     ;; tomorrow arrows
      (if stops-tomorrow
        [:g
         [:polyline {:fill           "transparent"
@@ -266,10 +262,8 @@
                                       (:x tomorrow-arrow-point) ","
                                       (:y tomorrow-arrow-point) " "
                                       (:x tomorrow-arrow-point-bb) ","
-                                      (:y tomorrow-arrow-point-bb) " "
-                                      )
+                                      (:y tomorrow-arrow-point-bb) " ")}]
 
-                    }]
         [:polyline {:fill           "transparent"
                     :stroke         "white"
                     :stroke-width   "0.5"
@@ -280,13 +274,7 @@
                                       (:x tomorrow-2-arrow-point) ","
                                       (:y tomorrow-2-arrow-point) " "
                                       (:x tomorrow-2-arrow-point-bb) ","
-                                      (:y tomorrow-2-arrow-point-bb) " "
-                                      )
-
-                    }]
-        ])
-     ]
-    ))
+                                      (:y tomorrow-2-arrow-point-bb) " ")}]])]))
 
 (defn periods [periods selected is-moving-period curr-time displayed-day]
   (let [actual (filter #(not (:planned %)) periods)
