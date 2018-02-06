@@ -13,7 +13,6 @@
 
 (defonce mae-spring (anim/interpolate-to margin-action-expanded))
 
-
 (def expanded-buttons-style {:style {:display        "flex"
                                      :flex-direction "column"
                                      :align-items    "center"
@@ -29,8 +28,8 @@
     ]]
   )
 
-
 (def basic-button {:style {}})
+
 (def basic-mini-button {:mini             true
                         :background-color "grey"
                         :style            {:marginBottom "20px"}})
@@ -53,6 +52,15 @@
               [:pause-period-play]))})
    [ic/av-pause uic/basic-ic]])
 
+(defn edit-button [id]
+  [ui/floating-action-button
+   (merge basic-button
+          {:secondary true}
+          {:onTouchTap
+           (fn [_]
+             (hist/nav! (str "/edit/period/" id)))})
+   [ic/image-edit uic/basic-ic]])
+
 (defn back-button []
   [ui/floating-action-button (merge
                                basic-button
@@ -65,6 +73,7 @@
    [ic/navigation-close uic/basic-ic]])
 
 (defonce action-buttons-collapsed-click (r/atom false))
+
 (defonce forcer (r/atom 0))
 
 (defn action-buttons-collapsed []
@@ -106,8 +115,6 @@
     )
   )
 
-
-
 (defn action-buttons-no-selection []
 
     (if @action-buttons-collapsed-click
@@ -128,8 +135,12 @@
      ]
   )
 
-(defn action-buttons-period-selection [period-in-play]
-  [:div (if (some? period-in-play) (pause-button) (play-button))])
+(defn action-buttons-period-selection [period-in-play id]
+  [:div {:style {:display "flex"
+                 :flex-direction "column"}}
+   (edit-button id)
+   [:div {:style {:padding "0.25em"}}] ;; TODO get rid of this style hack pad
+   (if (some? period-in-play) (pause-button) (play-button))])
 
 (defn action-buttons-period-in-play [selected period-in-play]
   [:div (pause-button)])
@@ -183,9 +194,10 @@
 
 (defn action-buttons [state selected period-in-play]
   (let [forceable @forcer ;; TODO idk what this is for
-        selection (get-in selected [:current-selection :type-or-nil])]
+        selection (get-in selected [:current-selection :type-or-nil])
+        id (get-in selected [:current-selection :id-or-nil])]
     (case selection
-      :period (action-buttons-period-selection period-in-play)
+      :period (action-buttons-period-selection period-in-play id)
       :queue
       (action-buttons-queue-selection selected period-in-play)
       ;; else
