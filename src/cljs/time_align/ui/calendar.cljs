@@ -153,7 +153,7 @@
                     [:g (->> periods
                              (map (fn [p]
                                     [:rect {:key (str (:id p))
-                                            :x "0"
+                                            :x (if (:planned p) "0" (/ cell-width 2))
                                             :y (->>
                                                 (#(if (< (.getDate (:start p))
                                                          this-day-date)
@@ -164,7 +164,7 @@
                                                      utils/ms-in-day))
                                                 (* cell-height))
 
-                                            :width cell-width
+                                            :width (/ cell-width 2.1)
                                             :height (-> (#(if (> (.getDate (:stop p))
                                                                  this-day-date)
                                                             (merge p {:stop (new js/Date year month this-day-date 23 59 59)})
