@@ -69,7 +69,8 @@
 (defn app-bar-option [{:keys [href label icon on-touch-tap child]}]
   [:a (merge (when (some? href)
                {:href href})
-             {:key label})
+             {:key label
+              :style {:text-decoration "none"}})
    [ui/menu-item (merge
                   {:innerDivStyle {:display "flex" :align-items "center"}}
                   (when (some? on-touch-tap)
