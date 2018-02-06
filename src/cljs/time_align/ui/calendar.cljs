@@ -80,7 +80,7 @@
       {:onClick (fn [e] (rf/dispatch [:advance-displayed-month]))}
       [ic/image-navigate-next {:color (:primary uic/app-theme)}]]]))
 
-(defn calendar [data]
+(defn calendar []
   (let [displayed-day @(rf/subscribe [:displayed-day])
         dd-year (.getFullYear displayed-day)
         dd-month (.getMonth displayed-day)

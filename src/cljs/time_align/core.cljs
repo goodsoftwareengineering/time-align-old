@@ -199,7 +199,11 @@
       [ui/text-field {:floating-label-text "Email"
                       :fullWidth           true}]]]))
 
-(defn calendar-page [] (cp/calendar []))
+(defn calendar-page []
+  [:div
+   (app-bar)
+   [ui/paper {:style {:width "100%"}}
+    (cp/calendar)]])
 
 (defn page []
   (let [this-page @(rf/subscribe [:page])
