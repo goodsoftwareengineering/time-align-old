@@ -139,15 +139,13 @@
                                        (jsi/stop-propagation e)
                                        (jsi/prevent-default e)
                                        (rf/dispatch
-                                        [:set-selected-period id]))
-                                     )
+                                        [:set-selected-period id])))
         movement-trigger-handler   (if (and is-period-selected
                                             (= selected-period id))
                                      (fn [e]
                                        (jsi/stop-propagation e)
                                        (rf/dispatch
-                                         [:set-moving-period true]))
-                                     )
+                                         [:set-moving-period true])))
 
         yesterday-arrow-point      (cutils/polar-to-cartesian cx cy r 1)
         yesterday-arrow-point-bt   (cutils/polar-to-cartesian
@@ -171,8 +169,7 @@
         tomorrow-2-arrow-point-bt  (cutils/polar-to-cartesian
                                      cx cy (+ r (* 0.7 (/ period-width 2))) 355)
         tomorrow-2-arrow-point-bb  (cutils/polar-to-cartesian
-                                     cx cy (- r (* 0.7 (/ period-width 2))) 355)
-        ]
+                                     cx cy (- r (* 0.7 (/ period-width 2))) 355)]
 
     [:g {:key (str id)}
      (if (and straddles-now ;; ticker splitting should only happen when displaying today
