@@ -36,12 +36,12 @@
 
     [ui/icon-button {:onClick (fn [e] (zoom-fn zoom-arg))
                      :style (if invert
-                              {:background-color "grey"}
+                              {:background-color (:secondary uic/app-theme)}
                               {})}
      [ui/svg-icon
       {:viewBox "0 0 50 50" :style {:width "100%" :height "100%"}}
       [:circle {:cx 25 :cy 25 :r 22
-                :fill (if invert "grey" "white")
+                :fill (if invert (:secondary uic/app-theme) "white")
                 :stroke (if invert "white" (:primary uic/app-theme))
                 :stroke-width "4"}]
       [:path (merge {:fill (if invert "white" (:primary uic/app-theme))}
@@ -134,6 +134,7 @@
      [ui/paper {:style {:width "100%"}}
       [:div.day-label {:style
                        {:color (:primary uic/app-theme) :padding "0.01em" :text-align "center"}}
+
        [:span (jsi/->date-string displayed-day)]]
 
       [ui/divider {:style {:margin-top    "0"
@@ -159,6 +160,11 @@
 
        (svg-mui-zoom 1)
        (svg-mui-zoom 4)
+       [ui/icon-button
+        {:onClick (fn [e] (rf/dispatch [:set-displayed-day (new js/Date)]))}
+        (if (cutils/same-day? displayed-day (new js/Date))
+          [ic/device-gps-fixed {:color (:primary uic/app-theme)}]
+          [ic/device-gps-not-fixed {:color (:primary uic/app-theme)}])]
        (svg-mui-zoom 3)
        (svg-mui-zoom 2)
 
