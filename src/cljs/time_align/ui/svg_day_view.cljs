@@ -87,8 +87,8 @@
                                      nil)
         this-period-selected       (= selected-period id)
 
-        opacity-minor              "0.3"
-        opacity-major              "0.9"
+        opacity-minor              "0.66"
+        opacity-major              ".99"
         is-planned                 (= type :planned)
         ;; actual is boldest in the past (before now)
         ;; planned is boldest in the future (after now)
@@ -208,6 +208,7 @@
           [:path
            {:d            arc
             :stroke       (:secondary uic/app-theme)
+            :stroke-dasharray "0.55, 0.55"
             :opacity      opacity
             :stroke-width (* 1.1 period-width)
             :fill         "transparent"}])
