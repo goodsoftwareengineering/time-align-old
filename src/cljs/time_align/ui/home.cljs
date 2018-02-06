@@ -211,7 +211,7 @@
                  :icon (r/as-element [ui/svg-icon [ic/action-date-range {:color (:primary uic/app-theme)}]])
                  :style {:color (:primary uic/app-theme)}
                  :value "calendar"}
-         (cp/calendar [])]
+         (cp/calendar)]
 
         [ui/tab {:label ""
                  :icon (r/as-element [ui/svg-icon [ic/editor-format-list-bulleted {:color (:primary uic/app-theme)}]])
