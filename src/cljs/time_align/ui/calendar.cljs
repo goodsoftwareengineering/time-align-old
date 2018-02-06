@@ -116,9 +116,12 @@
        (fn [i d]
          (let [this-day-date (.getDate d)
                displayed-day-date (.getDate displayed-day)
-               this-day-is-today (and (= this-day-date displayed-day-date)
+               this-day-is-displayed (and (= this-day-date displayed-day-date)
                                       (= dd-year (.getFullYear d))
                                       (= dd-month (.getMonth d)))
+               this-day-is-today (and (= this-day-date (.getDate (new js/Date)))
+                                      (= (.getFullYear d) (.getFullYear (new js/Date)))
+                                      (= (.getMonth d) (.getMonth (new js/Date))))
                x (-> d (get-day) (- 1) (* cell-width))
                y (* cell-height (week-number d))]
            [:g {:transform (str "translate(" x " " y ")")
@@ -130,8 +133,11 @@
                     :width cell-width
                     :height cell-height
                     :fill "white"
-                    :stroke "#bcbcbc" ;; TODO grey400 when global styles are in place
-                    :stroke-width "0.10"}]
+                    :stroke (if this-day-is-today
+                              (:secondary uic/app-theme) ;; TODO should be accent1
+                              (if this-day-is-displayed (:primary uic/app-theme) "#bcbcbc"))
+                    ;; TODO grey400 when global styles are in place
+                    :stroke-width (if (or this-day-is-displayed this-day-is-today) "0.25" "0.10")}]
 
             (->> periods
                  (filter (fn [p]
