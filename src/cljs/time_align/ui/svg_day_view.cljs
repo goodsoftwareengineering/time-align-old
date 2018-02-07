@@ -133,6 +133,17 @@
         broken-arc-after           (uic/describe-arc cx cy r
                                                  broken-start-after-angle
                                                  stop-angle)
+        future-handle-arc          (uic/describe-arc cx cy r
+                                                     (+ stop-angle
+                                                        (-> 5 ;; minutes
+                                                            (* 60) ;; seconds
+                                                            (* 1000) ;; milleseconds
+                                                            (cutils/ms-to-angle)))
+                                                     (+ stop-angle
+                                                        (-> 25 ;; minutes
+                                                            (* 60) ;; seconds
+                                                            (* 1000) ;; milleseconds
+                                                            (cutils/ms-to-angle))))
 
         touch-click-handler        (if (not is-period-selected)
                                      (fn [e]
@@ -169,7 +180,8 @@
         tomorrow-2-arrow-point-bt  (cutils/polar-to-cartesian
                                      cx cy (+ r (* 0.7 (/ period-width 2))) 355)
         tomorrow-2-arrow-point-bb  (cutils/polar-to-cartesian
-                                     cx cy (- r (* 0.7 (/ period-width 2))) 355)]
+                                    cx cy (- r (* 0.7 (/ period-width 2))) 355)]
+
 
     [:g {:key (str id)}
      (if (and straddles-now ;; ticker splitting should only happen when displaying today
@@ -201,14 +213,21 @@
        [:g
 
         ;; when selected
-        (when  (= selected-period id)
-          [:path
-           {:d            arc
-            :stroke       (:secondary uic/app-theme)
-            :stroke-dasharray "0.55, 0.55"
-            :opacity      opacity
-            :stroke-width (* 1.1 period-width)
-            :fill         "transparent"}])
+        (when  (= selected-period id) ;; TODO add this in the broken arc section
+          [:g
+           [:path
+            {:d            arc
+             :stroke       (:secondary uic/app-theme)
+             :stroke-dasharray "0.55, 0.55"
+             :opacity      opacity
+             :stroke-width (* 1.1 period-width)
+             :fill         "transparent"}]
+           [:path
+            {:d            future-handle-arc
+             :stroke       (:secondary uic/app-theme)
+             :opacity      opacity
+             :stroke-width (* 1.1 period-width)
+             :fill         "transparent"}]])
 
         [:path
          {:d            arc
@@ -275,8 +294,18 @@
                                       (:y tomorrow-2-arrow-point-bb) " ")}]])]))
 
 (defn periods [periods selected is-moving-period curr-time displayed-day]
-  (let [actual (filter #(not (:planned %)) periods)
-        planned (filter #(:planned %) periods)]
+  (let [
+        ;; whole song and dance for putting the selected period on _top_
+        sel-id (get-in selected [:current-selection :id-or-nil])
+        selected-period (some #(if (= sel-id (:id %)) %) periods)
+        no-sel-periods (filter #(not= (:id %) sel-id) periods)
+        sel-last-periods (if (some? sel-id)
+                           (reverse (cons selected-period no-sel-periods))
+                           periods)
+        ;; dance done
+        actual (filter #(not (:planned %)) sel-last-periods)
+        planned (filter #(:planned %) sel-last-periods)
+        selected-planned (:planned selected-period)] ;; TODO fuse these and have them use the :planned flag in periods
     [:g
      [:g
       (if (some? actual)
