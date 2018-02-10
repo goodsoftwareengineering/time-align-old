@@ -222,12 +222,13 @@
              :opacity      opacity
              :stroke-width (* 1.1 period-width)
              :fill         "transparent"}]
-           [:path
-            {:d            future-handle-arc
-             :stroke       (:secondary uic/app-theme)
-             :opacity      opacity
-             :stroke-width (* 1.1 period-width)
-             :fill         "transparent"}]])
+           ;; [:path
+           ;;  {:d            future-handle-arc
+           ;;   :stroke       (:secondary uic/app-theme)
+           ;;   :opacity      opacity
+           ;;   :stroke-width (* 1.1 period-width)
+           ;;   :fill         "transparent"}]
+           ])
 
         [:path
          {:d            arc
