@@ -38,21 +38,25 @@
 (defn list-item-task [current-selection task]
   (let [{:keys [id name periods complete color]} task
         sel-id            (:id-or-nil current-selection)
+        number-of-periods (count periods)
         is-selected       (= id sel-id)]
-    (r/as-element
-      [ui/list-item
-       {:key           id
-        :primaryText   (uic/concatenated-text name 15 "no name entered ...")
-        :leftIcon      (r/as-element
-                         [ui/checkbox {:checked   complete
-                                       :iconStyle {:fill color}}])
-        :style         (if is-selected {:backgroundColor "#ededed"})
-        :onClick       (fn [e]
-                         (hist/nav! (str "/list/periods/" id)))
-
-        :onDoubleClick (fn [e]
-                         (when is-selected
-                           (hist/nav! (str "/edit/task/" id))))}])))
+    [ui/list-item
+     {:key           id
+      :primaryText   (uic/concatenated-text name 15 "no name entered ...")
+      :secondaryText   (str "Periods: " number-of-periods)
+      :leftIcon      (r/as-element
+                      [ui/checkbox {:checked   complete
+                                    :iconStyle {:fill color}}])
+      :style         (if is-selected {:backgroundColor "#ededed"})
+      :onClick       (fn [e]
+                       (hist/nav! (str "/list/periods/" id)))
+      :rightIconButton (r/as-element [ui/icon-button {:onClick (fn [e]
+                                                                 ;; mui docs say we don't need this
+                                                                 (jsi/stop-propagation e)
+                                                                 ;; but we really do (at least on mobile)
+                                                                 (hist/nav! (str "/edit/task/" id)))}
+                                      [ic/image-edit
+                                       {:color (:secondary uic/app-theme)}]])}]))
 
 (defn list-item-category [current-selection category]
   (let [{:keys [id name color tasks]} category
@@ -77,23 +81,11 @@
                                                    [ic/image-edit
                                                     {:color (:secondary uic/app-theme)}]])}]))
 
-(defn list-categories []
-  )
 
-
-;; [(r/as-element
-;;   [ui/raised-button {:key               (str "add-task-for-category-" id)
-;;                      :href              "#/add/task" :label "Add Task"
-;;                      :background-color "grey"
-;;                      :style            {:margin-top "1em"
-;;                                         :margin-left "2em"
-;;                                         :margin-bottom "1em"}}])]
-
-;; (r/as-element
 ;;  [ui/raised-button {:key (str "add-period-for-task-" id)
 ;;                     :href "#/add/period"
 ;;                     :label "Add Period"
 ;;                     :background-color "grey"
 ;;                     :style {:margin-top "1em"
 ;;                             :margin-left "3em"
-;;                             :margin-bottom "1em"}}])
+;;                             :margin-bottom "1em"}}]

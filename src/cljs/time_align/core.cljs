@@ -168,11 +168,36 @@
                          :style            {:margin-top    "1em"
                                             :margin-left   "1em"
                                             :margin-bottom "1em"}}]
+      [ui/divider]
       [ui/list
        (->> categories
             (map (partial lp/list-item-category current-selection)))]]]))
 
-(defn list-tasks-page [id] [:div "tasks page!"])
+(defn list-tasks-page [id]
+  (let [categories        @(rf/subscribe [:categories])
+        tasks             (->> {:categories categories}
+                               (cutils/pull-tasks )
+                               (filter #(= (:category-id %) id)))
+        selected          @(rf/subscribe [:selected])
+        current-selection (:current-selection selected)]
+
+    [:div
+     (app-bar)
+     [ui/paper {:style {:width "100%"}}
+      [ui/raised-button {:key               (str "add-task-for-category-" id)
+                         :href              (str "#/add/task" ) ;; TODO use query params to fill in category
+                         :label "Add Task"
+                         :background-color (:primary uic/app-theme)
+                         :label-color      "white"
+                         :style            {:margin-top "1em"
+                                            :margin-left "2em"
+                                            :margin-bottom "1em"}}]
+      [ui/divider]
+      ;; TODO add breadcrumb
+      [ui/divider]
+      [ui/list
+       (->> tasks
+            (map (partial lp/list-item-task current-selection)))]]]))
 
 (defn list-periods-page [id] [:div "periods page!"])
 
