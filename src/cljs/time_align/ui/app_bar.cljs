@@ -16,7 +16,7 @@
                      (rf/dispatch
                       [:set-active-page {:page-id :home}]))}
 
-   {:href "#/list"
+   {:href "#/list/categories"
     :label [:span "List"]
     :icon (uic/svg-mui-entity
            {:type :all :color "black"
@@ -34,8 +34,7 @@
     :icon [ic/action-settings {:style {:marginRight "0.5em"}}]}
 
    {:label [:span "Account"]
-    :icon [ic/social-person {:style {:marginRight "0.5em"
-                                     :color       "grey"}}]}
+    :icon [ic/social-person {:style {:marginRight "0.5em"}}]}
 
    {:label [:span "Import"]
     :icon [ic/file-cloud-upload {:style {:marginRight "0.5em"}}]
