@@ -147,6 +147,12 @@
     :add-entity-forms {:page-id     page
                        :type-or-nil type
                        :id-or-nil   nil}
+    :list-tasks      {:page-id page
+                      :type-or-nil type
+                      :id-or-nil id}
+    :list-periods    {:page-id page
+                      :type-or-nil type
+                      :id-or-nil id}
     ;;default
     {:page-id     page
      :type-or-nil nil
@@ -165,20 +171,22 @@
       :period [:load-new-period-entity-form query-params]
       nil)))
 
+(defn set-active-page
+  [cofx [_ params]]
+  (let [db           (:db cofx)
+        page         (:page-id params)
+        type         (:type params)
+        id           (:id params)
+        query-params (:query-params params)
+        view-page    (determine-page page type id)
+        to-load      (determine-dispatched type id query-params)]
+
+    (merge {:db (assoc-in db [:view :page] view-page)
+            :dispatch-n (filter some? (list to-load))})))
 (reg-event-fx
  :set-active-page
  [persist-ls send-analytic validate-app-db]
- (fn [cofx [_ params]]
-   (let [db           (:db cofx)
-         page         (:page-id params)
-         type         (:type params)
-         id           (:id params)
-         query-params (:query-params params)
-         view-page    (determine-page page type id)
-         to-load      (determine-dispatched type id query-params)]
-
-     (merge {:db (assoc-in db [:view :page] view-page)
-             :dispatch-n (filter some? (list to-load))}))))
+ set-active-page)
 
 (reg-event-db
  :load-category-entity-form

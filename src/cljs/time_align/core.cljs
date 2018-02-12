@@ -154,7 +154,7 @@
                         :backgroundColor "white"}}
       (ef/entity-form page-value entity-id)]]))
 
-(defn list-page []
+(defn list-categories-page []
   (let [categories        @(rf/subscribe [:categories])
         selected          @(rf/subscribe [:selected])
         current-selection (:current-selection selected)]
@@ -163,13 +163,18 @@
      (app-bar)
      [ui/paper {:style {:width "100%"}}
       [ui/raised-button {:href             "#/add/category" :label "Add Category"
-                         :background-color "grey"
+                         :background-color (:primary uic/app-theme)
+                         :label-color "white"
                          :style            {:margin-top    "1em"
                                             :margin-left   "1em"
                                             :margin-bottom "1em"}}]
       [ui/list
        (->> categories
-            (map (partial lp/list-category current-selection)))]]]))
+            (map (partial lp/list-item-category current-selection)))]]]))
+
+(defn list-tasks-page [id] [:div "tasks page!"])
+
+(defn list-periods-page [id] [:div "periods page!"])
 
 (defn agenda-page []
   (let [selected @(rf/subscribe [:selected])
@@ -218,7 +223,9 @@
         :home              (hp/home-page)
         :add-entity-forms  (entity-forms this-page)
         :edit-entity-forms (entity-forms this-page)
-        :list              (list-page)
+        :list-categories   (list-categories-page)
+        :list-tasks        (list-tasks-page (:id-or-nil this-page))
+        :list-periods      (list-periods-page (:id-or-nil this-page))
         :account           (account-page)
         :agenda            (agenda-page)
         :queue             (queue-page)
@@ -238,9 +245,21 @@
   (rf/dispatch [:set-active-page {:page-id :agenda}])
   )
 
-(secretary/defroute list-route "/list" []
+(secretary/defroute list-categories-route "/list/categories" []
   (rf/dispatch [:set-main-drawer false])
-  (rf/dispatch [:set-active-page {:page-id :list}]))
+  (rf/dispatch [:set-active-page {:page-id :list-categories}]))
+
+(secretary/defroute list-tasks-route "/list/tasks/:category" [category]
+  (rf/dispatch [:set-main-drawer false])
+  (rf/dispatch [:set-active-page {:page-id :list-tasks
+                                  :type :category
+                                  :id (uuid category)}]))
+
+(secretary/defroute list-periods-route "/list/periods/:task" [task]
+  (rf/dispatch [:set-main-drawer false])
+  (rf/dispatch [:set-active-page {:page-id :list-periods
+                                  :type :task
+                                  :id (uuid task)}]))
 
 (secretary/defroute queue-route "/queue" []
   (rf/dispatch [:set-main-drawer false])

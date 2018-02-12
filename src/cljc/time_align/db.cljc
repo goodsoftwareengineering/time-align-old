@@ -110,7 +110,9 @@
 (s/def ::page-id (s/with-gen #{:home
                                :add-entity-forms
                                :edit-entity-forms
-                               :list
+                               :list-categories
+                               :list-tasks
+                               :list-periods
                                :queue
                                :agenda
                                :calendar}
