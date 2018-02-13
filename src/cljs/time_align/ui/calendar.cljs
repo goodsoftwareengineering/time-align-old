@@ -3,6 +3,7 @@
             [cljs-react-material-ui.reagent :as ui]
             [time-align.ui.common :as uic]
             [cljs-react-material-ui.icons :as ic]
+            [time-align.client-utilities :as cutils]
             [time-align.utilities :as utils]))
 
 (def cell-width (* (/ 100 7)))  ;; ~14
@@ -140,6 +141,7 @@
                     :stroke-width (if (or this-day-is-displayed this-day-is-today) "0.25" "0.10")}]
 
             (->> periods
+                 (filter cutils/period-has-stamps)
                  (filter (fn [p]
                            (and
                             (or

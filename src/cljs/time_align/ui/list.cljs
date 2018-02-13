@@ -14,8 +14,6 @@
   (let [{:keys [id description color]} period
         sel-id            (:id-or-nil current-selection)
         is-selected       (= id sel-id)]
-
-    (r/as-element
      [ui/list-item
       (merge {:key         id
               :primaryText (uic/period-list-item-primary-text period)
@@ -33,7 +31,7 @@
 
                 ;; otherwise render a queue indicator
                 {:leftIcon (r/as-element
-                             [ui/svg-icon [ic/action-list {:color color}]])}))])))
+                             [ui/svg-icon [ic/action-list {:color color}]])}))]))
 
 (defn list-item-task [current-selection task]
   (let [{:keys [id name periods complete color]} task

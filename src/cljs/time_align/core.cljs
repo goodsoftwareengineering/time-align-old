@@ -178,12 +178,15 @@
         tasks             (->> {:categories categories}
                                (cutils/pull-tasks )
                                (filter #(= (:category-id %) id)))
+        parent-category   (some #(if (= (:id %) id) %) categories)
         selected          @(rf/subscribe [:selected])
         current-selection (:current-selection selected)]
 
     [:div
      (app-bar)
      [ui/paper {:style {:width "100%"}}
+      (lp/list-item-category current-selection parent-category)
+      [ui/divider]
       [ui/raised-button {:key               (str "add-task-for-category-" id)
                          :href              (str "#/add/task" ) ;; TODO use query params to fill in category
                          :label "Add Task"
@@ -193,13 +196,43 @@
                                             :margin-left "2em"
                                             :margin-bottom "1em"}}]
       [ui/divider]
-      ;; TODO add breadcrumb
-      [ui/divider]
       [ui/list
        (->> tasks
             (map (partial lp/list-item-task current-selection)))]]]))
 
-(defn list-periods-page [id] [:div "periods page!"])
+(defn list-periods-page [id]
+  (let [categories        @(rf/subscribe [:categories])
+        periods             (->> {:categories categories}
+                               (cutils/pull-periods )
+                               (filter #(= (:task-id %) id)))
+        tasks             (->> {:categories categories}
+                               (cutils/pull-tasks )
+                               (filter #(= (:id %) id)))
+        parent-task       (first tasks)
+        category-id       (:category-id (first tasks))
+        parent-category   (some #(if (= (:id %) category-id) %) categories)
+        selected          @(rf/subscribe [:selected])
+        current-selection (:current-selection selected)]
+
+    [:div
+     (app-bar)
+     [ui/paper {:style {:width "100%"}}
+      (lp/list-item-category current-selection parent-category)
+      [ui/divider]
+      (lp/list-item-task current-selection parent-task)
+      [ui/divider]
+      [ui/raised-button {:key               (str "add-period-for-task-" id)
+                         :href              (str "#/add/period" ) ;; TODO use query params to fill in category
+                         :label "Add Period"
+                         :background-color (:primary uic/app-theme)
+                         :label-color      "white"
+                         :style            {:margin-top "1em"
+                                            :margin-left "2em"
+                                            :margin-bottom "1em"}}]
+      [ui/divider]
+      [ui/list
+       (->> periods
+            (map (partial lp/list-item-task current-selection)))]]]))
 
 (defn agenda-page []
   (let [selected @(rf/subscribe [:selected])

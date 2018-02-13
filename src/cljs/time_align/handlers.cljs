@@ -34,6 +34,18 @@
 ;;  :queue     <a collection of further interceptors>
 ;;  :stack     <a collection of interceptors already walked> }
 
+(defn set-nil-tasks-to-empty [db]
+  ;; save-period-form describes why this and function below are needed
+  (specter/setval
+   [:categories specter/ALL
+    :tasks nil?] '[] db))
+
+(defn set-nil-periods-to-empty [db]
+  (specter/setval
+   [:categories specter/ALL
+    :tasks specter/ALL
+    :periods nil?] '[] db))
+
 (def persist-ls
   (->interceptor
    :id :persist-to-localstorage
@@ -616,11 +628,14 @@
                   #(= category-id (:id %))
                   :tasks specter/END]
 
-                 [clean-task] new-db-removed-old-task)]
+                 [clean-task] new-db-removed-old-task)
+
+         remove-task-nils-db (set-nil-tasks-to-empty new-db)
+         remove-period-nils-db (set-nil-periods-to-empty remove-task-nils-db)]
 
      (if (some? category-id)           ;; secondary, view should not dispatch when nil
 
-       {:db       new-db
+       {:db       remove-period-nils-db
         :route    [:back]
         :dispatch [:clear-task-form]}
 
@@ -716,13 +731,18 @@
                                  :periods specter/ALL #(= period-id (:id %))]
 
                                 specter/NONE db)
+         ;; above will set {:task nil} for any category without a task key because idk TODO file complaint
+         ;; this line below fixes that
+         remove-task-nils-db (set-nil-tasks-to-empty removed-old-period-db)
+         remove-period-nils-db (set-nil-periods-to-empty remove-task-nils-db)
+
          new-db (specter/setval
                  [:categories specter/ALL :tasks specter/ALL #(= task-id (:id %))
                   :periods specter/END]
 
                  [clean-period]
 
-                 removed-old-period-db)]
+                 remove-period-nils-db)]
 
      (if (or (and (nil? start) (nil? stop))  ;; TODO add error state for not planned with no stamps
              (< start-v stop-v))
