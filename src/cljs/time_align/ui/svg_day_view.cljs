@@ -244,14 +244,7 @@
              :stroke-dasharray "0.20, 0.25"
              :opacity      "0.7"
              :stroke-width  period-width
-             :fill         "transparent"}]
-           ;; [:path
-           ;;  {:d            future-handle-arc
-           ;;   :stroke       (:secondary uic/app-theme)
-           ;;   :opacity      opacity
-           ;;   :stroke-width (* 1.1 period-width)
-           ;;   :fill         "transparent"}]
-           ])])
+             :fill         "transparent"}]])])
 
      ;; yesterday arrows TODO change all yesterdays and tomorrows to next and previous days
      (if starts-yesterday
