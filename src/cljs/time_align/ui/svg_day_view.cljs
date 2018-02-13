@@ -345,7 +345,8 @@
         ticker-pos               (cutils/polar-to-cartesian
                                    (:cx uic/svg-consts)
                                    (:cy uic/svg-consts)
-                                   (:r uic/svg-consts)
+                                   (- (:inner-r uic/svg-consts)
+                                      (:period-width uic/svg-consts))
                                    ticker-angle)
         filtered-periods         (cutils/filter-periods-for-day day tasks)
         selected-period          (if (= :period
@@ -446,13 +447,13 @@
                     ))
 
       shadow-filter
-      [:circle (merge {:fill "#e8e8e8" :filter "url(#shadow-2dp)"}
+      [:circle (merge {:fill "#dfdfdf" :filter "url(#shadow-2dp)"}
                       (select-keys uic/svg-consts [:cx :cy :r]))]
-      [:circle (merge {:fill "#f1f1f1" :r (:inner-r uic/svg-consts)}
+      [:circle (merge {:fill "#ededed" :r (:inner-r uic/svg-consts)}
                       (select-keys uic/svg-consts [:cx :cy]))]
-
-      (periods filtered-periods selected is-moving-period curr-time day)
-
+      [:circle (merge {:fill "#f0f0f0" :r (- (:inner-r uic/svg-consts)
+                                             (:period-width uic/svg-consts))}
+                      (select-keys uic/svg-consts [:cx :cy]))]
       (when display-ticker
         [:g
          [:circle {:cx (:cx uic/svg-consts) :cy (:cy uic/svg-consts)
@@ -474,7 +475,10 @@
                  :x1           (:cx uic/svg-consts)
                  :y1           (:cy uic/svg-consts)
                  :x2           (:x ticker-pos)
-                 :y2           (:y ticker-pos)}]])]]))
+                 :y2           (:y ticker-pos)}]])
+      (periods filtered-periods selected is-moving-period curr-time day)
+
+      ]]))
 
 (defn days [days tasks selected-period]
   (->> days
