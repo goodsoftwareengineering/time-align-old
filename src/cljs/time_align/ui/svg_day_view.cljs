@@ -199,22 +199,6 @@
           :onClick      touch-click-handler
           :onTouchStart movement-trigger-handler
           :onMouseDown  movement-trigger-handler}]
-        (when  (= selected-period id) ;; TODO add this in the broken arc section
-          [:g
-           [:path
-            {:d            broken-arc-before
-             :stroke       (:secondary uic/app-theme)
-             :stroke-dasharray "0.25, 0.25"
-             :opacity      opacity
-             :stroke-width (* 1.1 period-width)
-             :fill         "transparent"}]
-           ;; [:path
-           ;;  {:d            future-handle-arc
-           ;;   :stroke       (:secondary uic/app-theme)
-           ;;   :opacity      opacity
-           ;;   :stroke-width (* 1.1 period-width)
-           ;;   :fill         "transparent"}]
-           ])
         [:path
          {:d            broken-arc-after
           :stroke       color
@@ -227,42 +211,22 @@
         (when  (= selected-period id) ;; TODO add this in the broken arc section
           [:g
            [:path
+            {:d            broken-arc-before
+             :stroke       (:secondary uic/app-theme)
+             :stroke-dasharray "0.25, 0.25"
+             :opacity      opacity
+             :stroke-width (* 1.1 period-width)
+             :fill         "transparent"}]
+           [:path
             {:d            broken-arc-after
              :stroke       (:secondary uic/app-theme)
              :stroke-dasharray "0.25, 0.25"
              :opacity      opacity
              :stroke-width (* 1.1 period-width)
-             :fill         "transparent"}]
-           ;; [:path
-           ;;  {:d            future-handle-arc
-           ;;   :stroke       (:secondary uic/app-theme)
-           ;;   :opacity      opacity
-           ;;   :stroke-width (* 1.1 period-width)
-           ;;   :fill         "transparent"}]
-           ])
-        ]
+             :fill         "transparent"}]])]
 
        ;; solid arc
        [:g
-
-        ;; when selected
-        (when  (= selected-period id) ;; TODO add this in the broken arc section
-          [:g
-           [:path
-            {:d            arc
-             :stroke       (:secondary uic/app-theme)
-             :stroke-dasharray "0.25, 0.25"
-             :opacity      opacity
-             :stroke-width (* 1.1 period-width)
-             :fill         "transparent"}]
-           ;; [:path
-           ;;  {:d            future-handle-arc
-           ;;   :stroke       (:secondary uic/app-theme)
-           ;;   :opacity      opacity
-           ;;   :stroke-width (* 1.1 period-width)
-           ;;   :fill         "transparent"}]
-           ])
-
         [:path
          {:d            arc
           :stroke       color
@@ -271,7 +235,23 @@
           :fill         "transparent"
           :onClick      touch-click-handler
           :onTouchStart movement-trigger-handler
-          :onMouseDown  movement-trigger-handler}]])
+          :onMouseDown  movement-trigger-handler}]
+        (when  (= selected-period id) ;; TODO add this in the broken arc section
+          [:g
+           [:path
+            {:d            arc
+             :stroke       "white"
+             :stroke-dasharray "0.20, 0.25"
+             :opacity      "0.7"
+             :stroke-width  period-width
+             :fill         "transparent"}]
+           ;; [:path
+           ;;  {:d            future-handle-arc
+           ;;   :stroke       (:secondary uic/app-theme)
+           ;;   :opacity      opacity
+           ;;   :stroke-width (* 1.1 period-width)
+           ;;   :fill         "transparent"}]
+           ])])
 
      ;; yesterday arrows TODO change all yesterdays and tomorrows to next and previous days
      (if starts-yesterday
