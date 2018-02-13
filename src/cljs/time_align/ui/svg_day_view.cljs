@@ -337,6 +337,7 @@
 (defn day [tasks selected day]
   (let [date-str                 (subs (jsi/->iso-string day) 0 10)
         curr-time                (:time @uic/clock-state)
+        period-in-play           @(rf/subscribe [:period-in-play])
         display-ticker           (= (jsi/value-of (utils/zero-in-day day))
                                     (jsi/value-of (utils/zero-in-day curr-time)))
 
@@ -345,8 +346,10 @@
         ticker-pos               (cutils/polar-to-cartesian
                                    (:cx uic/svg-consts)
                                    (:cy uic/svg-consts)
-                                   (- (:inner-r uic/svg-consts)
-                                      (:period-width uic/svg-consts))
+                                   (if (some? period-in-play)
+                                     (:r uic/svg-consts)
+                                     (- (:inner-r uic/svg-consts)
+                                        (:period-width uic/svg-consts)))
                                    ticker-angle)
         filtered-periods         (cutils/filter-periods-for-day day tasks)
         selected-period          (if (= :period
@@ -357,7 +360,6 @@
                                            [:current-selection :id-or-nil])
                                    nil)
         is-moving-period         @(rf/subscribe [:is-moving-period])
-        period-in-play           @(rf/subscribe [:period-in-play])
         period-in-play-color     @(rf/subscribe [:period-in-play-color])
         long-press-state         @(rf/subscribe [:inline-period-long-press])
         ;; start touch sets timeout callback

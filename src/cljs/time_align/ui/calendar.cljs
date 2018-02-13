@@ -2,6 +2,7 @@
   (:require [re-frame.core :as rf]
             [cljs-react-material-ui.reagent :as ui]
             [time-align.ui.common :as uic]
+            [time-align.history :as hist]
             [cljs-react-material-ui.icons :as ic]
             [time-align.client-utilities :as cutils]
             [time-align.utilities :as utils]))
@@ -128,7 +129,9 @@
            [:g {:transform (str "translate(" x " " y ")")
                 :id  (.toDateString d)
                 :key (.toDateString d)
-                :onClick (fn [_] (rf/dispatch [:set-displayed-day d]))}
+                :onClick (fn [_]
+                           (rf/dispatch [:set-displayed-day d])
+                           (hist/nav! "/"))}
             [:rect {:x "0"
                     :y "0"
                     :width cell-width
