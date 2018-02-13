@@ -234,7 +234,9 @@
          id          (:id this-task)
          name        (str (:name this-task))
          description (str (:description this-task))
-         complete    (:complete this-task)
+         complete    (if (some? (:complete this-task))
+                       (:complete this-task)
+                       false)
          category-id (:category-id this-task)]
      (assoc-in db [:view :task-form]
                {:id-or-nil   id

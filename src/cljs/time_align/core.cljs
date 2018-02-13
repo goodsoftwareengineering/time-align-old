@@ -232,7 +232,7 @@
       [ui/divider]
       [ui/list
        (->> periods
-            (map (partial lp/list-item-task current-selection)))]]]))
+            (map (partial lp/list-item-period current-selection)))]]]))
 
 (defn agenda-page []
   (let [selected @(rf/subscribe [:selected])
