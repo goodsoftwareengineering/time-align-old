@@ -181,9 +181,7 @@
                                                         (/ utils/ms-in-day)
                                                         (* cell-height))
 
-                                            :fill (:color p)
-                                            :stroke "#bcbcbc"
-                                            :stroke-width "0.10"}] )))])))
+                                            :fill (:color p)}] )))])))
 
             [:circle {:cx 2 :cy 2.5 :r 1.5 :fill "white"}]
             [:text {:x 2 :y 3
