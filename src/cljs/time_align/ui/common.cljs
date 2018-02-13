@@ -126,8 +126,8 @@
 
 (def svg-consts {:viewBox      "0 0 100 100"
                  ;; :width "90" :height "90" :x "5" :y "5"
-                 :cx           "50" :cy "50" :r "40"
-                 :inner-r      "30"
+                 :cx           "50" :cy "50" :r "45"
+                 :inner-r      "35"
                  :ticker-r     "5"
                  :center-r     "5"                                                                                      ;; TODO might not be used
                  :period-width "10"})

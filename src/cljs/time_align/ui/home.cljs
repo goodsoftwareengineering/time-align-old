@@ -124,22 +124,15 @@
      {:style {:display         "flex"
               :flex-wrap       "wrap"
               :justify-content "center"
-              :align-content   "space-between"
+              :align-content   "flex-start"
               :height          "100%"
               ;; :border "yellow solid 0.1em"
               :box-sizing      "border-box"}}
 
      (app-bar)
 
-     [ui/paper {:style {:width "100%"}}
-      [:div.day-label {:style
-                       {:color (:primary uic/app-theme) :padding "0.01em" :text-align "center"}}
-
-       [:span (jsi/->date-string displayed-day)]]
-
-      [ui/divider {:style {:margin-top    "0"
-                           :margin-bottom "0"}}]
-
+     [ui/paper {:style {:width "100%"
+                        :margin-bottom "3em"}}
       [:div.navigation.zoom
        {:style {:display "flex"
                 :justify-content "space-between"
@@ -148,15 +141,7 @@
        [ui/icon-button
         {:onClick (fn [e]
                     (rf/dispatch [:iterate-displayed-day :prev]))}
-        [ic/image-navigate-before {:color (:primary uic/app-theme)}]
-        ;; TODO style these buttons similar to below
-        ;; [ui/svg-icon
-        ;;  {:viewBox "0 0 50 50" :style {:width "100%" :height "100%"}}
-        ;;  [:polyline {:points       "25,0 0,25 25,50"
-        ;;              :fill         "grey"
-        ;;              :fill-opacity "1"
-        ;;              }]]
-        ]
+        [ic/image-navigate-before {:color (:primary uic/app-theme)}]]
 
        (svg-mui-zoom 1)
        (svg-mui-zoom 4)
@@ -177,47 +162,12 @@
       {:style {:display    "flex"
                :flex       "1 0 100%"
                :max-height "60%"
-               ;; :border "red solid 0.1em"
                :box-sizing "border-box"
                :justify-content "center"
                :align-items "center"
                :flex-direction "column"}}
 
       (day-view/day tasks selected displayed-day)]
-
-     [:div.dashboard
-      {:style {:display    "flex"
-               :flex       "1 0 100%"
-               ;; :border "blue solid 0.1em"
-               :box-sizing "border-box"}}
-      [ui/paper {:style {:width      "100%"
-                         :min-height "10em" ;; keeps the tabs above action
-                                            ;; and from tabs 'jumping' if there
-                                            ;; is no content in other tab
-                                            ;; at least on mobile
-                                            ;; TODO add breakpoint rules
-                         }}
-
-       [ui/divider {:style {:margin-top    "0"
-                            :margin-bottom "0"}}]
-
-       [ui/tabs {:tabItemContainerStyle {:backgroundColor "white"}
-                 :inkBarStyle           {:backgroundColor (:primary uic/app-theme)}
-                 :value                 (name dashboard-tab)
-                 :on-change             (fn [v]
-                                          (rf/dispatch
-                                           [:set-dashboard-tab (keyword v)]))}
-        [ui/tab {:label ""
-                 :icon (r/as-element [ui/svg-icon [ic/action-date-range {:color (:primary uic/app-theme)}]])
-                 :style {:color (:primary uic/app-theme)}
-                 :value "calendar"}
-         (cp/calendar)]
-
-        [ui/tab {:label ""
-                 :icon (r/as-element [ui/svg-icon [ic/editor-format-list-bulleted {:color (:primary uic/app-theme)}]])
-                 :style {:color (:primary uic/app-theme)}
-                 :value "queue"}
-         (qp/queue tasks selected)]]]]
 
      [:div.action-container
       {:style {:position   "fixed"

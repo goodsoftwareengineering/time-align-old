@@ -22,6 +22,10 @@
            {:type :all :color "black"
             :style {:marginRight "0.5em"}})}
 
+   {:href "#/calendar"
+    :icon [ic/action-date-range {:style {:marginRight "0.5em"}}]
+    :label [:span "Calendar"]}
+
    {:href "#/agenda"
     :label [:span "Agenda"]
     :icon [ic/action-view-agenda {:style {:marginRight "0.5em"}}]}
@@ -61,9 +65,7 @@
     :icon [ic/content-save {:style {:marginRight "0.5em"}}]
     :label [:span "Export"]}
 
-   {:href "#/calendar"
-    :icon [ic/action-date-range {:style {:marginRight "0.5em"}}]
-    :label [:span "Calendar"]}])
+   ])
 
 (defn app-bar-option [{:keys [href label icon on-touch-tap child]}]
   [:a (merge (when (some? href)
@@ -77,14 +79,17 @@
     child icon label]])
 
 (defn app-bar []
-  (let [main-drawer-state @(rf/subscribe [:main-drawer-state])]
+  (let [main-drawer-state @(rf/subscribe [:main-drawer-state])
+        displayed-day       @(rf/subscribe [:displayed-day])
+        ]
     [:div.app-bar-container
      {:style {:display    "flex"
               :flex       "1 0 100%"
               ;; :border "green solid 0.1em"
               :box-sizing "border-box"}}
-     [ui/app-bar {:title                    "Time Align"
+     [ui/app-bar {:title       (jsi/->date-string displayed-day)
                   :onLeftIconButtonTouchTap (fn [e] (rf/dispatch [:toggle-main-drawer]))}]
+
      [ui/drawer {:docked             false
                  :open               main-drawer-state
                  :disableSwipeToOpen true

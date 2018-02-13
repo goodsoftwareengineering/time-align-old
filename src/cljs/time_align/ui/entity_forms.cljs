@@ -96,6 +96,9 @@
         name  @(rf/subscribe [:category-form-name])]
 
     [:div
+     (entity-form-buttons [:save-category-form] [:delete-category-form-entity])
+     [ui/divider {:style {:margin-top    "1em"
+                          :margin-bottom "1em"}}]
      [ui/text-field {:floating-label-text "Name"
                      :default-value       name
                      :onChange            (fn [e v]
@@ -114,15 +117,7 @@
       [ui/tab {:label "picker" :style {:color (:primary uic/app-theme)}}
        (standard-color-picker)]
       [ui/tab {:label "slider" :style {:color (:primary uic/app-theme)}}
-       (color-slider color)]]
-
-     [ui/divider {:style {:margin-top    "1em"
-                          :margin-bottom "1em"}}]
-
-     (entity-form-buttons [:save-category-form] [:delete-category-form-entity])]
-
-    )
-  )
+       (color-slider color)]]]))
 
 (defn category-menu-item [category]
   (let [id (str (:id category))]
@@ -166,10 +161,12 @@
         description @(rf/subscribe [:task-form-description])
         complete    @(rf/subscribe [:task-form-complete])
         category-id @(rf/subscribe [:task-form-category-id])
-        categories  @(rf/subscribe [:categories])
-        ]
+        categories  @(rf/subscribe [:categories])]
 
     [:div
+     (entity-form-buttons [:save-task-form] [:delete-task-form-entity])
+     [ui/divider {:style {:margin-top    "1em"
+                          :margin-bottom "1em"}}]
      [ui/text-field {:floating-label-text "Name"
                      :fullWidth           true
                      :default-value       name
@@ -201,8 +198,7 @@
                             category-selection-render
                             categories)
        :onChange          (fn [e, i, v]
-                            (rf/dispatch [:set-task-form-category-id (uuid v)]))
-       }
+                            (rf/dispatch [:set-task-form-category-id (uuid v)]))}
       (->> categories
            (map category-menu-item))]
 
@@ -211,16 +207,7 @@
                    :style      {:marginTop "20"}
                    :checked    complete
                    :onCheck    (fn [e v]
-                                 (rf/dispatch [:set-task-form-complete v]))}]
-
-     [ui/divider {:style {:margin-top    "1em"
-                          :margin-bottom "1em"}}]
-
-     (entity-form-buttons [:save-task-form] [:delete-task-form-entity])
-
-     ]
-    )
-  )
+                                 (rf/dispatch [:set-task-form-complete v]))}]]))
 
 (defn period-form [id]
   (let [desc        @(rf/subscribe [:period-form-description])
@@ -233,6 +220,9 @@
         planned     @(rf/subscribe [:period-form-planned])]
 
     [:div
+     (entity-form-buttons [:save-period-form] [:delete-period-form-entity])
+     [ui/divider {:style {:margin-top    "1em"
+                          :margin-bottom "1em"}}]
      [ui/checkbox {:label      "Planned"
                    :labelStyle {:color (:primary uic/app-theme)}
                    :style      {:marginTop "20"}
@@ -288,8 +278,7 @@
                      :default-value       description
                      :onChange
                                           (fn [e v]
-                                            (rf/dispatch-sync [:set-period-form-description v])
-                                            )}]
+                                            (rf/dispatch-sync [:set-period-form-description v]))}]
 
      [ui/select-field
       ;; select fields get a little strange with the parent entity id's
@@ -307,18 +296,9 @@
                             task-selection-render
                             tasks)
        :onChange          (fn [e, i, v]
-                            (rf/dispatch [:set-period-form-task-id (uuid v)]))
-       }
+                            (rf/dispatch [:set-period-form-task-id (uuid v)]))}
       (->> tasks
-           (map task-menu-item))]
-
-     [ui/divider {:style {:margin-top    "1em"
-                          :margin-bottom "1em"}}]
-
-     (entity-form-buttons [:save-period-form] [:delete-period-form-entity])
-     ]
-    )
-  )
+           (map task-menu-item))]]))
 
 (defn entity-form
   [page-value entity-id]

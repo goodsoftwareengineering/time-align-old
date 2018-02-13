@@ -170,9 +170,13 @@
                                             :height (-> (#(if (> (.getDate (:stop p))
                                                                  this-day-date)
                                                             (merge p {:stop (new js/Date year month this-day-date 23 59 59)})
-                                                            p))
-                                                        (#(.valueOf (:stop %)))
-                                                        (- (.valueOf (:start p)))
+                                                            p)) ;; adjust stop if after today
+                                                        (#(if (< (.getDate (:start p))
+                                                                 this-day-date)
+                                                            (merge p {:start (new js/Date year month this-day-date 0 0 1)})
+                                                            p)) ;; adjust start if before today
+                                                        (#(- (.valueOf (:stop %))
+                                                             (.valueOf (:start %))))
                                                         ;; relative height
                                                         (/ utils/ms-in-day)
                                                         (* cell-height))
