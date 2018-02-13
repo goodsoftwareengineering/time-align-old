@@ -111,13 +111,14 @@
 
 (defn home-page []
   (let [
-        tasks               @(rf/subscribe [:tasks])
-        selected            @(rf/subscribe [:selected])
-        action-button-state @(rf/subscribe [:action-buttons])
-        displayed-day       @(rf/subscribe [:displayed-day])
-        periods             @(rf/subscribe [:periods])
-        period-in-play      @(rf/subscribe [:period-in-play])
-        dashboard-tab       @(rf/subscribe [:dashboard-tab])
+        tasks                @(rf/subscribe [:tasks])
+        selected             @(rf/subscribe [:selected])
+        action-button-state  @(rf/subscribe [:action-buttons])
+        displayed-day        @(rf/subscribe [:displayed-day])
+        periods              @(rf/subscribe [:periods])
+        period-in-play       @(rf/subscribe [:period-in-play])
+        ;; dashboard-tab       @(rf/subscribe [:dashboard-tab])
+        zoom                 @(rf/subscribe [:zoom])
         inline-period-dialog @(rf/subscribe [:inline-period-add-dialog])]
 
     [:div.app-container
@@ -131,12 +132,14 @@
 
      (app-bar)
 
-     [ui/paper {:style {:width "100%"
-                        :margin-bottom "3em"}}
+     [ui/paper {:style (merge {:width "100%"}
+                              (if (nil? zoom)
+                                {:margin-bottom "3em"}
+                                {:margin-bottom "0em"}))}
       [:div.navigation.zoom
-       {:style {:display "flex"
+       {:style {:display         "flex"
                 :justify-content "space-between"
-                :flex-wrap "nowrap"}}
+                :flex-wrap       "nowrap"}}
 
        [ui/icon-button
         {:onClick (fn [e]
@@ -159,13 +162,16 @@
         [ic/image-navigate-next {:color (:primary uic/app-theme)}]]]]
 
      [:div.day-container
-      {:style {:display    "flex"
-               :flex       "1 0 100%"
-               :max-height "60%"
-               :box-sizing "border-box"
-               :justify-content "center"
-               :align-items "center"
-               :flex-direction "column"}}
+      {:style (merge
+               {:display         "flex"
+                :flex            "1 0 100%"
+                ;; :max-height      "60%"
+                :box-sizing      "border-box"
+                :justify-content "center"
+                :align-items     "center"
+                :flex-direction  "column"}
+               (when (some? zoom)
+                 {:height          "100%"}))}
 
       (day-view/day tasks selected displayed-day)]
 
