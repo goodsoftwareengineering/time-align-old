@@ -308,9 +308,10 @@
         sel-id (get-in selected [:current-selection :id-or-nil])
         selected-period (some #(if (= sel-id (:id %)) %) periods)
         no-sel-periods (filter #(not= (:id %) sel-id) periods)
-        sel-last-periods (if (some? sel-id)
-                           (reverse (cons selected-period no-sel-periods))
-                           periods)
+        sel-last-periods (filter cutils/period-has-stamps
+                                 (if (some? sel-id)
+                                   (reverse (cons selected-period no-sel-periods))
+                                   periods))
         ;; dance done
         actual (filter #(not (:planned %)) sel-last-periods)
         planned (filter #(:planned %) sel-last-periods)

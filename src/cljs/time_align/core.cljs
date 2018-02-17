@@ -274,7 +274,7 @@
     [ui/mui-theme-provider
      {:mui-theme (get-mui-theme (aget js/MaterialUIStyles "DarkRawTheme"))}
      [ui/mui-theme-provider
-      {:mui-theme (get-mui-theme {:palette uic/app-theme})}
+      {:mui-theme (get-mui-theme uic/app-theme-with-component-overides)}
       [:div
        (case page-id
          :home              (hp/home-page)

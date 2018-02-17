@@ -120,23 +120,24 @@
   ;; have handler that ticks the clock + resets any "playing" period
   )
 
-
-(def app-theme {
-                ;; TODO merge and refactor primary with primary 1
+(def app-theme {;; TODO merge and refactor primary with primary 1
                 :primary   "#000000"
                 :primary1-color "#000000"
                 :primary2-color "rgba(0,0,0, 0.87)"
                 :primary3-color "rgba(0,0,0, 0.26)"
                 ;; TODO merge and refactor secondary with accent 1
-                :secondary "#e0e0e0"
-                :accent1-color  "#e0e0e0"
+                :secondary "rgba(255,255,255, 0.54)"
+                :accent1-color  "rgba(255,255,255, 0.54)"
                 :accent2-color  "#9e9e9e"
                 :accent3-color  "#757575"
-                :alternate-text-color "#9e9e9e"
+                :alternate-text-color "rgba(255,255,255, 0.9)"
                 :secondary-text-color "rgba(255,255,255, 0.87)"
                 :text-color "#ffffff"
-                :canvas-color "#303030"
+                :canvas-color "#616161"
                 :border-color "rgba(255,255,255,0.3)"})
+
+(def app-theme-with-component-overides {:palette app-theme
+                                        :raised-button {:color "#9e9e9e"}})
 
 (def svg-consts {:viewBox      "0 0 100 100"
                  ;; :width "90" :height "90" :x "5" :y "5"

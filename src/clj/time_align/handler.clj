@@ -2,7 +2,7 @@
   (:require [compojure.core :refer [routes wrap-routes]]
             [time-align.layout :refer [error-page]]
             [time-align.routes.home :refer [home-routes]]
-            [time-align.routes.services :refer [service-routes]]
+            ;; [time-align.routes.services :refer [service-routes]]
             [time-align.routes.oauth :refer [oauth-routes]]
             [compojure.route :as route]
             [time-align.env :refer [defaults]]
@@ -21,7 +21,7 @@
           (wrap-routes middleware/wrap-csrf)
           (wrap-routes middleware/wrap-formats))
           #'oauth-routes
-          #'service-routes
+          ;; #'service-routes ;; TODO compiled jar can't find "resources/graphql/schema.edn" when this is included
       (route/not-found
         (:body
           (error-page {:status 404
