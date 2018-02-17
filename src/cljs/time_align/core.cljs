@@ -272,24 +272,23 @@
   (let [this-page @(rf/subscribe [:page])
         page-id   (:page-id this-page)]
     [ui/mui-theme-provider
-     {:mui-theme (get-mui-theme
-                  {:palette
-                   {:primary1-color (:primary uic/app-theme)
-                    :accent1-color  (:secondary uic/app-theme)}})}
-     [:div
-      (case page-id
-        :home              (hp/home-page)
-        :add-entity-forms  (entity-forms this-page)
-        :edit-entity-forms (entity-forms this-page)
-        :list-categories   (list-categories-page)
-        :list-tasks        (list-tasks-page (:id-or-nil this-page))
-        :list-periods      (list-periods-page (:id-or-nil this-page))
-        :account           (account-page)
-        :agenda            (agenda-page)
-        :queue             (queue-page)
-        :calendar          (calendar-page)
-        ;; default
-        (hp/home-page))]]))
+     {:mui-theme (get-mui-theme (aget js/MaterialUIStyles "DarkRawTheme"))}
+     [ui/mui-theme-provider
+      {:mui-theme (get-mui-theme {:palette uic/app-theme})}
+      [:div
+       (case page-id
+         :home              (hp/home-page)
+         :add-entity-forms  (entity-forms this-page)
+         :edit-entity-forms (entity-forms this-page)
+         :list-categories   (list-categories-page)
+         :list-tasks        (list-tasks-page (:id-or-nil this-page))
+         :list-periods      (list-periods-page (:id-or-nil this-page))
+         :account           (account-page)
+         :agenda            (agenda-page)
+         :queue             (queue-page)
+         :calendar          (calendar-page)
+         ;; default
+         (hp/home-page))]]]))
 
 ;; -------------------------
 ;; Routes

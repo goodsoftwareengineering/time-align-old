@@ -180,7 +180,9 @@
         tomorrow-2-arrow-point-bt  (cutils/polar-to-cartesian
                                      cx cy (+ r (* 0.7 (/ period-width 2))) 355)
         tomorrow-2-arrow-point-bb  (cutils/polar-to-cartesian
-                                    cx cy (- r (* 0.7 (/ period-width 2))) 355)]
+                                    cx cy (- r (* 0.7 (/ period-width 2))) 355)
+        prev-next-stroke "0.15"
+        selected-dash-array "0.5 0.4"]
 
 
     [:g {:key (str id)}
@@ -212,15 +214,15 @@
           [:g
            [:path
             {:d            broken-arc-before
-             :stroke       (:secondary uic/app-theme)
-             :stroke-dasharray "0.25, 0.25"
+             :stroke       (:text-color uic/app-theme)
+             :stroke-dasharray selected-dash-array
              :opacity      opacity
              :stroke-width (* 1.1 period-width)
              :fill         "transparent"}]
            [:path
             {:d            broken-arc-after
-             :stroke       (:secondary uic/app-theme)
-             :stroke-dasharray "0.25, 0.25"
+             :stroke       (:text-color uic/app-theme)
+             :stroke-dasharray selected-dash-array
              :opacity      opacity
              :stroke-width (* 1.1 period-width)
              :fill         "transparent"}]])]
@@ -240,8 +242,8 @@
           [:g
            [:path
             {:d            arc
-             :stroke       "white"
-             :stroke-dasharray "0.20, 0.25"
+             :stroke       (:text-color uic/app-theme)
+             :stroke-dasharray selected-dash-array
              :opacity      "0.7"
              :stroke-width  period-width
              :fill         "transparent"}]])])
@@ -251,37 +253,37 @@
        [:g
         [:polyline {:fill           "transparent"
                     :stroke         "white"
-                    :stroke-width   "0.5"
+                    :stroke-width   prev-next-stroke
                     :stroke-linecap "round"
                     :points         (str
-                                      (:x yesterday-arrow-point-bt) ","
-                                      (:y yesterday-arrow-point-bt) " "
-                                      (:x yesterday-arrow-point) ","
-                                      (:y yesterday-arrow-point) " "
-                                      (:x yesterday-arrow-point-bb) ","
-                                      (:y yesterday-arrow-point-bb) " ")}]
+                                     (:x yesterday-arrow-point-bt) ","
+                                     (:y yesterday-arrow-point-bt) " "
+                                     (:x yesterday-arrow-point) ","
+                                     (:y yesterday-arrow-point) " "
+                                     (:x yesterday-arrow-point-bb) ","
+                                     (:y yesterday-arrow-point-bb) " ")}]
 
         [:polyline {:fill           "transparent"
                     :stroke         "white"
-                    :stroke-width   "0.5"
+                    :stroke-width   prev-next-stroke
                     :stroke-linecap "round"
                     :points         (str
-                                      (:x yesterday-2-arrow-point-bt) ","
-                                      (:y yesterday-2-arrow-point-bt) " "
-                                      (:x yesterday-2-arrow-point) ","
-                                      (:y yesterday-2-arrow-point) " "
-                                      (:x yesterday-2-arrow-point-bb) ","
-                                      (:y yesterday-2-arrow-point-bb) " ")}]])
+                                     (:x yesterday-2-arrow-point-bt) ","
+                                     (:y yesterday-2-arrow-point-bt) " "
+                                     (:x yesterday-2-arrow-point) ","
+                                     (:y yesterday-2-arrow-point) " "
+                                     (:x yesterday-2-arrow-point-bb) ","
+                                     (:y yesterday-2-arrow-point-bb) " ")}]])
 
      ;; tomorrow arrows
      (if stops-tomorrow
        [:g
         [:polyline {:fill           "transparent"
                     :stroke         "white"
-                    :stroke-width   "0.5"
+                    :stroke-width   prev-next-stroke
                     :stroke-linecap "round"
                     :points         (str
-                                      (:x tomorrow-arrow-point-bt) ","
+                                     (:x tomorrow-arrow-point-bt) ","
                                       (:y tomorrow-arrow-point-bt) " "
                                       (:x tomorrow-arrow-point) ","
                                       (:y tomorrow-arrow-point) " "
@@ -290,7 +292,7 @@
 
         [:polyline {:fill           "transparent"
                     :stroke         "white"
-                    :stroke-width   "0.5"
+                    :stroke-width   prev-next-stroke
                     :stroke-linecap "round"
                     :points         (str
                                       (:x tomorrow-2-arrow-point-bt) ","
@@ -414,9 +416,10 @@
                    :id          date-str
                    :xmlns "http://www.w3.org/2000/svg"
                    :version  "1.1"
-                   :style       {:display      "inline-box"
-                                 :touch-action "pinch-zoom"
+                   :style       {
+                                 :display      "inline-box"
                                  ;; this stops scrolling
+                                 :touch-action "pinch-zoom"
                                  ;; for moving period
                                  }
                    :width       "100%"
@@ -438,23 +441,30 @@
                    :onMouseMove (if is-moving-period
                                   (partial handle-period-move
                                            date-str :mouse))
-                   :onClick     deselect
-                   }
+                   :onClick     deselect}
                   (case zoom
                     :q1 {:viewBox "40 0 60 60"}
                     :q2 {:viewBox "0 0 60 60"}
                     :q3 {:viewBox "0 40 60 60"}
                     :q4 {:viewBox "40 40 60 60"}
-                    (select-keys uic/svg-consts [:viewBox])
-                    ))
+                    (select-keys uic/svg-consts [:viewBox])))
 
       shadow-filter
-      [:circle (merge {:fill "#dfdfdf" :filter "url(#shadow-2dp)"}
+      [:circle (merge {:fill (:canvas-color uic/app-theme)
+                       ;; :stroke (:border-color uic/app-theme)
+                       ;; :filter "url(#shadow-2dp)"
+                       }
                       (select-keys uic/svg-consts [:cx :cy :r]))]
-      [:circle (merge {:fill "#ededed" :r (:inner-r uic/svg-consts)}
+      [:circle (merge {:fill (:canvas-color uic/app-theme)
+                       :stroke (:border-color uic/app-theme)
+                       :stroke-width "0.25"
+                       :r (:inner-r uic/svg-consts)}
                       (select-keys uic/svg-consts [:cx :cy]))]
-      [:circle (merge {:fill "#f0f0f0" :r (- (:inner-r uic/svg-consts)
-                                             (:period-width uic/svg-consts))}
+      [:circle (merge {:fill (:canvas-color uic/app-theme)
+                       :stroke (:border-color uic/app-theme)
+                       :stroke-width "0.25"
+                       :r (- (:inner-r uic/svg-consts)
+                             (:period-width uic/svg-consts))}
                       (select-keys uic/svg-consts [:cx :cy]))]
       (when display-ticker
         [:g
@@ -462,7 +472,7 @@
                    :r ".7"
                    :fill (if (some? period-in-play)
                            period-in-play-color
-                           "white")
+                           (:text-color uic/app-theme))
                    :stroke "transparent"}]
          [:line {:fill         "transparent"
                  :stroke-width "1.4"
@@ -478,9 +488,7 @@
                  :y1           (:cy uic/svg-consts)
                  :x2           (:x ticker-pos)
                  :y2           (:y ticker-pos)}]])
-      (periods filtered-periods selected is-moving-period curr-time day)
-
-      ]]))
+      (periods filtered-periods selected is-moving-period curr-time day)]]))
 
 (defn days [days tasks selected-period]
   (->> days

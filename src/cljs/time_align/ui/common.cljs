@@ -121,8 +121,22 @@
   )
 
 
-(def app-theme {:primary   (color :blue-grey-600)
-                :secondary (color :red-500)})
+(def app-theme {
+                ;; TODO merge and refactor primary with primary 1
+                :primary   "#000000"
+                :primary1-color "#000000"
+                :primary2-color "rgba(0,0,0, 0.87)"
+                :primary3-color "rgba(0,0,0, 0.26)"
+                ;; TODO merge and refactor secondary with accent 1
+                :secondary "#e0e0e0"
+                :accent1-color  "#e0e0e0"
+                :accent2-color  "#9e9e9e"
+                :accent3-color  "#757575"
+                :alternate-text-color "#9e9e9e"
+                :secondary-text-color "rgba(255,255,255, 0.87)"
+                :text-color "#ffffff"
+                :canvas-color "#303030"
+                :border-color "rgba(255,255,255,0.3)"})
 
 (def svg-consts {:viewBox      "0 0 100 100"
                  ;; :width "90" :height "90" :x "5" :y "5"

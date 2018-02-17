@@ -64,7 +64,7 @@
 (defn calendar-nav [year month dd-year dd-month]
   (let [honed-in (and (= year dd-year)
                       (= month dd-month))]
-    [:div.navigation
+    [ui/paper
      {:style {:display "flex" :justify-content "space-around"
               :flex-wrap "nowrap" :width "100%"}}
 
@@ -82,6 +82,19 @@
       {:onClick (fn [e] (rf/dispatch [:advance-displayed-month]))}
       [ic/image-navigate-next {:color (:primary uic/app-theme)}]]]))
 
+(def months {:0 "January"
+             :1 "February"
+             :2 "March"
+             :3 "April"
+             :4 "May"
+             :5 "June"
+             :6 "July"
+             :7 "August"
+             :8 "September"
+             :9 "October"
+             :10 "November"
+             :11 "December"})
+
 (defn calendar []
   (let [displayed-day @(rf/subscribe [:displayed-day])
         dd-year (.getFullYear displayed-day)
@@ -95,12 +108,13 @@
 
     [:div
      {:style
-      {:display "flex" :justify-content "center" :flex-wrap "wrap"
-       :margin-top "0.5em"}}
-
-     [:span {:style {:color (:primary uic/app-theme)}} (str year "/" (inc month))]
+      {:display "flex" :justify-content "center" :flex-wrap "wrap"}}
 
      (calendar-nav year month dd-year dd-month)
+
+     [:span {:style {:color (:primary uic/app-theme)
+                     :padding "0.5em"}}
+      (str year " " (get months (keyword (str month))))]
 
      [:svg {:key "calendar-svg"
             :id "calendar-svg"
@@ -136,12 +150,15 @@
                     :y "0"
                     :width cell-width
                     :height cell-height
-                    :fill "white"
+                    :fill (:canvas-color uic/app-theme)
                     :stroke (if this-day-is-today
-                              (:secondary uic/app-theme) ;; TODO should be accent1
-                              (if this-day-is-displayed (:primary uic/app-theme) "#bcbcbc"))
+                              (:primary uic/app-theme)
+                               ;; TODO should be accent1
+                              (if this-day-is-displayed (:secondary uic/app-theme)
+                                  (:border-color uic/app-theme)))
                     ;; TODO grey400 when global styles are in place
-                    :stroke-width (if (or this-day-is-displayed this-day-is-today) "0.25" "0.10")}]
+                    :stroke-width (if (or this-day-is-displayed this-day-is-today)
+                                    "0.50" "0.10")}]
 
             (->> periods
                  (filter cutils/period-has-stamps)
@@ -186,13 +203,14 @@
 
                                             :fill (:color p)}] )))])))
 
-            [:circle {:cx 2 :cy 2.5 :r 1.5 :fill "white"}]
+            [:circle {:cx 2 :cy 2.5 :r 1.5
+                      :fill (:canvas-color uic/app-theme)}]
             [:text {:x 2 :y 3
                     :text-anchor "middle"
                     ;; :stroke "white" :stroke-width "0.1"
                     :font-weight "bold"
-                    :fill "grey" :font-size "2"} (.getDate d)]
-            ]))
+                    :fill (:text-color uic/app-theme)
+                    :font-size "2"} (.getDate d)]]))
 
        days)]]))
 

@@ -9,8 +9,8 @@
 (def app-bar-options
   [{:href "/#"
     :label [:span "Home"]
-    :icon (uic/svg-mui-time-align {:color "black"
-                                   :style {:marginRight "0.5em"}})
+    :icon (uic/svg-mui-time-align {:style {:marginRight "0.5em"}
+                                   :color (:text-color uic/app-theme)})
     :on-touch-tap #(do
                      (rf/dispatch [:set-main-drawer false])
                      (rf/dispatch
@@ -19,7 +19,8 @@
    {:href "#/list/categories"
     :label [:span "List"]
     :icon (uic/svg-mui-entity
-           {:type :all :color "black"
+           {:type :all
+           :color (:text-color uic/app-theme)
             :style {:marginRight "0.5em"}})}
 
    {:href "#/calendar"

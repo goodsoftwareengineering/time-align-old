@@ -16,8 +16,7 @@
 (defn svg-mui-zoom
   "cartesian quadrants go counter clockwise"
   [quadrant]
-  (let [
-        zoom @(rf/subscribe [:zoom])
+  (let [zoom @(rf/subscribe [:zoom])
         d (case quadrant
             1 {:d "M25,25 L25,0  A25,25 0 0 1 47,25 z"}
             2 {:d "M25,25 L25,0  A25,25 0 0 0 3,25 z"}
@@ -31,8 +30,7 @@
               3 :q3
               4 :q4)
         invert (= zoom za)
-        zoom-arg (if (and (some? zoom) invert) nil za)
-        ]
+        zoom-arg (if (and (some? zoom) invert) nil za)]
 
     [ui/icon-button {:onClick (fn [e] (zoom-fn zoom-arg))
                      :style (if invert
@@ -41,10 +39,13 @@
      [ui/svg-icon
       {:viewBox "0 0 50 50" :style {:width "100%" :height "100%"}}
       [:circle {:cx 25 :cy 25 :r 22
-                :fill (if invert (:secondary uic/app-theme) "white")
-                :stroke (if invert "white" (:primary uic/app-theme))
+                :fill (if invert (:secondary uic/app-theme)
+                          (:canvas-color uic/app-theme))
+                :stroke (if invert (:canvas-color uic/app-theme)
+                            (:primary uic/app-theme))
                 :stroke-width "4"}]
-      [:path (merge {:fill (if invert "white" (:primary uic/app-theme))}
+      [:path (merge {:fill (if invert (:canvas-color uic/app-theme)
+                               (:primary uic/app-theme))}
                     d)]]]))
 
 (defn stats-selection [selected periods tasks]
@@ -110,8 +111,7 @@
   )
 
 (defn home-page []
-  (let [
-        tasks                @(rf/subscribe [:tasks])
+  (let [tasks                @(rf/subscribe [:tasks])
         selected             @(rf/subscribe [:selected])
         action-button-state  @(rf/subscribe [:action-buttons])
         displayed-day        @(rf/subscribe [:displayed-day])
@@ -165,11 +165,7 @@
       {:style (merge
                {:display         "flex"
                 :flex            "1 0 100%"
-                ;; :max-height      "60%"
-                :box-sizing      "border-box"
-                :justify-content "center"
-                :align-items     "center"
-                :flex-direction  "column"}
+                :box-sizing      "border-box"}
                (when (some? zoom)
                  {:height          "100%"}))}
 
