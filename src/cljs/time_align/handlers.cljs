@@ -160,10 +160,10 @@
                        :type-or-nil type
                        :id-or-nil   nil}
     :list-tasks      {:page-id page
-                      :type-or-nil type
+                      :type-or-nil :category
                       :id-or-nil id}
     :list-periods    {:page-id page
-                      :type-or-nil type
+                      :type-or-nil :task
                       :id-or-nil id}
     ;;default
     {:page-id     page
