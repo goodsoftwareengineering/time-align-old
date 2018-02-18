@@ -34,18 +34,18 @@
 
     [ui/icon-button {:onClick (fn [e] (zoom-fn zoom-arg))
                      :style (if invert
-                              {:background-color (:secondary uic/app-theme)}
+                              {:background-color (:accent2-color uic/app-theme)}
                               {})}
      [ui/svg-icon
       {:viewBox "0 0 50 50" :style {:width "100%" :height "100%"}}
       [:circle {:cx 25 :cy 25 :r 22
-                :fill (if invert (:secondary uic/app-theme)
+                :fill (if invert (:accent2-color uic/app-theme)
                           (:canvas-color uic/app-theme))
-                :stroke (if invert (:canvas-color uic/app-theme)
-                            (:primary uic/app-theme))
-                :stroke-width "4"}]
-      [:path (merge {:fill (if invert (:canvas-color uic/app-theme)
-                               (:primary uic/app-theme))}
+                :stroke (if invert (:primary1-color uic/app-theme)
+                            (:alternate-text-color uic/app-theme))
+                :stroke-width "5"}]
+      [:path (merge {:fill (if invert (:primary1-color uic/app-theme)
+                               (:alternate-text-color uic/app-theme))}
                     d)]]]))
 
 (defn stats-selection [selected periods tasks]
@@ -135,7 +135,7 @@
      [ui/paper {:style (merge {:width "100%"}
                               (if (nil? zoom)
                                 {:margin-bottom "3em"}
-                                {:margin-bottom "0em"}))}
+                                {:margin-bottom "0.05em"}))}
       [:div.navigation.zoom
        {:style {:display         "flex"
                 :justify-content "space-between"
@@ -144,22 +144,22 @@
        [ui/icon-button
         {:onClick (fn [e]
                     (rf/dispatch [:iterate-displayed-day :prev]))}
-        [ic/image-navigate-before {:color (:primary uic/app-theme)}]]
+        [ic/image-navigate-before {:color (:alternate-text-color uic/app-theme)}]]
 
        (svg-mui-zoom 1)
        (svg-mui-zoom 4)
        [ui/icon-button
         {:onClick (fn [e] (rf/dispatch [:set-displayed-day (new js/Date)]))}
         (if (cutils/same-day? displayed-day (new js/Date))
-          [ic/device-gps-fixed {:color (:primary uic/app-theme)}]
-          [ic/device-gps-not-fixed {:color (:primary uic/app-theme)}])]
+          [ic/device-gps-fixed {:color (:alternate-text-color uic/app-theme)}]
+          [ic/device-gps-not-fixed {:color (:alternate-text-color uic/app-theme)}])]
        (svg-mui-zoom 3)
        (svg-mui-zoom 2)
 
        [ui/icon-button
         {:onClick (fn [e]
                     (rf/dispatch [:iterate-displayed-day :next]))}
-        [ic/image-navigate-next {:color (:primary uic/app-theme)}]]]]
+        [ic/image-navigate-next {:color (:alternate-text-color uic/app-theme)}]]]]
 
      [:div.day-container
       {:style (merge

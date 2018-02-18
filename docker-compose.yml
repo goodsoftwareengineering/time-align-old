@@ -17,6 +17,12 @@ services:
     working_dir: /usr/app/time-align
     command: ["lein", "repl", ":headless", ":host", "0.0.0.0", ":port", "7000"]
 
+    # command: ["lein", "uberjar"] # compile the jar
+
+    # command: ["java", "-jar","target/uberjar/time-align.jar"] # test run the compiled jar locally
+    # environment:
+    #   DATABASE_URL: "postgresql://db/time_align?user=time_align&password=time_align" # needed to test run jar
+
   db:
     image: postgres
     ports:

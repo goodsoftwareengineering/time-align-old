@@ -112,11 +112,10 @@
        [:circle {:cx "500" :cy "500" :r "500" :fill (cutils/color-255->hex color)}]]
       [ui/subheader "Color"]]
 
-     [ui/tabs {:tabItemContainerStyle {:backgroundColor "white"}
-               :inkBarStyle           {:backgroundColor (:primary uic/app-theme)}}
-      [ui/tab {:label "picker" :style {:color (:primary uic/app-theme)}}
+     [ui/tabs 
+      [ui/tab {:label "picker"}
        (standard-color-picker)]
-      [ui/tab {:label "slider" :style {:color (:primary uic/app-theme)}}
+      [ui/tab {:label "slider"}
        (color-slider color)]]]))
 
 (defn category-menu-item [category]

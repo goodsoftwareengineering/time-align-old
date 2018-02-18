@@ -1,40 +1,38 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Welcome to time-align</title>
-</head>
-<body>
-
-  <div id="app">
-    <div class="spinner-container">
-      <!-- ganked from here https://codepen.io/jczimm/pen/vEBpoL?q=loader&limit=all&type=type-pens -->
-      <div class="showbox"
-           style="display:flex;">
-        <div class="loader">
-          <svg class="circular" viewBox="25 25 50 50">
-            <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2" stroke-miterlimit="10"/>
-          </svg>
+  <head>
+    <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Welcome to time-align</title>
+  </head>
+  <body>
+    <!-- loading icon ganked from here
+         https://codepen.io/jczimm/pen/vEBpoL?q=loader&limit=all&type=type-pens -->
+    <div id="app">
+      <div class="spinner-container">
+        <div class="showbox"
+             style="display:flex;">
+          <div class="loader">
+            <svg class="circular" viewBox="25 25 50 50">
+              <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2" stroke-miterlimit="10"/>
+            </svg>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-  </div>
 
-  <!-- scripts and styles -->
-{% style "/assets/font-awesome/css/font-awesome.min.css" %}
-{% style "/css/screen.css" %}
+    <!-- scripts and styles -->
+    {% style "/css/screen.css" %}
 
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons"
-      rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+          rel="stylesheet">
 
-<script type="text/javascript">
-  var context = "{{servlet-context}}";
-  var csrfToken = "{{csrf-token}}";
-</script>
-{% script "/js/app.js" %}
-</body>
+    <script type="text/javascript">
+     var context = "{{servlet-context}}";
+     var csrfToken = "{{csrf-token}}";
+    </script>
+    {% script "/js/app.js" %}
+  </body>
 </html>
 
 

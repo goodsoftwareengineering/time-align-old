@@ -150,8 +150,7 @@
         div-name   (keyword (str "div." page-value "-form"))]
     [:div.entity-form-container
      (app-bar)
-     [div-name {:style {:padding         "0.5em"
-                        :backgroundColor "white"}}
+     [ui/paper {:style {:padding "0.5em"}}
       (ef/entity-form page-value entity-id)]]))
 
 (defn list-categories-page []

@@ -70,17 +70,17 @@
 
      [ui/icon-button
       {:onClick (fn [e] (rf/dispatch [:decrease-displayed-month]))}
-      [ic/image-navigate-before {:color (:primary uic/app-theme)}]]
+      [ic/image-navigate-before {:color (:alternate-text-color uic/app-theme)}]]
 
      [ui/icon-button
       {:onClick (fn [e] (rf/dispatch [:set-displayed-month [dd-year dd-month]]))}
       (if honed-in
-        [ic/device-gps-fixed {:color (:primary uic/app-theme)}]
-        [ic/device-gps-not-fixed {:color (:primary uic/app-theme)}])]
+        [ic/device-gps-fixed {:color (:alternate-text-color uic/app-theme)}]
+        [ic/device-gps-not-fixed {:color (:alternate-text-color uic/app-theme)}])]
 
      [ui/icon-button
       {:onClick (fn [e] (rf/dispatch [:advance-displayed-month]))}
-      [ic/image-navigate-next {:color (:primary uic/app-theme)}]]]))
+      [ic/image-navigate-next {:color (:alternate-text-color uic/app-theme)}]]]))
 
 (def months {:0 "January"
              :1 "February"
@@ -112,7 +112,7 @@
 
      (calendar-nav year month dd-year dd-month)
 
-     [:span {:style {:color (:primary uic/app-theme)
+     [:span {:style {:color (:alternate-text-color uic/app-theme)
                      :padding "0.5em"}}
       (str year " " (get months (keyword (str month))))]
 

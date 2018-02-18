@@ -136,8 +136,14 @@
                 :canvas-color "#616161"
                 :border-color "rgba(255,255,255,0.3)"})
 
-(def app-theme-with-component-overides {:palette app-theme
-                                        :raised-button {:color "#9e9e9e"}})
+(def app-theme-with-component-overides
+  {:palette app-theme
+   :raised-button {:color "#9e9e9e"}
+   :text-field {:hint-color "rgba(0, 0, 0, 0.54)"
+                :floating-label-color "rgba(0, 0, 0, 0.54)"
+                :disabled-text-color "rgba(255, 255, 255, 0.54)"
+                :error-color "#ff8a80"}
+   :snackbar {:background-color (:primary1-color app-theme)}})
 
 (def svg-consts {:viewBox      "0 0 100 100"
                  ;; :width "90" :height "90" :x "5" :y "5"

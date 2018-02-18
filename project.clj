@@ -49,7 +49,7 @@
                  [org.webjars/font-awesome "5.0.2"]
                  [org.webjars/webjars-locator-jboss-vfs "0.1.0"] ;; ported from old luminus version kept it because i dont' know what it is
                  [re-frame "0.10.2"]
-                 [reagent "0.7.0"]
+                 [reagent "0.7.0" :exclusions [cljsjs/react cljsjs/react-dom]]
                  [reagent-utils "0.2.1"]
                  [reanimated "0.5.1"] ;; TODO: don't know if we need this
                  [ring-webjars "0.2.0"]
@@ -111,8 +111,7 @@
                                :output-to     "target/cljsbuild/public/js/worker.js"
                                :optimizations :advanced
                                :pretty-print  false}}}}
-             
-             
+
              :aot :all
              :uberjar-name "time-align.jar"
              :source-paths ["env/prod/clj"]
@@ -157,9 +156,7 @@
                      :compiler     {:output-to     "target/cljsbuild/public/js/worker.js"
                                     :output-dir    "target/cljsbuild/public/js/out_worker"
                                     :source-map    true
-                                    :optimizations :none}
-                     }
-                    }}
+                                    :optimizations :none}}}}
 
                   :doo {:build "test"}
                   :source-paths ["env/dev/clj"]
@@ -178,8 +175,6 @@
                      {:output-to "target/test.js"
                       :main "time-align.doo-runner"
                       :optimizations :whitespace
-                      :pretty-print true}}}}
-                  
-                  }
+                      :pretty-print true}}}}}
    :profiles/dev {}
    :profiles/test {}})
