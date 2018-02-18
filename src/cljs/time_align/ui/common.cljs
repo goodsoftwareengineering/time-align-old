@@ -147,8 +147,8 @@
 (def converted-js-mui-theme-palette (convert-js-mui-theme json-string-mui-theme-palette))
 (def app-theme (merge converted-js-mui-theme-palette
                       {;; TODO refactor primary & secondary
-                       :primary   (:primary1-color converted-js-mui-theme-palette)
-                       :secondary (:accent1-color converted-js-mui-theme-palette)}))
+                       :primary   (:primary-1-color converted-js-mui-theme-palette)
+                       :secondary (:accent-1-color converted-js-mui-theme-palette)}))
 
 (def app-theme-with-component-overides
   (merge {:palette app-theme}

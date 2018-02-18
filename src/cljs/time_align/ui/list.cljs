@@ -30,9 +30,20 @@
 
                 ;; otherwise render a queue indicator
                 {:leftIcon (r/as-element
-                            [ui/svg-icon [ic/action-list {:color color}]])}))]))
+                            [ui/svg-icon [ic/action-list {:color color}]])})
 
-(defn list-item-task [current-selection show-sub-directory task]
+              {:rightIconButton (r/as-element
+                                 [ui/icon-button
+                                  {:onClick
+                                   (fn [e]
+                                     ;; mui docs say we don't need this
+                                     (jsi/stop-propagation e)
+                                     ;; but we really do (at least on mobile)
+                                     (hist/nav! (str "/edit/period/" id)))}
+                                  [ic/editor-mode-edit
+                                   {:color (:primary uic/app-theme)}]])})]))
+
+(defn list-item-task [current-selection not-parent task]
   (let [{:keys [id name periods complete color]} task
         sel-id            (:id-or-nil current-selection)
         number-of-periods (count periods)
@@ -48,20 +59,22 @@
                                      :iconStyle {:fill color}}])
        :style         (if is-selected {:backgroundColor "#ededed"})
        :onClick       (fn [e]
-                        (hist/nav! (str "/edit/task/" id)))}
-      (when show-sub-directory
-        {:rightIconButton (r/as-element
-                           [ui/icon-button
-                            {:onClick
-                             (fn [e]
-                               ;; mui docs say we don't need this
-                               (jsi/stop-propagation e)
-                               ;; but we really do (at least on mobile)
-                               (hist/nav! (str "/list/periods/" id)))}
-                            [ic/navigation-subdirectory-arrow-right
-                             {:color (:primary uic/app-theme)}]])}))]))
+                        (if not-parent
+                          (hist/nav! (str "/list/periods/" id))
+                          (hist/nav! (str "/list/tasks/" (:category-id task)))))}
 
-(defn list-item-category [current-selection show-sub-directory category]
+      {:rightIconButton (r/as-element
+                         [ui/icon-button
+                          {:onClick
+                           (fn [e]
+                             ;; mui docs say we don't need this
+                             (jsi/stop-propagation e)
+                             ;; but we really do (at least on mobile)
+                             (hist/nav! (str "/edit/task/" id)))}
+                          [ic/editor-mode-edit
+                           {:color (:primary uic/app-theme)}]])})]))
+
+(defn list-item-category [current-selection not-parent category]
   (let [{:keys [id name color tasks]} category
         sel-id                 (:id-or-nil current-selection)
         is-selected            (= id sel-id)
@@ -75,14 +88,16 @@
                    :leftIcon        (r/as-element (uic/svg-mui-circle color))
                    :style           (if is-selected {:backgroundColor "#ededed"})
                    :onClick         (fn [e]
-                                      (hist/nav! (str "/edit/category/" id)))}
-                   (when show-sub-directory
-                     {:rightIconButton (r/as-element [ui/icon-button
-                                                      {:onClick
-                                                       (fn [e]
-                                                         ;; mui docs say we don't need this
-                                                         (jsi/stop-propagation e)
-                                                         ;; but we really do (at least on mobile)
-                                                         (hist/nav! (str "/list/tasks/" id)))}
-                                                      [ic/navigation-subdirectory-arrow-right
-                                                       {:color (:primary uic/app-theme)}]])}))]))
+                                      (if not-parent
+                                        (hist/nav! (str "/list/tasks/" id))
+                                        (hist/nav! "/list/categories")))}
+
+                   {:rightIconButton (r/as-element [ui/icon-button
+                                                    {:onClick
+                                                     (fn [e]
+                                                       ;; mui docs say we don't need this
+                                                       (jsi/stop-propagation e)
+                                                       ;; but we really do (at least on mobile)
+                                                       (hist/nav! (str "/edit/category/" id)))}
+                                                    [ic/editor-mode-edit
+                                                     {:color (:primary uic/app-theme)}]])})]))

@@ -34,17 +34,17 @@
 
     [ui/icon-button {:onClick (fn [e] (zoom-fn zoom-arg))
                      :style (if invert
-                              {:background-color (:accent2-color uic/app-theme)}
+                              {:background-color (:accent-2-color uic/app-theme)}
                               {})}
      [ui/svg-icon
       {:viewBox "0 0 50 50" :style {:width "100%" :height "100%"}}
       [:circle {:cx 25 :cy 25 :r 22
-                :fill (if invert (:accent2-color uic/app-theme)
+                :fill (if invert (:accent-2-color uic/app-theme)
                           (:canvas-color uic/app-theme))
-                :stroke (if invert (:primary1-color uic/app-theme)
+                :stroke (if invert (:primary-1-color uic/app-theme)
                             (:alternate-text-color uic/app-theme))
                 :stroke-width "5"}]
-      [:path (merge {:fill (if invert (:primary1-color uic/app-theme)
+      [:path (merge {:fill (if invert (:primary-1-color uic/app-theme)
                                (:alternate-text-color uic/app-theme))}
                     d)]]]))
 

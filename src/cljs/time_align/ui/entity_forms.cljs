@@ -161,21 +161,18 @@
      (entity-form-buttons [:save-task-form] [:delete-task-form-entity])
      [ui/divider {:style {:margin-top    "1em"
                           :margin-bottom "1em"}}]
+     [ui/checkbox {:label      "complete"
+                   :labelStyle {:color (:primary uic/app-theme)}
+                   :style      {:marginTop "20"}
+                   :checked    complete
+                   :onCheck    (fn [e v]
+                                 (rf/dispatch [:set-task-form-complete v]))}]
+
      [ui/text-field {:floating-label-text "Name"
                      :fullWidth           true
                      :default-value       name
                      :onChange            (fn [e v]
-                                 (rf/dispatch-sync [:set-task-form-name v])
-                                 )}]
-
-     [ui/text-field {:floating-label-text "Description"
-                     :fullWidth           true
-                     :multiLine           true
-                     :rows                4
-                     :default-value       description
-                     :onChange            (fn [e v]
-                                 (rf/dispatch-sync [:set-task-form-description v])
-                                 )}]
+                                 (rf/dispatch-sync [:set-task-form-name v]))}]
 
      [ui/select-field
       ;; select fields get a little strange with the parent entity id's
@@ -189,19 +186,20 @@
        :autoWidth         true
        :fullWidth         true
        :selectionRenderer (partial
-                            category-selection-render
-                            categories)
+                           category-selection-render
+                           categories)
        :onChange          (fn [e, i, v]
                             (rf/dispatch [:set-task-form-category-id (uuid v)]))}
       (->> categories
            (map category-menu-item))]
 
-     [ui/checkbox {:label      "complete"
-                   :labelStyle {:color (:primary uic/app-theme)}
-                   :style      {:marginTop "20"}
-                   :checked    complete
-                   :onCheck    (fn [e v]
-                                 (rf/dispatch [:set-task-form-complete v]))}]]))
+     [ui/text-field {:floating-label-text "Description"
+                     :fullWidth           true
+                     :multiLine           true
+                     :rows                4
+                     :default-value       description
+                     :onChange            (fn [e v]
+                                 (rf/dispatch-sync [:set-task-form-description v]))}]]))
 
 (defn period-form [id]
   (let [desc        @(rf/subscribe [:period-form-description])
@@ -223,6 +221,26 @@
                    :checked    planned
                    :onCheck    (fn [e v]
                                  (rf/dispatch [:set-period-form-planned v]))}]
+     [ui/select-field
+      ;; select fields get a little strange with the parent entity id's
+      ;; this goes for tasks and periods
+      ;; the value stored on the mui element is a string conversion of the uuid
+      ;; the value stored in the app-db form is of uuid type
+      ;; function for the renderer, in this select field element, takes in a string id
+      ;; but converts it to uuid type before comparing to the collection
+      {:value             (str task-id)
+       :floatingLabelText "Task"
+       :autoWidth         true
+       :fullWidth         true
+       :errorText         (if (= :no-task error) "Must Select Task")
+       :selectionRenderer (partial
+                           task-selection-render
+                           tasks)
+       :onChange          (fn [e, i, v]
+                            (rf/dispatch [:set-period-form-task-id (uuid v)]))}
+      (->> tasks
+           (map task-menu-item))]
+
      [ui/subheader "Start"]
 
      (if (= :time-mismatch error)
@@ -272,27 +290,7 @@
                      :default-value       description
                      :onChange
                                           (fn [e v]
-                                            (rf/dispatch-sync [:set-period-form-description v]))}]
-
-     [ui/select-field
-      ;; select fields get a little strange with the parent entity id's
-      ;; this goes for tasks and periods
-      ;; the value stored on the mui element is a string conversion of the uuid
-      ;; the value stored in the app-db form is of uuid type
-      ;; function for the renderer, in this select field element, takes in a string id
-      ;; but converts it to uuid type before comparing to the collection
-      {:value             (str task-id)
-       :floatingLabelText "Task"
-       :autoWidth         true
-       :fullWidth         true
-       :errorText         (if (= :no-task error) "Must Select Task")
-       :selectionRenderer (partial
-                            task-selection-render
-                            tasks)
-       :onChange          (fn [e, i, v]
-                            (rf/dispatch [:set-period-form-task-id (uuid v)]))}
-      (->> tasks
-           (map task-menu-item))]]))
+                                            (rf/dispatch-sync [:set-period-form-description v]))}]]))
 
 (defn entity-form
   [page-value entity-id]
