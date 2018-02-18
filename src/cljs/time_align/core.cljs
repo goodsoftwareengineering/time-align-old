@@ -185,23 +185,26 @@
         selected          @(rf/subscribe [:selected])
         current-selection (:current-selection selected)]
 
-    [:div
-     (app-bar)
-     [ui/paper {:style {:width "100%"}}
-      (lp/list-item-category current-selection false parent-category)
-      [ui/divider]
-      [ui/raised-button {:key               (str "add-task-for-category-" id)
-                         :href              (str "#/add/task" ) ;; TODO use query params to fill in category
-                         :label "Add Task"
-                         :background-color (:primary uic/app-theme)
-                         :label-color      "white"
-                         :style            {:margin-top "1em"
-                                            :margin-left "2em"
-                                            :margin-bottom "1em"}}]
-      [ui/divider]
-      [ui/list
-       (->> tasks
-            (map (partial lp/list-item-task true current-selection)))]]]))
+    (if (nil? parent-category)
+      [:div (app-bar) [ui/paper {:style {:width "100%"}}
+                       [ui/subheader "No Category by that name :("]]]
+      [:div
+       (app-bar)
+       [ui/paper {:style {:width "100%"}}
+        (lp/list-item-category current-selection false parent-category)
+        [ui/divider]
+        [ui/raised-button {:key               (str "add-task-for-category-" id)
+                           :href              (str "#/add/task" ) ;; TODO use query params to fill in category
+                           :label "Add Task"
+                           :background-color (:primary uic/app-theme)
+                           :label-color      "white"
+                           :style            {:margin-top "1em"
+                                              :margin-left "2em"
+                                              :margin-bottom "1em"}}]
+        [ui/divider]
+        [ui/list
+         (->> tasks
+              (map (partial lp/list-item-task true current-selection)))]]])))
 
 (defn list-periods-page [id]
   (let [categories        @(rf/subscribe [:categories])
@@ -217,25 +220,28 @@
         selected          @(rf/subscribe [:selected])
         current-selection (:current-selection selected)]
 
-    [:div
-     (app-bar)
-     [ui/paper {:style {:width "100%"}}
-      (lp/list-item-category current-selection false parent-category)
-      [ui/divider]
-      (lp/list-item-task current-selection false parent-task)
-      [ui/divider]
-      [ui/raised-button {:key               (str "add-period-for-task-" id)
-                         :href              (str "#/add/period" ) ;; TODO use query params to fill in category
-                         :label "Add Period"
-                         :background-color (:primary uic/app-theme)
-                         :label-color      "white"
-                         :style            {:margin-top "1em"
-                                            :margin-left "2em"
-                                            :margin-bottom "1em"}}]
-      [ui/divider]
-      [ui/list
-       (->> periods
-            (map (partial lp/list-item-period current-selection)))]]]))
+    (if (nil? parent-task)
+      [:div (app-bar) [ui/paper {:style {:width "100%"}}
+                       [ui/subheader "No Task by that name :("]]]
+      [:div
+       (app-bar)
+       [ui/paper {:style {:width "100%"}}
+        (lp/list-item-category current-selection false parent-category)
+        [ui/divider]
+        (lp/list-item-task current-selection false parent-task)
+        [ui/divider]
+        [ui/raised-button {:key               (str "add-period-for-task-" id)
+                           :href              (str "#/add/period" ) ;; TODO use query params to fill in category
+                           :label "Add Period"
+                           :background-color (:primary uic/app-theme)
+                           :label-color      "white"
+                           :style            {:margin-top "1em"
+                                              :margin-left "2em"
+                                              :margin-bottom "1em"}}]
+        [ui/divider]
+        [ui/list
+         (->> periods
+              (map (partial lp/list-item-period current-selection)))]]])))
 
 (defn agenda-page []
   (let [selected @(rf/subscribe [:selected])
