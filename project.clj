@@ -50,6 +50,7 @@
                  [org.webjars/font-awesome "5.0.2"]
                  [org.webjars/webjars-locator-jboss-vfs "0.1.0"] ;; ported from old luminus version kept it because i dont' know what it is
                  [re-frame "0.10.2"]
+                 [re-learn "0.1.1"]
                  [reagent "0.7.0" :exclusions [cljsjs/react cljsjs/react-dom]]
                  [reagent-utils "0.2.1"]
                  [reanimated "0.5.1"] ;; TODO: don't know if we need this

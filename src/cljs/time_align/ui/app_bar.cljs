@@ -1,6 +1,7 @@
 (ns time-align.ui.app-bar
   (:require [re-frame.core :as rf]
             [time-align.ui.common :as uic]
+            [reagent.core :as r]
             [oops.core :refer [oget oset!]]
             [cljs-react-material-ui.reagent :as ui]
             [cljs-react-material-ui.icons :as ic]
@@ -18,6 +19,7 @@
 
    {:href "#/list/categories"
     :label [:span "List"]
+    :id "list-menu-item"
     :icon (uic/svg-mui-entity
            {:type :all
            :color (:text-color uic/app-theme)
@@ -68,9 +70,11 @@
 
    ])
 
-(defn app-bar-option [{:keys [href label icon on-touch-tap child]}]
+(defn app-bar-option [{:keys [href label icon on-touch-tap child id]}]
   [:a (merge (when (some? href)
                {:href href})
+             (when (some? id)
+               {:id id})
              {:key label
               :style {:text-decoration "none"}})
    [ui/menu-item (merge
@@ -81,14 +85,23 @@
 
 (defn app-bar []
   (let [main-drawer-state @(rf/subscribe [:main-drawer-state])
-        displayed-day       @(rf/subscribe [:displayed-day])
-        ]
+        displayed-day       @(rf/subscribe [:displayed-day])]
+
     [:div.app-bar-container
      {:style {:display    "flex"
               :flex       "1 0 100%"
               ;; :border "green solid 0.1em"
               :box-sizing "border-box"}}
      [ui/app-bar {:title       (jsi/->date-string displayed-day)
+                  :icon-element-left (r/as-element
+                                      [:div#menu-button
+                                       [ui/svg-icon
+                                        [ic/navigation-menu
+                                         {:color (:text-color uic/app-theme)}]]])
+                  :icon-style-left {:display "flex"
+                                    :height "100%"
+                                    :margin-top "none"
+                                    :align-items "center"}
                   :onLeftIconButtonTouchTap (fn [e] (rf/dispatch [:toggle-main-drawer]))}]
 
      [ui/drawer {:docked             false

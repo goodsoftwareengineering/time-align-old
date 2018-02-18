@@ -1,6 +1,7 @@
 (ns time-align.ui.home
   (:require [re-frame.core :as rf]
             [reagent.core :as r]
+            [re-learn.core :as re-learn]
             [time-align.ui.svg-day-view :as day-view]
             [time-align.ui.app-bar :as ab :refer [app-bar]]
             [time-align.ui.queue :as qp]

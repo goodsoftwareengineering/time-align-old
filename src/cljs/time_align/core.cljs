@@ -5,6 +5,8 @@
             [cljs-react-material-ui.reagent :as ui]
             [cljs-react-material-ui.icons :as ic]
             [re-frame.core :as rf]
+            [re-learn.core :as re-learn]
+            [re-learn.views :as re-learn-views]
             [reanimated.core :as anim]
             [secretary.core :as secretary]
             [markdown.core :refer [md->html]]
@@ -19,6 +21,7 @@
             [time-align.subscriptions]
             [clojure.string :as string]
             [time-align.client-utilities :as cutils]
+            [time-align.tutorials :as tuts]
             [goog.string.format]
             [time-align.utilities :as utils]
             [oops.core :refer [oget oset!]]
@@ -162,6 +165,7 @@
      (app-bar)
      [ui/paper {:style {:width "100%"}}
       [ui/raised-button {:href             "#/add/category" :label "Add Category"
+                         :id "add-category-button"
                          :background-color (:primary uic/app-theme)
                          :label-color "white"
                          :style            {:margin-top    "1em"
@@ -267,27 +271,30 @@
    [ui/paper {:style {:width "100%"}}
     (cp/calendar)]])
 
-(defn page []
-  (let [this-page @(rf/subscribe [:page])
-        page-id   (:page-id this-page)]
-    [ui/mui-theme-provider
-     {:mui-theme (get-mui-theme (aget js/MaterialUIStyles "DarkRawTheme"))}
-     [ui/mui-theme-provider
-      {:mui-theme (get-mui-theme uic/app-theme-with-component-overides)}
-      [:div
-       (case page-id
-         :home              (hp/home-page)
-         :add-entity-forms  (entity-forms this-page)
-         :edit-entity-forms (entity-forms this-page)
-         :list-categories   (list-categories-page)
-         :list-tasks        (list-tasks-page (:id-or-nil this-page))
-         :list-periods      (list-periods-page (:id-or-nil this-page))
-         :account           (account-page)
-         :agenda            (agenda-page)
-         :queue             (queue-page)
-         :calendar          (calendar-page)
-         ;; default
-         (hp/home-page))]]]))
+(def page
+  (re-learn/with-tutorial
+    tuts/main-tutorial
+    (fn []
+      (let [this-page @(rf/subscribe [:page])
+            page-id   (:page-id this-page)]
+        [ui/mui-theme-provider
+         {:mui-theme (get-mui-theme (aget js/MaterialUIStyles "DarkRawTheme"))}
+         [ui/mui-theme-provider
+          {:mui-theme (get-mui-theme uic/app-theme-with-component-overides)}
+          [:div
+           (case page-id
+             :home              (hp/home-page)
+             :add-entity-forms  (entity-forms this-page)
+             :edit-entity-forms (entity-forms this-page)
+             :list-categories   (list-categories-page)
+             :list-tasks        (list-tasks-page (:id-or-nil this-page))
+             :list-periods      (list-periods-page (:id-or-nil this-page))
+             :account           (account-page)
+             :agenda            (agenda-page)
+             :queue             (queue-page)
+             :calendar          (calendar-page)
+             ;; default
+             (hp/home-page))]]]))))
 
 ;; -------------------------
 ;; Routes
@@ -348,12 +355,15 @@
 
 (defn mount-components []
   (rf/clear-subscription-cache!)
-  (r/render [#'page] (jsi/get-element-by-id "app")))
+  (r/render [page] (jsi/get-element-by-id "app"))
+  (r/render [re-learn-views/tutorial {:context? true}]
+            (jsi/get-element-by-id "tutorial")))
 
 (defn init! []
   (rf/dispatch-sync [:initialize-db])
   (load-interceptors!)
   (hist/hook-browser-navigation!)
+  (re-learn/init)
   (mount-components)
   (js/setInterval uic/clock-tick 5000) ;; TODO this is bad
   )
