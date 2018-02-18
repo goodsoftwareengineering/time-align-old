@@ -2,6 +2,7 @@
   (:require [cljs-react-material-ui.reagent :as ui]
             [cljs-react-material-ui.core :refer [get-mui-theme color]]
             [reagent.core :as r]
+            [camel-snake-kebab.core :refer [->kebab-case]]
             [re-frame.core :as rf]
             [time-align.client-utilities :as cutils]
             [clojure.string :as string]
@@ -120,30 +121,38 @@
   ;; have handler that ticks the clock + resets any "playing" period
   )
 
-(def app-theme {;; TODO merge and refactor primary with primary 1
-                :primary   "#000000"
-                :primary1-color "#000000"
-                :primary2-color "rgba(0,0,0, 0.87)"
-                :primary3-color "rgba(0,0,0, 0.26)"
-                ;; TODO merge and refactor secondary with accent 1
-                :secondary "rgba(255,255,255, 0.54)"
-                :accent1-color  "rgba(255,255,255, 0.54)"
-                :accent2-color  "#9e9e9e"
-                :accent3-color  "#757575"
-                :alternate-text-color "rgba(255,255,255, 0.9)"
-                :secondary-text-color "rgba(255,255,255, 0.87)"
-                :text-color "#ffffff"
-                :canvas-color "#616161"
-                :border-color "rgba(255,255,255,0.3)"})
+;; from here https://cimdalli.github.io/mui-theme-generator/
+;; take export
+;; JSON.stringinfy(export)
+;; /s/"/\\"/g
+;; surround with final "
+;; paste here
+(def json-string-mui-theme-palette
+  (str "{\"primary1Color\":\"#607d8b\",\"primary2Color\":\"#78909c\",\"primary3Color\":\"#90a4ae\",\"accent1Color\":\"#e91e63\",\"accent2Color\":\"#d81b60\",\"accent3Color\":\"#90a4ae\",\"alternateTextColor\":\"#cfd8dc\",\"secondaryTextColor\":\"#607d8b\",\"textColor\":\"#ffffff\",\"canvasColor\":\"#263238\",\"borderColor\":\"#cfd8dc\",\"disabledColor\":\"#b0bec5\",\"pickerHeaderColor\":\"#90a4ae\",\"clockCircleColor\":\"#607d8b\",\"shadowColor\":\"#212121\"}"))
+(def json-string-mui-theme-overides
+  (str "{\"snackbar\":{\"backgroundColor\":\"#546e7a\",\"actionColor\":\"#263238\"},\"raisedButton\":{\"color\":\"#546e7a\",\"disabledColor\":\"#455a64\"},\"tableRow\":{\"selectedColor\":\"#455a64\"},\"toggle\":{\"thumbOffColor\":\"#455a64\",\"thumbOnColor\":\"#90a4ae\",\"trackOnColor\":\"rgba(120, 144, 156, 0.5)\",\"trackDisabledColor\":\"#37474f\",\"thumbDisabledColor\":\"#37474f\",\"trackOffColor\":\"#455a64\",\"thumbRequiredColor\":\"#78909c\"},\"slider\":{\"trackColor\":\"#607d8b\",\"trackColorSelected\":\"#b0bec5\",\"selectionColor\":\"#e91e63\"},\"timePicker\":{\"clockColor\":\"#37474f\",\"clockCircleColor\":\"#455a64\"}}" ))
+
+(defn convert-js-mui-theme [string]
+  (->> string
+       (.parse js/JSON)
+       (js->clj)
+       (seq)
+       (reduce
+        (fn [m [k v]]
+          (merge m {(-> k
+                        (->kebab-case)
+                        (keyword))
+                    v})) {})))
+
+(def converted-js-mui-theme-palette (convert-js-mui-theme json-string-mui-theme-palette))
+(def app-theme (merge converted-js-mui-theme-palette
+                      {;; TODO refactor primary & secondary
+                       :primary   (:primary1-color converted-js-mui-theme-palette)
+                       :secondary (:accent1-color converted-js-mui-theme-palette)}))
 
 (def app-theme-with-component-overides
-  {:palette app-theme
-   :raised-button {:color "#9e9e9e"}
-   :text-field {:hint-color "rgba(0, 0, 0, 0.54)"
-                :floating-label-color "rgba(0, 0, 0, 0.54)"
-                :disabled-text-color "rgba(255, 255, 255, 0.54)"
-                :error-color "#ff8a80"}
-   :snackbar {:background-color (:primary1-color app-theme)}})
+  (merge {:palette app-theme}
+         (convert-js-mui-theme json-string-mui-theme-overides)))
 
 (def svg-consts {:viewBox      "0 0 100 100"
                  ;; :width "90" :height "90" :x "5" :y "5"

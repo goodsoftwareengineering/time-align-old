@@ -7,6 +7,7 @@
                  [alandipert/storage-atom "2.0.1"]
                  [binaryage/oops "0.5.6"]
                  [buddy "2.0.0"]
+                 [camel-snake-kebab "0.4.0"]
                  [ch.qos.logback/logback-classic "1.2.3"]
                  [cider/cider-nrepl "0.15.1"]
                  [clj-oauth "1.5.4"]

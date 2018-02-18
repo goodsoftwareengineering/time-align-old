@@ -24,8 +24,7 @@
                           (js->clj)
                           (keys)
                           (filter (fn [c] (some? (re-find #"500" c))))
-                          (map (fn [c] (color (keyword c))))
-                          ))
+                          (map (fn [c] (color (keyword c))))))
 
 (defn standard-color-picker []
   [:div.colors {:style {:display         "flex"
@@ -73,23 +72,19 @@
                          :margin-top      "1em"
                          }}
 
-   [ui/flat-button {:icon            (r/as-element [ic/action-delete-forever uic/basic-ic])
-                    :backgroundColor (:secondary uic/app-theme)
-                    :onTouchTap      (fn [e]
-                                       (rf/dispatch delete-dispatch-vec)
-                                       )}]
+   [ui/raised-button {:icon            (r/as-element
+                                        [ic/action-delete-forever uic/basic-ic])
+                      :secondary true
+                      :onTouchTap      (fn [e]
+                                         (rf/dispatch delete-dispatch-vec))}]
 
-   [ui/flat-button {:icon            (r/as-element [ic/navigation-cancel uic/basic-ic])
-                    :backgroundColor "grey"
-                    :onTouchTap      (fn [e]
-                                       (jsi/back! js/history)
-                                       )}]
-   [ui/flat-button {:icon            (r/as-element [ic/content-save uic/basic-ic])
-                    :backgroundColor (:primary uic/app-theme)
-                    :onTouchTap      (fn [e]
-                                       (rf/dispatch save-dispatch-vec)
-                                       )}]
-   ])
+   [ui/raised-button {:icon            (r/as-element [ic/navigation-cancel uic/basic-ic])
+                      :onTouchTap      (fn [e]
+                                       (jsi/back! js/history))}]
+   [ui/raised-button {:icon            (r/as-element [ic/content-save uic/basic-ic])
+                      :primary true
+                      :onTouchTap      (fn [e]
+                                         (rf/dispatch save-dispatch-vec))}]])
 
 (defn category-form [id]
   (let [color @(rf/subscribe [:category-form-color])
