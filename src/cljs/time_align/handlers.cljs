@@ -34,6 +34,8 @@
 ;;  :queue     <a collection of further interceptors>
 ;;  :stack     <a collection of interceptors already walked> }
 
+(defonce local-storage-atom (atom db/default-db))
+
 (defn set-nil-tasks-to-empty [db]
   ;; save-period-form describes why this and function below are needed
   (specter/setval
@@ -50,11 +52,14 @@
   (->interceptor
    :id :persist-to-localstorage
    :after (fn [context]
-            (remove-local-storage! :app-db)
-            (local-storage (-> context
-                               (get-in [:effects :db])
-                               atom)
-                           :app-db)
+            ;; (remove-local-storage! :app-db)
+            ;; (local-storage (-> context
+            ;;                    (get-in [:effects :db])
+            ;;                    atom)
+            ;;                :app-db)
+            (.log js/console context)
+            (reset! local-storage-atom
+                    (get-in context [:effects :db]))
             context)))
 
 (def route
@@ -139,12 +144,7 @@
           (time-align.worker-handlers/init! (js/Worker. worker-src-url))))
 
 (defn initialize-db [cofx _]
-  (let [initial-db (if (some #(= :app-db %) (store/store->keys))
-                              (->> :app-db
-                                   store/key->transit-str
-                                   (.getItem js/localStorage)
-                                   store/transit-json->map)
-                              db/default-db)]
+  (let [initial-db @(local-storage local-storage-atom :app-db)]
     {:db initial-db
      :init-worker (if js/goog.DEBUG "/bootstrap_worker.js" "js/worker.js") }))
 
