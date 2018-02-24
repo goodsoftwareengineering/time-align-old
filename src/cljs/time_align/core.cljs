@@ -279,7 +279,13 @@
 
 (def page
   (re-learn/with-tutorial
-    tuts/main-tutorial
+    {:id :intro-tutorial
+     :name "Time Align"
+     :description "Align planning and doing."
+     :precedence 1
+     :lessons [tuts/hello-lesson
+               hp/home-page
+               tuts/good-bye-lesson]}
     (fn []
       (let [this-page @(rf/subscribe [:page])
             page-id   (:page-id this-page)]
@@ -289,7 +295,7 @@
           {:mui-theme (get-mui-theme uic/app-theme-with-component-overides)}
           [:div
            (case page-id
-             :home              (hp/home-page)
+             :home              [hp/home-page]
              :add-entity-forms  (entity-forms this-page)
              :edit-entity-forms (entity-forms this-page)
              :list-categories   (list-categories-page)

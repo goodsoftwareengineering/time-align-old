@@ -111,7 +111,7 @@
     )
   )
 
-(defn home-page []
+(defn home-page-comp []
   (let [tasks                @(rf/subscribe [:tasks])
         selected             @(rf/subscribe [:selected])
         action-button-state  @(rf/subscribe [:action-buttons])
@@ -181,3 +181,11 @@
                ;; :border "green solid 0.1em"
                :box-sizing "border-box"}}
       (actb/action-buttons action-button-state selected period-in-play)]]))
+
+(def home-page
+  (re-learn/with-lesson
+    {:id :home-page-lesson
+     :description "This is the home page. It displays a day with two tracks -- planned and actual."
+     :position :unattached}
+
+    home-page-comp))
