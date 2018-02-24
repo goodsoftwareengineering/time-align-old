@@ -377,7 +377,7 @@
                                                   (println "start the inline period add!")
                                                   (rf/dispatch [:set-inline-period-add-dialog
                                                                 true]))
-                                                700)
+                                                1500)
                                             svg-coords    (cutils/client-to-view-box elem-id e ui-type)
                                             circle-coords (cutils/point-to-centered-circle
                                                            (merge (select-keys uic/svg-consts [:cx :cy])
