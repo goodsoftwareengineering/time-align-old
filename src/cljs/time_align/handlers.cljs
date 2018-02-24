@@ -52,12 +52,6 @@
   (->interceptor
    :id :persist-to-localstorage
    :after (fn [context]
-            ;; (remove-local-storage! :app-db)
-            ;; (local-storage (-> context
-            ;;                    (get-in [:effects :db])
-            ;;                    atom)
-            ;;                :app-db)
-            (.log js/console context)
             (reset! local-storage-atom
                     (get-in context [:effects :db]))
             context)))
@@ -144,7 +138,7 @@
           (time-align.worker-handlers/init! (js/Worker. worker-src-url))))
 
 (defn initialize-db [cofx _]
-  (let [initial-db @(local-storage local-storage-atom :app-db)]
+  (let [initial-db @(local-storage local-storage-atom :app-db)] ;; library handles ignoring default when already present
     {:db initial-db
      :init-worker (if js/goog.DEBUG "/bootstrap_worker.js" "js/worker.js") }))
 
