@@ -217,8 +217,6 @@
                 :name      ""
                 :color-map {:red 0 :blue 0 :green 0}}))))
 
-
-
 (reg-event-db
  :load-task-entity-form
  [persist-ls send-analytic validate-app-db]
