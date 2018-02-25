@@ -126,9 +126,13 @@
    (->> days-of-the-week
         (map (fn [w]
                [:span {:key (str "day-of-the-week-label-" w)
-                       :style {:width "100%"}
-                       :color (:alternate-text-color uic/app-theme)}
-                w])))])
+                       :style {:width "100%"
+                               :text-align (if traditional
+                                             "center"
+                                             "left")
+                               :padding "0.25em"
+                               :color (:alternate-text-color uic/app-theme)}}
+                (if traditional w (take 1 w))])))])
 
 (defn calendar []
   (let [displayed-day @(rf/subscribe [:displayed-day])
@@ -146,27 +150,41 @@
     [:div
      {:style
       {:display "flex"
-       :justify-content "center"
-       :flex-wrap "wrap"}}
+       :justify-content "flex-start"
+       :align-items "stretch"
+       :align-content "center"
+       :flex-direction "column"
+       :flex-wrap "nowrap"}}
 
      (calendar-nav year month dd-year dd-month calendar-orientation)
 
      [:span {:style {:color (:alternate-text-color uic/app-theme)
-                     :padding "0.5em"}}
+                     :padding "0.5em"
+                     :display "flex"
+                     :justify-content "center"}}
       (str year " " (get months (keyword (str month))))]
 
-     [:div {:style {:display "flex"
-                    :flex-direction "row"
-                    :justify-content "center"
-                    :align-items "stretch"
-                    :align-content "stretch"}}
+     [:div {:style (if traditional?
+                     {:display "flex"
+                      :flex-direction "column"
+                      :flex-wrap "nowrap"
+                      :justify-content "center"
+                      :align-items "stretch"
+                      :align-content "stretch"}
+                     {:display "flex"
+                      :flex-direction "row"
+                      :justify-content "center"
+                      :align-items "stretch"
+                      :align-content "stretch"})}
       (calendar-week-headings
-       {:display "flex"
-        :order "0"
-        :flex "0 1 auto"
-        :align-self "auto"
-        :flex-direction "column"
-        :justify-content "space-between"}
+       (if traditional?
+         {:display "flex"
+          :flex "0 1 auto"}
+         {:display "flex"
+          :flex "0 1 auto"
+          :align-self "auto"
+          :flex-direction "column"
+          :justify-content "space-between"})
        traditional?)
       [:div {:style {:display "flex"
                      :order "0"

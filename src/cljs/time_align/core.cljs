@@ -319,9 +319,12 @@
                       :fullWidth           true}]]]))
 
 (defn calendar-page []
-  [:div
+  [:div ;; {:style {:width "100%"
+        ;;          :height "100%"}}
    (app-bar)
-   [ui/paper {:style {:width "100%"}}
+   [ui/paper {:style {:width "100%"
+                      ;; :height "100%"
+                      }}
     (cp/calendar)]])
 
 (def page
