@@ -1020,8 +1020,9 @@
 (defn advance-displayed-month [db _]
   ;; TODO use specter here
   (let [[year month] (get-in db [:view :displayed-month])
+        year-inc (if (>= month 11) (inc year) year)
         month-inc (mod (inc month) 12)]
-    (assoc-in db [:view :displayed-month] [year month-inc])))
+    (assoc-in db [:view :displayed-month] [year-inc month-inc])))
 
 (reg-event-db
  :advance-displayed-month
@@ -1031,8 +1032,9 @@
 (defn decrease-displayed-month [db _]
   ;; TODO use specter here
   (let [[year month] (get-in db [:view :displayed-month])
-        month-inc (mod (dec month) 12)]
-    (assoc-in db [:view :displayed-month] [year month-inc])))
+        year-dec (if (<= month 0) (dec year) year)
+        month-dec (mod (dec month) 12)]
+    (assoc-in db [:view :displayed-month] [year-dec month-dec])))
 
 (reg-event-db
  :decrease-displayed-month
