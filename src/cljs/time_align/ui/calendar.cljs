@@ -7,9 +7,18 @@
             [time-align.client-utilities :as cutils]
             [time-align.utilities :as utils]))
 
+(def stroke-width 0.125)
+
 (def cell-width (* (/ 100 7)))  ;; ~14
 
+(def cell-width-adjusted
+  (- (* (/ 100 7))
+     (* 2 stroke-width)))
+
 (def cell-height (* (/ 100 5))) ;; 20
+
+(def cell-height-adjusted (- (* (/ 100 5))
+                             (* 2 stroke-width)))
 
 (defn indices
   "From [stack overflow](https://stackoverflow.com/a/8642069/5040125)"
@@ -148,8 +157,8 @@
                            (hist/nav! "/"))}
             [:rect {:x "0"
                     :y "0"
-                    :width cell-width
-                    :height cell-height
+                    :width cell-width-adjusted
+                    :height cell-height-adjusted
                     :fill (:canvas-color uic/app-theme)
                     :stroke (if this-day-is-today
                               (:primary uic/app-theme)
@@ -157,8 +166,7 @@
                               (if this-day-is-displayed (:secondary uic/app-theme)
                                   (:border-color uic/app-theme)))
                     ;; TODO grey400 when global styles are in place
-                    :stroke-width (if (or this-day-is-displayed this-day-is-today)
-                                    "0.50" "0.10")}]
+                    :stroke-width  stroke-width}]
 
             (->> periods
                  (filter cutils/period-has-stamps)
@@ -175,7 +183,7 @@
                     [:g (->> periods
                              (map (fn [p]
                                     [:rect {:key (str (:id p))
-                                            :x (if (:planned p) "0" (/ cell-width 2))
+                                            :x (if (:planned p) "0" (/ cell-width-adjusted 2))
                                             :y (->>
                                                 (#(if (< (.getDate (:start p))
                                                          this-day-date)
@@ -186,17 +194,25 @@
                                                      utils/ms-in-day))
                                                 (* cell-height))
 
-                                            :width (/ cell-width 2.1)
+                                            :width (/ cell-width-adjusted 2.1)
                                             :height (-> (#(if (> (.getDate (:stop p))
                                                                  this-day-date)
-                                                            (merge p {:stop (new js/Date year month this-day-date 23 59 59)})
+                                                            (merge p {:stop (new js/Date year month this-day-date 23 30 0)}) ;; keeps the periods from touching borders
                                                             p)) ;; adjust stop if after today
-                                                        (#(if (< (.getDate (:start p))
+
+                                                        (#(if (> (.valueOf (:start %))
+                                                                 (.valueOf (new js/Date year month this-day-date 23 30 0))) ;; keeps heights from being negative
+                                                            (merge % {:start (new js/Date year month this-day-date 23 29 0)})
+                                                            %))
+
+                                                        (#(if (< (.getDate (:start %))
                                                                  this-day-date)
-                                                            (merge p {:start (new js/Date year month this-day-date 0 0 1)})
-                                                            p)) ;; adjust start if before today
+                                                            (merge % {:start (new js/Date year month this-day-date 0 0 1)})
+                                                            %)) ;; adjust start if before today
+
                                                         (#(- (.valueOf (:stop %))
                                                              (.valueOf (:start %))))
+
                                                         ;; relative height
                                                         (/ utils/ms-in-day)
                                                         (* cell-height))
