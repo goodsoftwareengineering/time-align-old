@@ -22,14 +22,13 @@
                       "A" r r 0 large-arc-flag 1 (:x p-stop) (:y p-stop)])))
 
 (defn mini-arc [period]
-  (let [
-        {:keys [id description color]} period
-        start                (:start period)
-        start-ms             (utils/get-ms start)
-        start-angle          (cutils/ms-to-angle start-ms)
-        stop                 (:stop period)
-        stop-ms              (utils/get-ms stop)
-        stop-angle           (cutils/ms-to-angle stop-ms)
+  (let [{:keys [id description color]} period
+        start                          (:start period)
+        start-ms                       (utils/get-ms start)
+        start-angle                    (cutils/ms-to-angle start-ms)
+        stop                           (:stop period)
+        stop-ms                        (utils/get-ms stop)
+        stop-angle                     (cutils/ms-to-angle stop-ms)
 
         angle-difference     (- stop-angle start-angle)
         minimum-angle        30
@@ -43,20 +42,20 @@
                                    (+ stop-angle (/ factor-change 2))
                                    359)
 
-        use-adjustment       (< angle-difference 20)
-        start-used           (if use-adjustment
-                               start-angle-adjusted
-                               start-angle)
-        stop-used            (if use-adjustment
-                               stop-angle-adjusted
-                               stop-angle)]
+        use-adjustment (< angle-difference 20)
+        start-used     (if use-adjustment
+                         start-angle-adjusted
+                         start-angle)
+        stop-used      (if use-adjustment
+                         stop-angle-adjusted
+                         stop-angle)]
 
 
     [ui/svg-icon
      {:viewBox "0 0 24 24"}
      [:g
-      [:circle {:cx           "12" :cy "12" :r "11"
-                :stroke-width "2" :stroke "#cdcdcd"
+      [:circle {:cx           "12" :cy     "12" :r "11"
+                :stroke-width "2"  :stroke "#cdcdcd"
                 :fill         "transparent"}]
       [:path
        {:d            (describe-arc 12 12 11 start-used stop-used)
@@ -108,8 +107,6 @@
            (duration-ms-to-string duration-ms))
       "Queue item"
       )))
-
-
 
 (defn clock-tick []
   (swap! clock-state assoc :time (new js/Date))
