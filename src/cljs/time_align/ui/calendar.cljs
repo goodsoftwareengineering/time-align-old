@@ -119,6 +119,16 @@
              :9 "October"
              :10 "November"
              :11 "December"})
+(def days-of-the-week ["MON" "TUE" "WED" "THU" "FRI" "SAT" "SUN"])
+
+(defn calendar-week-headings [style traditional]
+  [:div {:style style}
+   (->> days-of-the-week
+        (map (fn [w]
+               [:span {:key (str "day-of-the-week-label-" w)
+                       :style {:width "100%"}
+                       :color (:alternate-text-color uic/app-theme)}
+                w])))])
 
 (defn calendar []
   (let [displayed-day @(rf/subscribe [:displayed-day])
@@ -135,7 +145,9 @@
 
     [:div
      {:style
-      {:display "flex" :justify-content "center" :flex-wrap "wrap"}}
+      {:display "flex"
+       :justify-content "center"
+       :flex-wrap "wrap"}}
 
      (calendar-nav year month dd-year dd-month calendar-orientation)
 
@@ -143,7 +155,24 @@
                      :padding "0.5em"}}
       (str year " " (get months (keyword (str month))))]
 
-     [:svg {:key "calendar-svg"
+     [:div {:style {:display "flex"
+                    :flex-direction "row"
+                    :justify-content "center"
+                    :align-items "stretch"
+                    :align-content "stretch"}}
+      (calendar-week-headings
+       {:display "flex"
+        :order "0"
+        :flex "0 1 auto"
+        :align-self "auto"
+        :flex-direction "column"
+        :justify-content "space-between"}
+       traditional?)
+      [:div {:style {:display "flex"
+                     :order "0"
+                     :flex "1 1 auto"
+                     :align-self "auto"}}
+       [:svg {:key "calendar-svg"
             :id "calendar-svg"
             :xmlns "http://www.w3.org/2000/svg"
             :version  "1.1"
@@ -260,6 +289,6 @@
                             (:text-color uic/app-theme))
                     :font-size "2"} (.getDate d)]]))
 
-       days)]]))
+       days)]]]]))
 
 
