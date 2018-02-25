@@ -3,6 +3,7 @@
             [time-align.history :as hist]
             [time-align.ui.common :as uic]
             [reagent.core :as r]
+            [time-align.ui.list :as list]
             [cljs-react-material-ui.reagent :as ui]
             [time-align.client-utilities :as cutils]
             [time-align.js-interop :as jsi]
@@ -21,29 +22,5 @@
     [ui/list {:style {:width "100%"}}
         (->> planned-periods-sorted
              (map (fn [period]
-                    [ui/list-item
-                     {:style           (merge {:width "100%"}
-                                              (if (and period-selected
-                                                       (= (:id period)
-                                                          selected-id))
-                                                {:backgroundColor (color :grey-300)}
-                                                {}))
-                      :key             (:id period)
-                      :leftIcon        (r/as-element (uic/mini-arc period))
-                      :primaryText     (uic/period-list-item-primary-text period)
-                      :secondaryText   (uic/period-list-item-secondary-text period)
-                      :on-double-click (fn [e]
-                                         (when period-selected
-                                           (hist/nav! (str "/edit/period/" (:id period))))) ;; TODO should hist only be messed with in handler interceptor?
-
-                      :onTouchTap      (if (and period-selected
-                                                (= selected-id (:id period)))
-                                         (fn [e]
-                                           (rf/dispatch [:set-active-page
-                                                         {:page-id :entity-forms
-                                                          :type    :period
-                                                          :id      (:id period)}]))
-                                         (fn [e]
-                                           (rf/dispatch
-                                             [:set-selected-period (:id period)])))}])))]))
+                    (list/list-item-period (:current-selection selected) period))))]))
 
