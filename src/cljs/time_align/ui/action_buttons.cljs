@@ -61,6 +61,12 @@
              (hist/nav! (str "/edit/period/" id)))})
    [ic/image-edit uic/basic-ic]])
 
+(defn add-button [add-fn]
+  [ui/floating-action-button
+   (merge basic-button
+          {:onTouchTap add-fn})
+   [ic/content-add uic/basic-ic]])
+
 (defn back-button []
   [ui/floating-action-button (merge
                                basic-button
@@ -191,6 +197,14 @@
    (back-button)
    ]
   )
+
+(defn action-buttons-add-edit [add-fn id]
+  [:div {:style {:display "flex"
+                 :flex-direction "column"}}
+   (when (some? id)
+     (edit-button id))
+   [:div {:style {:padding "0.25em"}}] ;; TODO get rid of this style hack pad
+   (add-button add-fn)])
 
 (defn action-buttons [state selected period-in-play]
   (let [forceable @forcer ;; TODO idk what this is for

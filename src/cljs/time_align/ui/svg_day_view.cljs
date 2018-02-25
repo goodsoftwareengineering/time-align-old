@@ -470,6 +470,8 @@
                        :r  (:inner-border-r uic/svg-consts)}
                       (select-keys uic/svg-consts [:cx :cy]))]
 
+      (periods filtered-periods selected is-moving-period curr-time day)
+
       (when display-ticker
         [:g
          [:circle {:cx (:cx uic/svg-consts) :cy (:cy uic/svg-consts)
@@ -492,8 +494,6 @@
                  :y1           (:cy uic/svg-consts)
                  :x2           (:x ticker-pos)
                  :y2           (:y ticker-pos)}]])
-
-      (periods filtered-periods selected is-moving-period curr-time day)
 
       (when (and (:press-on long-press-state)
                  (nil? selected-period))

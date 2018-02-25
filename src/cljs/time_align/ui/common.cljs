@@ -164,8 +164,7 @@
                  :circle-stroke "0.25"
                  :period-width  "10"
                  :border-r "34.5"
-                 :inner-border-r "23.5"
-                 })
+                 :inner-border-r "23.5"})
 
 (defn svg-mui-time-align [{:keys [color style]}]
   [ui/svg-icon

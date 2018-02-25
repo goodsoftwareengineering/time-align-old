@@ -30,6 +30,7 @@
             [time-align.ui.entity-forms :as ef]
             [time-align.ui.list :as lp]
             [time-align.ui.queue :as qp]
+            [time-align.ui.action-buttons :as actb]
             [time-align.ui.calendar :as cp]
             [time-align.js-interop :as jsi]))
 
@@ -223,25 +224,28 @@
     (if (nil? parent-task)
       [:div (app-bar) [ui/paper {:style {:width "100%"}}
                        [ui/subheader "No Task by that name :("]]]
-      [:div
+      [:div {:style {:padding-bottom "10em"}} ;; ensures actb don't block menu icon
        (app-bar)
        [ui/paper {:style {:width "100%"}}
         (lp/list-item-category current-selection false parent-category)
         [ui/divider]
         (lp/list-item-task current-selection false parent-task)
         [ui/divider]
-        [ui/raised-button {:key               (str "add-period-for-task-" id)
-                           :href              (str "#/add/period" ) ;; TODO use query params to fill in category
-                           :label "Add Period"
-                           :background-color (:primary uic/app-theme)
-                           :label-color      "white"
-                           :style            {:margin-top "1em"
-                                              :margin-left "2em"
-                                              :margin-bottom "1em"}}]
-        [ui/divider]
         [ui/list
          (->> periods
-              (map (partial lp/list-item-period current-selection)))]]])))
+              (map (partial lp/list-item-period current-selection)))]]
+
+       [:div.action-container ;; TODO this is used in two spots need to refactor to comp
+        {:style {:position   "fixed"
+                 :right      "0"
+                 :bottom     "0"
+                 :z-index    "99"
+                 :padding    "0.75em"
+                 ;; :border "green solid 0.1em"
+                 :box-sizing "border-box"}}
+        (actb/action-buttons-add-edit
+         (fn [_] (hist/nav! (str "#/add/period" ))) ;; TODO use query params to fill in category
+         (:id-or-nil current-selection))]])))
 
 (defn agenda-page []
   (let [selected @(rf/subscribe [:selected])
