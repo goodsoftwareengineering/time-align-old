@@ -227,10 +227,14 @@
       [:div {:style {:padding-bottom "10em"}} ;; ensures actb don't block menu icon
        (app-bar)
        [ui/paper {:style {:width "100%"}}
-        (lp/list-item-category current-selection false parent-category)
+
+        [:div {:style {:display "flex"
+                       :flex-wrap "wrap"}}
+         (lp/chip-item-category parent-category)
+         (lp/chip-item-task parent-task)]
+
         [ui/divider]
-        (lp/list-item-task current-selection false parent-task)
-        [ui/divider]
+
         [ui/list
          (->> periods
               (map (partial lp/list-item-period current-selection)))]]

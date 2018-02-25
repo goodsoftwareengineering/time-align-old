@@ -80,9 +80,7 @@
                        [ui/checkbox {:checked   complete
                                      :iconStyle {:fill color}}])
        :onClick       (fn [e]
-                        (if not-parent
-                          (hist/nav! (str "/list/periods/" id))
-                          (hist/nav! (str "/list/tasks/" (:category-id task)))))}
+                        (hist/nav! (str "/list/periods/" id)))}
 
       {:rightIconButton (r/as-element
                          [ui/icon-button
@@ -108,9 +106,7 @@
                    :secondaryText   (str "Tasks: " number-of-tasks)
                    :leftIcon        (r/as-element (uic/svg-mui-circle color))
                    :onClick         (fn [e]
-                                      (if not-parent
-                                        (hist/nav! (str "/list/tasks/" id))
-                                        (hist/nav! "/list/categories")))}
+                                        (hist/nav! (str "/list/tasks/" id)))}
 
                    {:rightIconButton (r/as-element [ui/icon-button
                                                     {:onClick
@@ -121,3 +117,30 @@
                                                        (hist/nav! (str "/edit/category/" id)))}
                                                     [ic/editor-mode-edit
                                                      {:color (:primary uic/app-theme)}]])})]))
+
+(defn chip-item-category [category]
+  (let [{:keys [id name color tasks]} category]
+    [ui/chip
+     {:background-color (:primary-1-color uic/app-theme)
+      :style {:border (str "0.125em solid " color)
+              :padding "0.125em"
+              :margin "0.5em 0.25em 0.5em 0.25em"}
+      :on-click (fn [e]
+                  (hist/nav! (str "/list/tasks/" id)))}
+     [ui/avatar {:background-color (:primary-1-color uic/app-theme)}
+      (uic/svg-mui-circle color)]
+     [:span {:color (:text-color uic/app-theme)} name]]))
+
+(defn chip-item-task [task]
+  (let [{:keys [id name color complete]} task]
+    [ui/chip
+     {:background-color (:primary-2-color uic/app-theme)
+      :style {:border (str "0.125em solid " color)
+              :padding "0.125em"
+              :margin "0.5em 0.25em 0.5em 0.25em"}
+      :on-click (fn [e]
+                  (hist/nav! (str "/list/periods/" id)))}
+     [ui/avatar {:background-color (:primary-2-color uic/app-theme)}
+      [ui/checkbox {:checked   complete
+                    :iconStyle {:fill color}}]]
+     [:span {:color (:text-color uic/app-theme)} name]]))

@@ -141,16 +141,16 @@
                          stop-angle)]
 
     [ui/svg-icon
-     {:viewBox "0 0 40 40"}
+     {:viewBox "0 0 41 41"}
      [:g
-      [:circle {:cx           "20" :cy "20" :r "20"
+      [:circle {:cx           "20.5" :cy "20.5" :r "20"
                 :opacity "0.66"
                 :fill         (:border-color app-theme)}]
-      [:circle {:cx           "20" :cy "20" :r "10"
+      [:circle {:cx           "20.5" :cy "20.5" :r "10"
                 :opacity "0.66"
                 :fill         (:border-color app-theme)}]
       [:path
-       {:d            (describe-arc 20 20
+       {:d            (describe-arc 20.5 20.5
                                     (if planned 5 15)
                                     start-used stop-used)
         :stroke       color
