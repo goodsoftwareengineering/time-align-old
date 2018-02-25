@@ -38,7 +38,7 @@
                                                              (:border-color uic/app-theme))}
                                    {:border (str "0.125em solid "
                                                  (:canvas-color uic/app-theme))})
-              :on-click        (if (= sel-id id)
+              :on-click        (if is-selected
                                  (fn [_] (rf/dispatch [:set-selected-period nil]))
                                  (fn [_] (rf/dispatch [:set-selected-period id])))}
 
@@ -79,8 +79,14 @@
        :leftIcon      (r/as-element
                        [ui/checkbox {:checked   complete
                                      :iconStyle {:fill color}}])
-       :onClick       (fn [e]
-                        (hist/nav! (str "/list/periods/" id)))}
+       :style           (if is-selected
+                          {:border (str "0.125em solid "
+                                        (:border-color uic/app-theme))}
+                          {:border (str "0.125em solid "
+                                        (:canvas-color uic/app-theme))})
+       :onClick         (if is-selected
+                          (fn [_] (rf/dispatch [:set-selected-task nil]))
+                          (fn [_] (rf/dispatch [:set-selected-task id])))}
 
       {:rightIconButton (r/as-element
                          [ui/icon-button
@@ -89,8 +95,8 @@
                              ;; mui docs say we don't need this
                              (jsi/stop-propagation e)
                              ;; but we really do (at least on mobile)
-                             (hist/nav! (str "/edit/task/" id)))}
-                          [ic/editor-mode-edit
+                             (hist/nav! (str "/list/periods/" id)))}
+                          [ic/navigation-subdirectory-arrow-left
                            {:color (:primary uic/app-theme)}]])})]))
 
 (defn list-item-category [current-selection not-parent category]

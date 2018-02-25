@@ -189,23 +189,31 @@
     (if (nil? parent-category)
       [:div (app-bar) [ui/paper {:style {:width "100%"}}
                        [ui/subheader "No Category by that name :("]]]
-      [:div
+      [:div {:style {:padding-bottom "10em"}}
        (app-bar)
        [ui/paper {:style {:width "100%"}}
-        (lp/list-item-category current-selection false parent-category)
+        [:div {:style {:display "flex"
+                       :flex-wrap "wrap"}}
+         (lp/chip-item-category parent-category)]
+
         [ui/divider]
-        [ui/raised-button {:key               (str "add-task-for-category-" id)
-                           :href              (str "#/add/task" ) ;; TODO use query params to fill in category
-                           :label "Add Task"
-                           :background-color (:primary uic/app-theme)
-                           :label-color      "white"
-                           :style            {:margin-top "1em"
-                                              :margin-left "2em"
-                                              :margin-bottom "1em"}}]
-        [ui/divider]
+
         [ui/list
          (->> tasks
-              (map (partial lp/list-item-task true current-selection)))]]])))
+              (map (partial lp/list-item-task current-selection true)))]]
+
+       [:div.action-container ;; TODO this is used in two spots need to refactor to comp
+        {:style {:position   "fixed"
+                 :right      "0"
+                 :bottom     "0"
+                 :z-index    "99"
+                 :padding    "0.75em"
+                 ;; :border "green solid 0.1em"
+                 :box-sizing "border-box"}}
+        (actb/action-buttons-add-edit
+         (fn [_] (hist/nav! (str "#/add/task" ))) ;; TODO use query params to fill in category
+         current-selection
+         :task)]])))
 
 (defn list-periods-page [id]
   (let [categories        @(rf/subscribe [:categories])
@@ -249,7 +257,8 @@
                  :box-sizing "border-box"}}
         (actb/action-buttons-add-edit
          (fn [_] (hist/nav! (str "#/add/period" ))) ;; TODO use query params to fill in category
-         (:id-or-nil current-selection))]])))
+         current-selection
+         :period)]])))
 
 (defn agenda-page []
   (let [selected @(rf/subscribe [:selected])

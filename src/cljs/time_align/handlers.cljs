@@ -382,12 +382,11 @@
  (fn [cofx [_ task-id]]
    (let [db (:db cofx)]
 
-     {:db       (assoc-in db [:view :selected]
-                          {:current-selection {:type-or-nil :task
-                                               :id-or-nil task-id}
-                           :previous-selection (get-in db [:view :selected :current-selection])})
-       ;; :dispatch [:action-buttons-back] ;; no selecting task on home yet
-})))
+     {:db (assoc-in db [:view :selected]
+                    {:current-selection {:type-or-nil :task
+                                         :id-or-nil task-id}
+                     :previous-selection
+                     (get-in db [:view :selected :current-selection])})})))
 
 (reg-event-fx
  :set-selected-period

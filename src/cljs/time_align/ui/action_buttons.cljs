@@ -52,13 +52,13 @@
               [:pause-period-play]))})
    [ic/av-pause uic/basic-ic]])
 
-(defn edit-button [id]
+(defn edit-button [id & {:keys [type] :or {type :period}}]
   [ui/floating-action-button
    (merge basic-button
           {:secondary true}
           {:onTouchTap
            (fn [_]
-             (hist/nav! (str "/edit/period/" id)))})
+             (hist/nav! (str "/edit/" (name type) "/" id)))})
    [ic/image-edit uic/basic-ic]])
 
 (defn add-button [add-fn]
@@ -198,13 +198,18 @@
    ]
   )
 
-(defn action-buttons-add-edit [add-fn id]
-  [:div {:style {:display "flex"
-                 :flex-direction "column"}}
-   (when (some? id)
-     (edit-button id))
-   [:div {:style {:padding "0.25em"}}] ;; TODO get rid of this style hack pad
-   (add-button add-fn)])
+(defn action-buttons-add-edit [add-fn current-selection type]
+  (let [id (:id-or-nil current-selection)
+        sel-type (:type-or-nil current-selection)
+        could-edit (and (some? id)
+                        (some? sel-type)
+                        (= type sel-type))]
+    [:div {:style {:display "flex"
+                   :flex-direction "column"}}
+     (when could-edit
+       (edit-button id :type type))
+     [:div {:style {:padding "0.25em"}}] ;; TODO get rid of this style hack pad
+     (add-button add-fn)]))
 
 (defn action-buttons [state selected period-in-play]
   (let [forceable @forcer ;; TODO idk what this is for
