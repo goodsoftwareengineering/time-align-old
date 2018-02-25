@@ -88,29 +88,32 @@
         this-period-selected       (= selected-period id)
 
         opacity-minor              "0.66"
-        opacity-major              ".99"
+        opacity-major              "0.99"
         is-planned                 (= type :planned)
         ;; actual is boldest in the past (before now)
         ;; planned is boldest in the future (after now)
         ;; opacity-before/after is used for task straddling now
-        opacity-before        (if is-planned
-                                opacity-minor
-                                opacity-major)
-        opacity-after         (if is-planned
-                                opacity-major
-                                opacity-minor)
-        opacity                    (cond
-                                     this-period-selected opacity-major
+        opacity-before        opacity-major
+                              ;; (if is-planned
+                              ;;   opacity-minor
+                              ;;   opacity-major)
+        opacity-after         opacity-major
+                              ;; (if is-planned
+                              ;;   opacity-major
+                              ;;   opacity-minor)
+        opacity               opacity-major
+                                   ;; (cond
+                                   ;;   this-period-selected opacity-major
 
-                                     ;; planned after now
-                                     (and is-planned (< curr-time-ms stop-abs-ms))
-                                     opacity-major
+                                   ;;   ;; planned after now
+                                   ;;   (and is-planned (< curr-time-ms stop-abs-ms))
+                                   ;;   opacity-major
 
-                                     ;; actual before now
-                                     (and (not is-planned) (> curr-time-ms stop-abs-ms))
-                                     opacity-major
+                                   ;;   ;; actual before now
+                                   ;;   (and (not is-planned) (> curr-time-ms stop-abs-ms))
+                                   ;;   opacity-major
 
-                                     :else opacity-minor)
+                                   ;;   :else opacity-minor)
 
         color                      (:color period)
         period-width               (js/parseInt (:period-width uic/svg-consts))
@@ -210,7 +213,7 @@
           :onClick      touch-click-handler
           :onTouchStart movement-trigger-handler
           :onMouseDown  movement-trigger-handler}]
-        (when  (= selected-period id) ;; TODO add this in the broken arc section
+        (when  (= selected-period id)
           [:g
            [:path
             {:d            broken-arc-before
@@ -238,7 +241,7 @@
           :onClick      touch-click-handler
           :onTouchStart movement-trigger-handler
           :onMouseDown  movement-trigger-handler}]
-        (when  (= selected-period id) ;; TODO add this in the broken arc section
+        (when  (= selected-period id)
           [:g
            [:path
             {:d            arc
@@ -350,9 +353,14 @@
                                    (:cx uic/svg-consts)
                                    (:cy uic/svg-consts)
                                    (if (some? period-in-play)
-                                     (:r uic/svg-consts)
-                                     (- (:inner-r uic/svg-consts)
-                                        (:period-width uic/svg-consts)))
+                                     (+ (js/parseFloat
+                                         (:border-r uic/svg-consts))
+                                        (js/parseFloat
+                                         (:circle-stroke uic/svg-consts)))
+                                     (+ (js/parseFloat
+                                         (:inner-border-r uic/svg-consts))
+                                        (js/parseFloat
+                                         (:circle-stroke uic/svg-consts))))
                                    ticker-angle)
         filtered-periods         (cutils/filter-periods-for-day day tasks)
         selected-period          (if (= :period
@@ -374,8 +382,7 @@
                                       (let [id (.setTimeout
                                                 js/window
                                                 (fn [_]
-                                                  (println "start the inline period add!")
-                                                  (rf/dispatch [:set-inline-period-add-dialog
+                                                  (rf/dispatch [:set-inline-period-add-dialog ;; TODO rename, shouldn't be 'dialog'
                                                                 true]))
                                                 1500)
                                             svg-coords    (cutils/client-to-view-box elem-id e ui-type)
@@ -450,23 +457,19 @@
                     :q4 {:viewBox "40 40 60 60"}
                     (select-keys uic/svg-consts [:viewBox])))
 
-      shadow-filter
-      [:circle (merge {:fill (:canvas-color uic/app-theme)
-                       ;; :stroke (:border-color uic/app-theme)
-                       ;; :filter "url(#shadow-2dp)"
-                       }
+      [:circle (merge {:fill (:canvas-color uic/app-theme)}
                       (select-keys uic/svg-consts [:cx :cy :r]))]
-      [:circle (merge {:fill (:canvas-color uic/app-theme)
+      [:circle (merge {:fill "transparent"
                        :stroke (:border-color uic/app-theme)
-                       :stroke-width "0.25"
-                       :r (:inner-r uic/svg-consts)}
+                       :stroke-width (:circle-stroke uic/svg-consts)
+                       :r  (:border-r uic/svg-consts)}
                       (select-keys uic/svg-consts [:cx :cy]))]
-      [:circle (merge {:fill (:canvas-color uic/app-theme)
+      [:circle (merge {:fill "transparent"
                        :stroke (:border-color uic/app-theme)
-                       :stroke-width "0.25"
-                       :r (- (:inner-r uic/svg-consts)
-                             (:period-width uic/svg-consts))}
+                       :stroke-width (:circle-stroke uic/svg-consts)
+                       :r  (:inner-border-r uic/svg-consts)}
                       (select-keys uic/svg-consts [:cx :cy]))]
+
       (when display-ticker
         [:g
          [:circle {:cx (:cx uic/svg-consts) :cy (:cy uic/svg-consts)
@@ -489,7 +492,26 @@
                  :y1           (:cy uic/svg-consts)
                  :x2           (:x ticker-pos)
                  :y2           (:y ticker-pos)}]])
-      (periods filtered-periods selected is-moving-period curr-time day)]]))
+
+      (periods filtered-periods selected is-moving-period curr-time day)
+
+      ;; (when (:press-on long-press-state)
+      ;;   (let [relative-ms (utils/get-ms (:press-time long-press-state))
+      ;;         angle (cutils/ms-to-angle relative-ms)
+      ;;         cx (js/parseInt (:cx uic/svg-consts))
+      ;;         cy (js/parseInt (:cy uic/svg-consts))
+      ;;         r (js/parseInt (:inner-r uic/svg-consts)) ;; TODO jsi int cast integration and replace all these
+      ;;         indicator-r (/ (js/parseInt (:period-width uic/svg-consts)) 2)
+      ;;         point (cutils/polar-to-cartesian cx cy r angle)
+      ;;         indicator-cx (:x point)
+      ;;         indicator-cy (:y point)]
+      ;;     [:circle {:cx indicator-cx :cy indicator-cy
+      ;;               :r indicator-r
+      ;;               :opacity "0.1"
+      ;;               :fill (:text-color uic/app-theme)
+      ;;               :stroke (:primary1-color uic/app-theme)}]))
+
+      ]]))
 
 (defn days [days tasks selected-period]
   (->> days
