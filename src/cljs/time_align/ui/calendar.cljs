@@ -217,12 +217,9 @@
                      :fill (:canvas-color uic/app-theme)
                      :stroke (if this-day-is-today
                                (:text-color uic/app-theme)
-                               ;; TODO should be accent1
                                (if this-day-is-displayed (:primary-3-color uic/app-theme)
                                    (:border-color uic/app-theme)))
-                     :stroke-width  stroke-width}
-                    (when (or this-day-is-today this-day-is-displayed)
-                      {:stroke-dasharray "2 1"}))]
+                     :stroke-width  stroke-width})]
 
             (->> periods
                  (filter cutils/period-has-stamps)
@@ -276,17 +273,17 @@
                                             :fill (:color p)}] )))])))
 
             [:circle {:cx 2 :cy 2.5 :r 1.5
-                      :fill (if (or this-day-is-today
-                                      this-day-is-displayed)
+                      :fill (if this-day-is-today
                               (:text-color uic/app-theme)
-                              (:canvas-color uic/app-theme))}]
+                              (if this-day-is-displayed (:accent-2-color uic/app-theme)
+                                  (:canvas-color uic/app-theme))) }]
             [:text {:x 2 :y 3
                     :text-anchor "middle"
                     :font-weight "bold"
-                    :fill (if (or this-day-is-today
-                                  this-day-is-displayed)
+                    :fill (if this-day-is-today
                             (:canvas-color uic/app-theme)
-                            (:text-color uic/app-theme))
+                            (if this-day-is-displayed (:text-color uic/app-theme)
+                                (:text-color uic/app-theme)))
                     :font-size "2"} (.getDate d)]]))
 
        days)]]]]))
