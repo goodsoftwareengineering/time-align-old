@@ -7,7 +7,7 @@
             [time-align.client-utilities :as cutils]
             [time-align.utilities :as utils]))
 
-(def stroke-width 0.125)
+(def stroke-width 0.05)
 
 (def cell-width-traditional (/ 100 7))  ;; ~14
 
@@ -180,18 +180,20 @@
                 :onClick (fn [_]
                            (rf/dispatch [:set-displayed-day d])
                            (hist/nav! "/"))}
-            [:rect {:x "0"
-                    :y "0"
-                    :width cell-width-adjusted
-                    :height cell-height-adjusted
-                    :fill (:canvas-color uic/app-theme)
-                    :stroke (if this-day-is-today
-                              (:primary uic/app-theme)
+            [:rect (merge
+                    {:x "0"
+                     :y "0"
+                     :width cell-width-adjusted
+                     :height cell-height-adjusted
+                     :fill (:canvas-color uic/app-theme)
+                     :stroke (if this-day-is-today
+                               (:text-color uic/app-theme)
                                ;; TODO should be accent1
-                              (if this-day-is-displayed (:secondary uic/app-theme)
-                                  (:border-color uic/app-theme)))
-                    ;; TODO grey400 when global styles are in place
-                    :stroke-width  stroke-width}]
+                               (if this-day-is-displayed (:primary-3-color uic/app-theme)
+                                   (:border-color uic/app-theme)))
+                     :stroke-width  stroke-width}
+                    (when (or this-day-is-today this-day-is-displayed)
+                      {:stroke-dasharray "2 1"}))]
 
             (->> periods
                  (filter cutils/period-has-stamps)
@@ -245,12 +247,17 @@
                                             :fill (:color p)}] )))])))
 
             [:circle {:cx 2 :cy 2.5 :r 1.5
-                      :fill (:canvas-color uic/app-theme)}]
+                      :fill (if (or this-day-is-today
+                                      this-day-is-displayed)
+                              (:text-color uic/app-theme)
+                              (:canvas-color uic/app-theme))}]
             [:text {:x 2 :y 3
                     :text-anchor "middle"
-                    ;; :stroke "white" :stroke-width "0.1"
                     :font-weight "bold"
-                    :fill (:text-color uic/app-theme)
+                    :fill (if (or this-day-is-today
+                                  this-day-is-displayed)
+                            (:canvas-color uic/app-theme)
+                            (:text-color uic/app-theme))
                     :font-size "2"} (.getDate d)]]))
 
        days)]]))
