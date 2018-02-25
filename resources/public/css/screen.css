@@ -20,16 +20,28 @@ div#app > div {
   height: inherit;
 }
 
-#inline-period-add-indicator {
+#inline-period-add-indicator-bottom {
   animation-duration: 1.5s;
-  animation-name: grow-animation;
+  animation-delay: 0.25s;
+  animation-name: grow-fast;
 }
 
-@keyframes grow-animation {
+#inline-period-add-indicator-top {
+  animation-duration: 1.5s;
+  animation-delay: 0.25s;
+  animation-name: grow-slow;
+}
+
+@keyframes grow-slow {
   from {r: 0;}
   to {r: 5;}
 }
 
+@keyframes grow-fast {
+  0% {r: 0;}
+  10% {r: 4;}
+  100% {r: 4;}
+}
 .showbox {
   position: absolute;
   top: 0;

@@ -495,7 +495,8 @@
 
       (periods filtered-periods selected is-moving-period curr-time day)
 
-      (when (:press-on long-press-state)
+      (when (and (:press-on long-press-state)
+                 (nil? selected-period))
         (let [relative-ms (utils/get-ms (:press-time long-press-state))
               angle (cutils/ms-to-angle relative-ms)
               cx (js/parseInt (:cx uic/svg-consts))
@@ -505,21 +506,19 @@
               point (cutils/polar-to-cartesian cx cy r angle)
               indicator-cx (:x point)
               indicator-cy (:y point)]
-          [:g [:circle {:cx indicator-cx :cy indicator-cy
-                        :r indicator-r
-                        :opacity "0.3"
-                        :fill (:text-color uic/app-theme)
-                        :stroke (:primary1-color uic/app-theme)}]
-           [:circle#inline-period-add-indicator
+          [:g
+           [:circle#inline-period-add-indicator-bottom
+            {:cx indicator-cx :cy indicator-cy
+             :r 0
+             :opacity "0.1"
+             :fill (:text-color uic/app-theme)
+             :stroke (:primary1-color uic/app-theme)}]
+           [:circle#inline-period-add-indicator-top
             {:cx indicator-cx :cy indicator-cy
              :r 0
              :opacity "0.6"
              :fill (:text-color uic/app-theme)
-             :stroke (:primary1-color uic/app-theme)}]
-           ]
-          ))
-
-      ]]))
+             :stroke (:primary1-color uic/app-theme)}]]))]]))
 
 (defn days [days tasks selected-period]
   (->> days
