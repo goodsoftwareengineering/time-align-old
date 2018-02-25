@@ -65,7 +65,7 @@
                   {:color (:primary uic/app-theme)
                    :style {:transform "scale(-1,1)"}}]])})]))
 
-(defn list-item-task [current-selection not-parent task]
+(defn list-item-task [current-selection task]
   (let [{:keys [id name periods complete color]} task
         sel-id            (:id-or-nil current-selection)
         number-of-periods (count periods)
@@ -99,7 +99,7 @@
                           [ic/navigation-subdirectory-arrow-left
                            {:color (:primary uic/app-theme)}]])})]))
 
-(defn list-item-category [current-selection not-parent category]
+(defn list-item-category [current-selection category]
   (let [{:keys [id name color tasks]} category
         sel-id                 (:id-or-nil current-selection)
         is-selected            (= id sel-id)
@@ -110,19 +110,27 @@
                    :primaryText     (uic/concatenated-text name 20
                                                            "no name entered ...")
                    :secondaryText   (str "Tasks: " number-of-tasks)
+                   :style           (if is-selected
+                                      {:border (str "0.125em solid "
+                                                    (:border-color uic/app-theme))}
+                                      {:border (str "0.125em solid "
+                                                    (:canvas-color uic/app-theme))})
                    :leftIcon        (r/as-element (uic/svg-mui-circle color))
-                   :onClick         (fn [e]
-                                        (hist/nav! (str "/list/tasks/" id)))}
+                    :onClick         (if is-selected
+                                       (fn [_] (rf/dispatch [:set-selected-category nil]))
+                                       (fn [_] (rf/dispatch [:set-selected-category id])))}
 
-                   {:rightIconButton (r/as-element [ui/icon-button
-                                                    {:onClick
-                                                     (fn [e]
-                                                       ;; mui docs say we don't need this
-                                                       (jsi/stop-propagation e)
-                                                       ;; but we really do (at least on mobile)
-                                                       (hist/nav! (str "/edit/category/" id)))}
-                                                    [ic/editor-mode-edit
-                                                     {:color (:primary uic/app-theme)}]])})]))
+                   {:rightIconButton
+                    (r/as-element
+                     [ui/icon-button
+                      {:onClick
+                       (fn [e]
+                         ;; mui docs say we don't need this
+                         (jsi/stop-propagation e)
+                         ;; but we really do (at least on mobile)
+                         (hist/nav! (str "/list/tasks/" id)))}
+                      [ic/navigation-subdirectory-arrow-left
+                       {:color (:primary uic/app-theme)}]])})]))
 
 (defn chip-item-category [category]
   (let [{:keys [id name color tasks]} category]
