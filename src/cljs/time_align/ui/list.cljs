@@ -4,10 +4,10 @@
             [time-align.ui.common :as uic]
             [re-frame.core :as rf]
             [time-align.history :as hist]
+            [time-align.utilities :as utils]
             [cljs-react-material-ui.icons :as ic]
             [time-align.ui.common :as uic]
             [time-align.client-utilities :as cutils]
-            [time-align.utilities :as utils]
             [time-align.js-interop :as jsi]))
 
 ;; Kept this for example of menu
@@ -42,8 +42,7 @@
                                  (fn [_] (rf/dispatch [:set-selected-period nil]))
                                  (fn [_] (rf/dispatch [:set-selected-period id])))}
 
-              (if (and (some? (:start period))
-                       (some? (:stop period)))
+              (if (cutils/period-has-stamps period)
 
                 ;; if not queue render the arc
                 {:leftIcon (r/as-element (uic/mini-arc period))}
@@ -53,17 +52,19 @@
                             [ui/svg-icon [ic/action-list {:color color}]])})
 
               ;; {:rightIconButton (r/as-element (list-item-right-menu)) ;; example of using menu
-               {:rightIconButton
-               (r/as-element
-                [ui/icon-button
-                 {:onClick
-                  (fn [e]
-                    (jsi/stop-propagation e)
-                    (rf/dispatch [:set-displayed-day (:start period)])
-                    (hist/nav! "/"))}
-                 [ic/content-reply
-                  {:color (:primary uic/app-theme)
-                   :style {:transform "scale(-1,1)"}}]])})]))
+              (when (cutils/period-has-stamps period)
+                {:rightIconButton
+                 (r/as-element
+                  [ui/icon-button
+                   {:onClick
+                    (fn [e]
+                      (jsi/stop-propagation e)
+                      (rf/dispatch [:set-displayed-day (:start period)])
+                      (hist/nav! "/"))}
+                   [ic/content-reply
+                    {:color (:primary uic/app-theme)
+                     :style {:transform "scale(-1,1)"}}]])}
+                ))]))
 
 (defn list-item-task [current-selection task]
   (let [{:keys [id name periods complete color]} task

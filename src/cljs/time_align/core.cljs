@@ -270,7 +270,20 @@
     [:div
      (app-bar)
      [ui/paper {:style {:width "100%"}}
-      (ap/agenda selected periods)]]))
+      (ap/agenda selected periods)]
+
+     [:div.action-container ;; TODO this is used in two spots need to refactor to comp
+      {:style {:position   "fixed"
+               :right      "0"
+               :bottom     "0"
+               :z-index    "99"
+               :padding    "0.75em"
+               ;; :border "green solid 0.1em"
+               :box-sizing "border-box"}}
+      (actb/action-buttons-add-edit
+       (fn [_] (hist/nav! (str "#/add/category" ))) ;; TODO use query params to fill in category
+       (:current-selection selected)
+       :period)]]))
 
 (defn queue-page []
   (let [tasks    @(rf/subscribe [:tasks])
@@ -278,7 +291,20 @@
     [:div
      (app-bar)
      [ui/paper {:style {:width "100%"}}
-      (qp/queue tasks selected)]]))
+      (qp/queue tasks selected)]
+     [:div.action-container ;; TODO this is used in two spots need to refactor to comp
+      {:style {:position   "fixed"
+               :right      "0"
+               :bottom     "0"
+               :z-index    "99"
+               :padding    "0.75em"
+               ;; :border "green solid 0.1em"
+               :box-sizing "border-box"}}
+      (actb/action-buttons-add-edit
+       (fn [_] (hist/nav! (str "#/add/category" ))) ;; TODO use query params to fill in category
+       (:current-selection selected)
+       :period)]
+     ]))
 
 (defn account-page []
   (let []
