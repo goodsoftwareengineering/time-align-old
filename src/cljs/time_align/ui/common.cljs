@@ -21,47 +21,7 @@
     (string/join " " ["M" (:x p-start) (:y p-start)
                       "A" r r 0 large-arc-flag 1 (:x p-stop) (:y p-stop)])))
 
-(defn mini-arc [period]
-  (let [{:keys [id description color]} period
-        start                          (:start period)
-        start-ms                       (utils/get-ms start)
-        start-angle                    (cutils/ms-to-angle start-ms)
-        stop                           (:stop period)
-        stop-ms                        (utils/get-ms stop)
-        stop-angle                     (cutils/ms-to-angle stop-ms)
 
-        angle-difference     (- stop-angle start-angle)
-        minimum-angle        30
-        factor-change        (- minimum-angle angle-difference)
-        ;; adjustments seek to set the angle difference to minimum (no matter what it is)
-        ;; catches when one side goes over edge with max & min
-        start-angle-adjusted (.max js/Math
-                                   (- start-angle (/ factor-change 2))
-                                   1)
-        stop-angle-adjusted  (.min js/Math
-                                   (+ stop-angle (/ factor-change 2))
-                                   359)
-
-        use-adjustment (< angle-difference 20)
-        start-used     (if use-adjustment
-                         start-angle-adjusted
-                         start-angle)
-        stop-used      (if use-adjustment
-                         stop-angle-adjusted
-                         stop-angle)]
-
-
-    [ui/svg-icon
-     {:viewBox "0 0 24 24"}
-     [:g
-      [:circle {:cx           "12" :cy     "12" :r "11"
-                :stroke-width "2"  :stroke "#cdcdcd"
-                :fill         "transparent"}]
-      [:path
-       {:d            (describe-arc 12 12 11 start-used stop-used)
-        :stroke       color
-        :stroke-width "2"
-        :fill         "transparent"}]]]))
 
 (def basic-ic {:style {:marginTop "7.5px"}
                :color "white"})
@@ -150,6 +110,52 @@
 (def app-theme-with-component-overides
   (merge {:palette app-theme}
          (convert-js-mui-theme json-string-mui-theme-overides)))
+
+(defn mini-arc [period]
+  (let [{:keys [id description color planned]} period
+        start                          (:start period)
+        start-ms                       (utils/get-ms start)
+        start-angle                    (cutils/ms-to-angle start-ms)
+        stop                           (:stop period)
+        stop-ms                        (utils/get-ms stop)
+        stop-angle                     (cutils/ms-to-angle stop-ms)
+
+        angle-difference     (- stop-angle start-angle)
+        minimum-angle        30
+        factor-change        (- minimum-angle angle-difference)
+        ;; adjustments seek to set the angle difference to minimum (no matter what it is)
+        ;; catches when one side goes over edge with max & min
+        start-angle-adjusted (.max js/Math
+                                   (- start-angle (/ factor-change 2))
+                                   1)
+        stop-angle-adjusted  (.min js/Math
+                                   (+ stop-angle (/ factor-change 2))
+                                   359)
+
+        use-adjustment (< angle-difference 20)
+        start-used     (if use-adjustment
+                         start-angle-adjusted
+                         start-angle)
+        stop-used      (if use-adjustment
+                         stop-angle-adjusted
+                         stop-angle)]
+
+    [ui/svg-icon
+     {:viewBox "0 0 40 40"}
+     [:g
+      [:circle {:cx           "20" :cy "20" :r "20"
+                :opacity "0.66"
+                :fill         (:border-color app-theme)}]
+      [:circle {:cx           "20" :cy "20" :r "10"
+                :opacity "0.66"
+                :fill         (:border-color app-theme)}]
+      [:path
+       {:d            (describe-arc 20 20
+                                    (if planned 5 15)
+                                    start-used stop-used)
+        :stroke       color
+        :stroke-width "5"
+        :fill         "transparent"}]]]))
 
 (def svg-consts {:viewBox       "0 0 100 100"
                  ;; :width "90" :height "90" :x "5" :y "5"
