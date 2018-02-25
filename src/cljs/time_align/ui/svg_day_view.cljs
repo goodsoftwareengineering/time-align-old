@@ -495,21 +495,29 @@
 
       (periods filtered-periods selected is-moving-period curr-time day)
 
-      ;; (when (:press-on long-press-state)
-      ;;   (let [relative-ms (utils/get-ms (:press-time long-press-state))
-      ;;         angle (cutils/ms-to-angle relative-ms)
-      ;;         cx (js/parseInt (:cx uic/svg-consts))
-      ;;         cy (js/parseInt (:cy uic/svg-consts))
-      ;;         r (js/parseInt (:inner-r uic/svg-consts)) ;; TODO jsi int cast integration and replace all these
-      ;;         indicator-r (/ (js/parseInt (:period-width uic/svg-consts)) 2)
-      ;;         point (cutils/polar-to-cartesian cx cy r angle)
-      ;;         indicator-cx (:x point)
-      ;;         indicator-cy (:y point)]
-      ;;     [:circle {:cx indicator-cx :cy indicator-cy
-      ;;               :r indicator-r
-      ;;               :opacity "0.1"
-      ;;               :fill (:text-color uic/app-theme)
-      ;;               :stroke (:primary1-color uic/app-theme)}]))
+      (when (:press-on long-press-state)
+        (let [relative-ms (utils/get-ms (:press-time long-press-state))
+              angle (cutils/ms-to-angle relative-ms)
+              cx (js/parseInt (:cx uic/svg-consts))
+              cy (js/parseInt (:cy uic/svg-consts))
+              r (js/parseInt (:inner-r uic/svg-consts)) ;; TODO jsi int cast integration and replace all these
+              indicator-r (/ (js/parseInt (:period-width uic/svg-consts)) 3)
+              point (cutils/polar-to-cartesian cx cy r angle)
+              indicator-cx (:x point)
+              indicator-cy (:y point)]
+          [:g [:circle {:cx indicator-cx :cy indicator-cy
+                        :r indicator-r
+                        :opacity "0.3"
+                        :fill (:text-color uic/app-theme)
+                        :stroke (:primary1-color uic/app-theme)}]
+           [:circle#inline-period-add-indicator
+            {:cx indicator-cx :cy indicator-cy
+             :r 0
+             :opacity "0.6"
+             :fill (:text-color uic/app-theme)
+             :stroke (:primary1-color uic/app-theme)}]
+           ]
+          ))
 
       ]]))
 
