@@ -42,10 +42,10 @@
       [:circle {:cx 25 :cy 25 :r 22
                 :fill (if invert (:accent-2-color uic/app-theme)
                           (:canvas-color uic/app-theme))
-                :stroke (if invert (:primary-1-color uic/app-theme)
+                :stroke (if invert (:text-color uic/app-theme)
                             (:alternate-text-color uic/app-theme))
                 :stroke-width "5"}]
-      [:path (merge {:fill (if invert (:primary-1-color uic/app-theme)
+      [:path (merge {:fill (if invert (:text-color uic/app-theme)
                                (:alternate-text-color uic/app-theme))}
                     d)]]]))
 

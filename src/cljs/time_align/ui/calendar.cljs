@@ -9,15 +9,15 @@
 
 (def stroke-width 0.125)
 
-(def cell-width (* (/ 100 7)))  ;; ~14
+(def cell-width-traditional (/ 100 7))  ;; ~14
 
-(def cell-width-adjusted
+(def cell-width-adjusted-traditional
   (- (* (/ 100 7))
      (* 2 stroke-width)))
 
-(def cell-height (* (/ 100 5))) ;; 20
+(def cell-height-traditional (/ 100 5)) ;; 20
 
-(def cell-height-adjusted (- (* (/ 100 5))
+(def cell-height-adjusted-traditional (- (* (/ 100 5))
                              (* 2 stroke-width)))
 
 (defn indices
@@ -83,7 +83,7 @@
 
      [ui/icon-button
       (merge
-       (when (= orientation :github) {:style {:background-color (:primary-1-color uic/app-theme)}})
+       (when (= orientation :github) {:style {:background-color (:accent-2-color uic/app-theme)}})
        {:onClick (fn [e] (rf/dispatch [:set-calendar-orientation :github]))})
       [ic/editor-border-vertical (if (= orientation :github)
                                    {:color (:text-color uic/app-theme)}
@@ -97,7 +97,7 @@
 
      [ui/icon-button
       (merge
-       (when (= orientation :traditional) {:style {:background-color (:primary-1-color uic/app-theme)}})
+       (when (= orientation :traditional) {:style {:background-color (:accent-2-color uic/app-theme)}})
        {:onClick (fn [e] (rf/dispatch [:set-calendar-orientation :traditional]))})
       [ic/editor-border-horizontal (if (= orientation :traditional)
                                      {:color (:text-color uic/app-theme)}
@@ -123,6 +123,7 @@
 (defn calendar []
   (let [displayed-day @(rf/subscribe [:displayed-day])
         calendar-orientation @(rf/subscribe [:calendar-orientation])
+        traditional? (= :traditional calendar-orientation)
         dd-year (.getFullYear displayed-day)
         dd-month (.getMonth displayed-day)
         [year month] @(rf/subscribe [:displayed-month])
@@ -164,8 +165,15 @@
                this-day-is-today (and (= this-day-date (.getDate (new js/Date)))
                                       (= (.getFullYear d) (.getFullYear (new js/Date)))
                                       (= (.getMonth d) (.getMonth (new js/Date))))
-               x (-> d (get-day) (- 1) (* cell-width))
-               y (* cell-height (week-number d))]
+               cell-width (if traditional? cell-width-traditional cell-height-traditional)
+               cell-height (if traditional? cell-height-traditional cell-width-traditional)
+               cell-width-adjusted (if traditional? cell-width-adjusted-traditional cell-height-adjusted-traditional)
+               cell-height-adjusted (if traditional? cell-height-adjusted-traditional cell-width-adjusted-traditional)
+               traditional-x (-> d (get-day) (- 1) (* cell-width-traditional))
+               traditional-y (* cell-height-traditional (week-number d))
+               x (if traditional? traditional-x traditional-y)
+               y (if traditional? traditional-y traditional-x)]
+
            [:g {:transform (str "translate(" x " " y ")")
                 :id  (.toDateString d)
                 :key (.toDateString d)
