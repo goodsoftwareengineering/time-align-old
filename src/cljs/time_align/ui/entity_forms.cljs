@@ -266,19 +266,14 @@
         "Start must come before Stop"])
 
      [ui/date-picker {:hintText "Stop Date"
-                      :value    (if (and (some? start-d)
-                                         (nil? stop-d))
-                                  start-d
-                                  stop-d)
+                      :value    stop-d
                       :minDate  (when (some? start-d)
                                  start-d)
                       :onChange (fn [_ new-d]
                                   (rf/dispatch [:set-period-form-date [new-d :stop]]))}]
 
      [ui/time-picker {:hintText "Stop Time"
-                      :value    (if-not (some? stop-d)
-                                  start-d
-                                  stop-d)
+                      :value    stop-d
                       :onChange
                                 (fn [_ new-s]
                                   (rf/dispatch [:set-period-form-time [new-s :stop]]))}]

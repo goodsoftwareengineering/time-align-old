@@ -292,7 +292,7 @@
          stop        (if (contains? query-params :stop-time)
                        (->> query-params
                             :stop-time
-                            (js/parseInt)
+                            (js/parseInt) ;; TODO this is probably the kind of spot to utilize time zones
                             (new js/Date))
                        nil)
 
@@ -664,17 +664,17 @@
  :set-period-form-time
  [persist-ls send-analytic validate-app-db]
  (fn [db [_ [new-s start-or-stop]]]
-   (let [o (get-in db [:view :period-form start-or-stop])]
+   (let [o (get-in db [:view :period-form start-or-stop])] ;; pull out the time in the form already
      (if (some? o)
-       (let [old-s (new js/Date o)]
+       (let [old-s (new js/Date o)] ;; if there is one just update the hours mins and secs like this function should
          (do
            (.setHours old-s (.getHours new-s))
            (.setMinutes old-s (.getMinutes new-s))
            (.setSeconds old-s (.getSeconds new-s))
            (assoc-in db [:view :period-form start-or-stop] old-s)))
        (do
-         (let [n (new js/Date)]
-           (.setFullYear new-s (.getFullYear n))
+         (let [n (get-in db [:view :displayed-day])] ;; if there isn't a date already there then we need to assume the year month day
+           (.setFullYear new-s (.getFullYear n))     ;; and just use the value coming from the action for hours minutes seconds
            (.setDate new-s (.getDate n))
            (assoc-in db [:view :period-form start-or-stop] new-s)))))))
 
