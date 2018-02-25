@@ -1040,3 +1040,11 @@
  :decrease-displayed-month
  [persist-ls send-analytic validate-app-db]
  decrease-displayed-month)
+
+(defn set-calendar-orientation [db [_ orientation]]
+  (assoc-in db [:view :calendar-orientation] orientation))
+
+(reg-event-db
+ :set-calendar-orientation
+ [persist-ls send-analytic validate-app-db]
+ set-calendar-orientation)

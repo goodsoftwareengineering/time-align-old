@@ -70,7 +70,7 @@
             #(week-has-day % {:year year :month month :date date})
             partitioned-by-weeks))))
 
-(defn calendar-nav [year month dd-year dd-month]
+(defn calendar-nav [year month dd-year dd-month orientation]
   (let [honed-in (and (= year dd-year)
                       (= month dd-month))]
     [ui/paper
@@ -82,10 +82,26 @@
       [ic/image-navigate-before {:color (:alternate-text-color uic/app-theme)}]]
 
      [ui/icon-button
+      (merge
+       (when (= orientation :github) {:style {:background-color (:primary-1-color uic/app-theme)}})
+       {:onClick (fn [e] (rf/dispatch [:set-calendar-orientation :github]))})
+      [ic/editor-border-vertical (if (= orientation :github)
+                                   {:color (:text-color uic/app-theme)}
+                                   {:color (:alternate-text-color uic/app-theme)})]]
+
+     [ui/icon-button
       {:onClick (fn [e] (rf/dispatch [:set-displayed-month [dd-year dd-month]]))}
       (if honed-in
         [ic/device-gps-fixed {:color (:alternate-text-color uic/app-theme)}]
         [ic/device-gps-not-fixed {:color (:alternate-text-color uic/app-theme)}])]
+
+     [ui/icon-button
+      (merge
+       (when (= orientation :traditional) {:style {:background-color (:primary-1-color uic/app-theme)}})
+       {:onClick (fn [e] (rf/dispatch [:set-calendar-orientation :traditional]))})
+      [ic/editor-border-horizontal (if (= orientation :traditional)
+                                     {:color (:text-color uic/app-theme)}
+                                     {:color (:alternate-text-color uic/app-theme)})]]
 
      [ui/icon-button
       {:onClick (fn [e] (rf/dispatch [:advance-displayed-month]))}
@@ -106,6 +122,7 @@
 
 (defn calendar []
   (let [displayed-day @(rf/subscribe [:displayed-day])
+        calendar-orientation @(rf/subscribe [:calendar-orientation])
         dd-year (.getFullYear displayed-day)
         dd-month (.getMonth displayed-day)
         [year month] @(rf/subscribe [:displayed-month])
@@ -119,7 +136,7 @@
      {:style
       {:display "flex" :justify-content "center" :flex-wrap "wrap"}}
 
-     (calendar-nav year month dd-year dd-month)
+     (calendar-nav year month dd-year dd-month calendar-orientation)
 
      [:span {:style {:color (:alternate-text-color uic/app-theme)
                      :padding "0.5em"}}

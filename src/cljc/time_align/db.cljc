@@ -204,6 +204,8 @@
                                                   :press-start nil
                                                   :press-on false})))
 (s/def ::inline-period-add-dialog boolean?)
+(s/def ::calendar-orientation (s/with-gen #{:traditional :github}
+                                #(gen/return :traditional)) )
 (s/def ::view (s/and (s/keys :req-un [::page
                                       ::selected
                                       ::period-in-play
@@ -218,6 +220,7 @@
                                       ::displayed-day
                                       ::displayed-month
                                       ::inline-period-add-dialog
+                                      ::calendar-orientation
                                       ])
                      (fn [view]
                        (if (get-in
@@ -251,6 +254,7 @@
   :dashboard-tab :calendar
   :period-in-play nil,
   :zoom nil,
+  :calendar-orientation :tranditional,
   :selected
   {:current-selection
    {:type-or-nil nil,
