@@ -167,6 +167,7 @@
      [ui/paper {:style {:width "100%"}}
       [ui/list
        (->> categories
+            (sort-by :name)
             (map (partial lp/list-item-category current-selection)))]]
      [:div.action-container ;; TODO this is used in two spots need to refactor to comp
       {:style {:position   "fixed"
@@ -204,6 +205,7 @@
 
         [ui/list
          (->> tasks
+              (sort-by :name)
               (map (partial lp/list-item-task current-selection)))]]
 
        [:div.action-container ;; TODO this is used in two spots need to refactor to comp
@@ -249,6 +251,10 @@
 
         [ui/list
          (->> periods
+              (sort-by (fn [period]
+                         (if (cutils/period-has-stamps period)
+                           (.valueOf (:stop period))
+                           0)))
               (map (partial lp/list-item-period current-selection)))]]
 
        [:div.action-container ;; TODO this is used in two spots need to refactor to comp
