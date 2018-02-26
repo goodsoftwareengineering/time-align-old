@@ -451,8 +451,8 @@
                                            date-str :mouse))
                    :onClick     deselect}
                   (case zoom
-                    :q1 {:viewBox "40 0 60 60"}
-                    :q2 {:viewBox "0 0 60 60"}
+                    :q1 {:viewBox "40 0 55 100"}
+                    :q2 {:viewBox "0 0 60 100"}
                     :q3 {:viewBox "0 40 60 60"}
                     :q4 {:viewBox "40 40 60 60"}
                     (select-keys uic/svg-consts [:viewBox])))
