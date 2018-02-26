@@ -254,7 +254,7 @@
   :dashboard-tab :calendar
   :period-in-play nil,
   :zoom nil,
-  :calendar-orientation :tranditional,
+  :calendar-orientation :traditional,
   :selected
   {:current-selection
    {:type-or-nil nil,
