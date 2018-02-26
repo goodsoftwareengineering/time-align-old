@@ -99,7 +99,7 @@
                 {:output-dir "target/cljsbuild/public/js"
                  :output-to "target/cljsbuild/public/js/app.js"
                  :source-map "target/cljsbuild/public/js/app.js.map"
-                 :optimizations :advanced
+                 :optimizations :whitespace
                  :pretty-print false
                  :pseudo-names    true
                  :closure-warnings
@@ -111,7 +111,7 @@
                 :compiler     {:main          time-align.worker
                                :output-dir    "target/cljsbuild/public/js/out_worker"
                                :output-to     "target/cljsbuild/public/js/worker.js"
-                               :optimizations :advanced
+                               :optimizations :whitespace
                                :pretty-print  false}}}}
 
              :aot :all

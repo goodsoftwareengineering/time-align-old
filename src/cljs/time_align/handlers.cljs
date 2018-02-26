@@ -999,8 +999,8 @@
 (reg-event-db
   :reset-app-db
   [persist-ls send-analytic validate-app-db]
-  (fn [_ [_ new-db]]
-    new-db))
+  (fn [db [_ new-db]]
+    (merge db (select-keys new-db [:categories]))))
 
 (reg-fx
   :load-db-to-import
