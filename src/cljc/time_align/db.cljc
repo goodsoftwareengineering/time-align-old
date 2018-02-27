@@ -93,7 +93,7 @@
 (s/def ::task (s/keys :req-un [::id ::name ::description ::complete]
                       :opt-un [::periods]))
 ;; TODO complete check (all periods are planned/actual are passed)
-(s/def ::tasks (s/coll-of ::task :gen-max 2 :min-count 1))
+(s/def ::tasks (s/coll-of ::task :gen-max 2 :min-count 0))
 (s/def ::user (s/keys :req-un [::name ::id ::email]))
 (s/def ::category (s/keys :req-un [::id ::name ::color]
                           :opt-un [::tasks]))
@@ -107,7 +107,15 @@
                        (s/or :is-id ::id
                              :is-nil nil?)
                        #(gen/return nil)))
-(s/def ::page-id (s/with-gen #{:home :add-entity-forms :edit-entity-forms :list :queue :agenda}
+(s/def ::page-id (s/with-gen #{:home
+                               :add-entity-forms
+                               :edit-entity-forms
+                               :list-categories
+                               :list-tasks
+                               :list-periods
+                               :queue
+                               :agenda
+                               :calendar}
                    #(gen/return :home)))
 (s/def ::page  (s/keys :req-un [::page-id
                                 ::type-or-nil
@@ -176,11 +184,13 @@
                                      :task-id nil
                                      :error-or-nil nil
                                      :planned false})))
-(s/def ::dashboard-tab (s/with-gen #{:agenda :queue :stats}
-                         #(gen/return :agenda)))
+(s/def ::dashboard-tab (s/with-gen #{:agenda :queue :calendar}
+                         #(gen/return :calendar)))
 (s/def ::displayed-day (s/with-gen inst?
                         #?(:cljs #(gen/return (new js/Date))
                            :clj #(gen/return (t/zoned-date-time)))))
+(s/def ::displayed-month (s/with-gen (s/coll-of int? :min-count 2 :max-count 2 :gen-max 2)
+                           #(gen/return [2018 1]))) ;; TODO make this dynamically today
 (s/def ::period-in-play ::id-or-nil)
 (s/def ::callback-id ::id-or-nil)
 (s/def ::press-start  (s/with-gen (s/or :some ::moment
@@ -194,6 +204,8 @@
                                                   :press-start nil
                                                   :press-on false})))
 (s/def ::inline-period-add-dialog boolean?)
+(s/def ::calendar-orientation (s/with-gen #{:traditional :github}
+                                #(gen/return :traditional)) )
 (s/def ::view (s/and (s/keys :req-un [::page
                                       ::selected
                                       ::period-in-play
@@ -206,7 +218,9 @@
                                       ::task-form
                                       ::period-form
                                       ::displayed-day
+                                      ::displayed-month
                                       ::inline-period-add-dialog
+                                      ::calendar-orientation
                                       ])
                      (fn [view]
                        (if (get-in
@@ -237,9 +251,10 @@
                              :press-start nil
                              :press-on false}
   :inline-period-add-dialog false
-  :dashboard-tab :agenda
+  :dashboard-tab :calendar
   :period-in-play nil,
   :zoom nil,
+  :calendar-orientation :traditional,
   :selected
   {:current-selection
    {:type-or-nil nil,
@@ -251,6 +266,7 @@
   :action-buttons :collapsed,
   :continous-action {:moving-period false},
   :displayed-day (utils/make-date),
+  :displayed-month [2018 1],
   :category-form
   {:id-or-nil nil, :name "", :color-map {:red 0, :green 0, :blue 0}},
   :task-form

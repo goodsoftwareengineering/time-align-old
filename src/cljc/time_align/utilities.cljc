@@ -3,7 +3,8 @@
             #?(:cljs [cljsjs.moment-timezone])
             #?(:clj [java-time :as t])
             [clojure.pprint :refer [pprint]]
-            ))
+))
+
 (defn thread-friendly-pprint!
   [to-prn]
   (pprint to-prn)

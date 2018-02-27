@@ -16,27 +16,28 @@
   [req]
   (cond
     ;;When in dev use the local ip header, when deploy
-    (-> time-align.config/env :dev) (InetAddress/getByName (:remote-addr req))
+    (-> time-align.config/env :dev)        (InetAddress/getByName (:remote-addr req))
     ;;When in prod use the header from nginx
     ;;see https://stackoverflow.com/questions/34814957/nginx-does-not-forwards-remote-address-to-gunicorn#34816635
     (-> time-align.config/env :production) (->  req :headers (get "x-forwarded-for") InetAddress/getByName)))
 
 (defroutes home-routes
-           (GET "/" []
-             (home-page))
-           (GET "/docs" []
+  (GET "/" []
+       (home-page))
+  (GET "/graphiql" [] (layout/render "graphiql.html"))
+  (GET "/docs" []
              (-> (response/ok (-> "docs/docs.md" io/resource slurp))
                  (response/header "Content-Type" "text/plain; charset=utf-8")))
-           (GET "/test-route" []
+  (GET "/test-route" []
              (fn [req]
-               (response/ok {:headers (:headers req)
+               (response/ok {:headers    (:headers req)
                              :csrf-token *anti-forgery-token*}))
              )
-           (POST "/analytics" []
-             (fn [req]
-               (->> req
-                    :params
-                    (merge {:ip_addr (get-ip-addr req)})
-                    db/create-analytic!
-                    (format "%d analytic(s) added")
-                    response/ok))))
+  (POST "/analytics" []
+        (fn [req]
+          (->> req
+               :params
+               (merge {:ip_addr (get-ip-addr req)})
+               db/create-analytic!
+               (format "%d analytic(s) added")
+               response/ok))))

@@ -3,7 +3,8 @@
 
 (defn start-fw []
   (ra/start-figwheel!)
-  (ra/start-autobuild :worker))
+  (ra/start-autobuild :worker)
+  (ra/start-autobuild :app))
 
 (defn stop-fw []
   (ra/stop-figwheel!))
@@ -12,4 +13,3 @@
   (when-not (ra/figwheel-running?)
     (start-fw))
   (ra/cljs-repl "app"))
-

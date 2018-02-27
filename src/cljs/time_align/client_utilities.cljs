@@ -326,3 +326,8 @@
   [periods]
 
   )
+
+(defn same-day? [day-a day-b]
+  (and (= (.getFullYear day-a) (.getFullYear day-b))
+       (= (.getMonth day-a) (.getMonth day-b))
+       (= (.getDate day-a) (.getDate day-b))))

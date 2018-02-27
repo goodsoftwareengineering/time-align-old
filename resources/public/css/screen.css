@@ -3,8 +3,7 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  background-color: #c2c2c2;
-
+  background-color: #1C2429; /* TODO refactor so this used by app theme and not even in css */
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -khtml-user-select: none;
@@ -21,154 +20,358 @@ div#app > div {
   height: inherit;
 }
 
-.clock-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
+#inline-period-add-indicator-bottom {
+  animation-duration: 1.5s;
+  animation-delay: 0.25s;
+  animation-name: grow-fast;
 }
 
-.cssload-clock {
-  border-radius: 353px;
-  border: 18px solid rgb(0, 0, 0);
-  height: 470px;
-  width: 470px;
+#inline-period-add-indicator-top {
+  animation-duration: 1.5s;
+  animation-delay: 0.25s;
+  animation-name: grow-slow;
+}
+
+@keyframes grow-slow {
+  from {r: 0;}
+  to {r: 5;}
+}
+
+@keyframes grow-fast {
+  0% {r: 0;}
+  10% {r: 4;}
+  100% {r: 4;}
+}
+.showbox {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 5%;
+}
+
+.loader {
   position: relative;
-  left: calc(50% - 253px);
-  left: -o-calc(50% - 253px);
-  left: -ms-calc(50% - 253px);
-  left: -webkit-calc(50% - 253px);
-  left: -moz-calc(50% - 253px);
+  margin: 0 auto;
+  width: 100px;
+}
+.loader:before {
+  content: '';
+  display: block;
+  padding-top: 100%;
 }
 
-.cssload-clock:after {
-  content: "";
+.circular {
+  -webkit-animation: rotate 2s linear infinite;
+          animation: rotate 2s linear infinite;
+  height: 100%;
+  -webkit-transform-origin: center center;
+          transform-origin: center center;
+  width: 100%;
   position: absolute;
-  background-color: rgb(0, 0, 0);
-  top: 12px;
-  left: 48%;
-  height: 223px;
-  width: 24px;
-  border-radius: 29px;
-  transform-origin: 50% 97%;
-  -o-transform-origin: 50% 97%;
-  -ms-transform-origin: 50% 97%;
-  -webkit-transform-origin: 50% 97%;
-  -moz-transform-origin: 50% 97%;
-  animation: grdAiguille 2.3s linear infinite;
-  -o-animation: grdAiguille 2.3s linear infinite;
-  -ms-animation: grdAiguille 2.3s linear infinite;
-  -webkit-animation: grdAiguille 2.3s linear infinite;
-  -moz-animation: grdAiguille 2.3s linear infinite;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
 }
 
-.cssload-clock:before {
-  content: "";
-  position: absolute;
-  background-color: rgb(0, 0, 0);
-  top: 35px;
-  left: 48%;
-  height: 206px;
-  width: 24px;
-  border-radius: 29px;
-  transform-origin: 50% 94%;
-  -o-transform-origin: 50% 94%;
-  -ms-transform-origin: 50% 94%;
-  -webkit-transform-origin: 50% 94%;
-  -moz-transform-origin: 50% 94%;
-  animation: ptAiguille 13.8s linear infinite;
-  -o-animation: ptAiguille 13.8s linear infinite;
-  -ms-animation: ptAiguille 13.8s linear infinite;
-  -webkit-animation: ptAiguille 13.8s linear infinite;
-  -moz-animation: ptAiguille 13.8s linear infinite;
+.path {
+  stroke-dasharray: 1, 200;
+  stroke-dashoffset: 0;
+  -webkit-animation: dash 1.5s ease-in-out infinite, color 6s ease-in-out infinite;
+          animation: dash 1.5s ease-in-out infinite, color 6s ease-in-out infinite;
+  stroke-linecap: round;
 }
 
-@keyframes grdAiguille {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-@-o-keyframes grdAiguille {
-  0% {
-    -o-transform: rotate(0deg);
-  }
-  100% {
-    -o-transform: rotate(360deg);
-  }
-}
-
-@-ms-keyframes grdAiguille {
-  0% {
-    -ms-transform: rotate(0deg);
-  }
-  100% {
-    -ms-transform: rotate(360deg);
-  }
-}
-
-@-webkit-keyframes grdAiguille {
-  0% {
-    -webkit-transform: rotate(0deg);
-  }
+@-webkit-keyframes rotate {
   100% {
     -webkit-transform: rotate(360deg);
+            transform: rotate(360deg);
   }
 }
 
-@-moz-keyframes grdAiguille {
-  0% {
-    -moz-transform: rotate(0deg);
-  }
-  100% {
-    -moz-transform: rotate(360deg);
-  }
-}
-
-@keyframes ptAiguille {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-@-o-keyframes ptAiguille {
-  0% {
-    -o-transform: rotate(0deg);
-  }
-  100% {
-    -o-transform: rotate(360deg);
-  }
-}
-
-@-ms-keyframes ptAiguille {
-  0% {
-    -ms-transform: rotate(0deg);
-  }
-  100% {
-    -ms-transform: rotate(360deg);
-  }
-}
-
-@-webkit-keyframes ptAiguille {
-  0% {
-    -webkit-transform: rotate(0deg);
-  }
+@keyframes rotate {
   100% {
     -webkit-transform: rotate(360deg);
+            transform: rotate(360deg);
+  }
+}
+@-webkit-keyframes dash {
+  0% {
+    stroke-dasharray: 1, 200;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 89, 200;
+    stroke-dashoffset: -35px;
+  }
+  100% {
+    stroke-dasharray: 89, 200;
+    stroke-dashoffset: -124px;
+  }
+}
+@keyframes dash {
+  0% {
+    stroke-dasharray: 1, 200;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 89, 200;
+    stroke-dashoffset: -35px;
+  }
+  100% {
+    stroke-dasharray: 89, 200;
+    stroke-dashoffset: -124px;
+  }
+}
+@-webkit-keyframes color {
+  100%,
+  0% {
+    stroke: #d62d20;
+  }
+  40% {
+    stroke: #0057e7;
+  }
+  66% {
+    stroke: #008744;
+  }
+  80%,
+  90% {
+    stroke: #ffa700;
+  }
+}
+@keyframes color {
+  100%,
+  0% {
+    stroke: #d62d20;
+  }
+  40% {
+    stroke: #0057e7;
+  }
+  66% {
+    stroke: #008744;
+  }
+  80%,
+  90% {
+    stroke: #ffa700;
   }
 }
 
-@-moz-keyframes ptAiguille {
-  0% {
-    -moz-transform: rotate(0deg);
-  }
-  100% {
-    -moz-transform: rotate(360deg);
-  }
+/* TODO move this tutorial style stuff as close to inline objects as possible might need some very minimal positioning for parent elements and then everything else is a snackbar or something */
+
+.lesson {
+    position: absolute;
+    z-index: 10001;
+    min-width: 200px;
+    padding: 8px;
+    border-radius: 4px;
+    color: white;
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.lesson button {
+    border-radius: 4px;
+    background-color: white;
+    color: black;
+    padding: 4px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.lesson:after {
+    border: solid transparent;
+	  content: " ";
+	  height: 0;
+	  width: 0;
+	  position: absolute;
+	  pointer-events: none;
+	  border-color: rgba(213, 60, 60, 0);;
+	  border-width: 10px;
+	  margin-top: -10px;
+}
+
+.lesson.top:after {
+    top: 100%;
+	  left: 50%;
+    border-top-color: rgba(0, 0, 0, 0.8);
+    margin-top: 0;
+    margin-left: -10px;
+}
+
+.lesson.bottom:after {
+    bottom: 100%;
+	  left: calc(50% - 10px);
+    border-bottom-color: rgba(0, 0, 0, 0.8);
+}
+
+.lesson.right:after {
+	  right: 100%;
+	  top: 50%;
+	  border-right-color: rgba(0, 0, 0, 0.8);
+}
+
+.lesson.left:after {
+	  left: 100%;
+	  top: 50%;
+	  border-left-color: rgba(0, 0, 0, 0.8);
+}
+
+.lesson.bottom-left {
+    border-top-right-radius: 0;
+}
+
+.lesson.bottom-left:after {
+	  left: 100%;
+	  top: 10px;
+	  border-left-color: rgba(0, 0, 0, 0.8);
+    border-top-color: rgba(0, 0, 0, 0.8);
+}
+
+.lesson.bottom-right {
+    border-top-left-radius: 0;
+}
+
+.lesson.bottom-right:after {
+	  right: 100%;
+	  top: 10px;
+	  border-right-color: rgba(0, 0, 0, 0.8);
+    border-top-color: rgba(0, 0, 0, 0.8);
+}
+
+.lesson.top-left {
+    border-bottom-right-radius: 0;
+}
+
+.lesson.top-left:after {
+	  left: 100%;
+	  bottom: 0px;
+	  border-left-color: rgba(0, 0, 0, 0.8);
+    border-bottom-color: rgba(0, 0, 0, 0.8);
+}
+
+.lesson.top-right {
+    border-bottom-left-radius: 0;
+}
+
+.lesson.top-right:after {
+	  right: 100%;
+	  bottom: 0px;
+	  border-right-color: rgba(0, 0, 0, 0.8);
+    border-bottom-color: rgba(0, 0, 0, 0.8);
+}
+
+/* tutorial context */
+
+.context-container {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    box-sizing: border-box;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 2em;
+    z-index: 10000;
+}
+
+.tutorial-description {
+    width: 40%;
+    display: inline-block;
+}
+
+.tutorial-description h2 {
+    margin-top: 0;
+}
+
+.tutorial-completion {
+    text-align: center;
+}
+
+.lesson-navigation {
+    width: 20%;
+    display: inline-block;
+    text-align: center;
+    line-height: 2em;
+    font-size: 3em;
+    vertical-align: bottom;
+}
+
+.lesson-navigation span {
+    vertical-align: middle;
+}
+
+.context-controls a, .lesson-navigation a {
+    cursor: pointer;
+    color: hotpink;
+}
+
+.lesson-navigation a.disabled {
+    color: gray;
+    pointer-events: none;
+}
+
+.context-controls {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    line-height: 1em;
+    font-size: 1.5em;
+    text-align: right;
+}
+
+.tutorial-progress {
+    width: 100%;
+    height: 10px;
+    border: 1px solid lightgreen;
+    text-align: center;
+}
+
+.tutorial-progress-bar {
+    position: relative;
+    background-color: lightgreen;
+    transition: width 250ms ease-in-out;
+    height: 100%;
+}
+
+.tutorial-progress-steps {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+    margin-top: -17px;
+    margin-bottom: 10px;
+}
+
+.progress-step {
+    display: table-cell;
+    width: 2%;
+    text-align: center;
+}
+
+.progress-step > div {
+    position: relative;
+    margin: 0 auto;
+    width: 20px;
+    height: 20px;
+    border-radius: 20px;
+}
+
+.progress-step.complete > div {
+    border: 1px solid lightgreen;
+    background-color: darkgreen;
+}
+
+.progress-step.incomplete > div {
+    border: 1px solid lightgreen;
+    background-color: rgb(255,64,129);
+}
+
+/* help mode */
+
+.help-outline {
+    position: absolute;
+    box-shadow: 0 0 12px 12px rgba(255, 215, 0, 0.3);
+    outline: 2px solid gold;
+    z-index: 10000;
 }

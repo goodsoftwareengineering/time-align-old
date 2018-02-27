@@ -34,15 +34,26 @@
 ;;  :queue     <a collection of further interceptors>
 ;;  :stack     <a collection of interceptors already walked> }
 
+(defonce local-storage-atom (atom db/default-db))
+
+(defn set-nil-tasks-to-empty [db]
+  ;; save-period-form describes why this and function below are needed
+  (specter/setval
+   [:categories specter/ALL
+    :tasks nil?] '[] db))
+
+(defn set-nil-periods-to-empty [db]
+  (specter/setval
+   [:categories specter/ALL
+    :tasks specter/ALL
+    :periods nil?] '[] db))
+
 (def persist-ls
   (->interceptor
    :id :persist-to-localstorage
    :after (fn [context]
-            (remove-local-storage! :app-db)
-            (local-storage (-> context
-                               (get-in [:effects :db])
-                               atom)
-                           :app-db)
+            (reset! local-storage-atom
+                    (get-in context [:effects :db]))
             context)))
 
 (def route
@@ -127,12 +138,7 @@
           (time-align.worker-handlers/init! (js/Worker. worker-src-url))))
 
 (defn initialize-db [cofx _]
-  (let [initial-db (if (some #(= :app-db %) (store/store->keys))
-                              (->> :app-db
-                                   store/key->transit-str
-                                   (.getItem js/localStorage)
-                                   store/transit-json->map)
-                              db/default-db)]
+  (let [initial-db @(local-storage local-storage-atom :app-db)] ;; library handles ignoring default when already present
     {:db initial-db
      :init-worker (if js/goog.DEBUG "/bootstrap_worker.js" "js/worker.js") }))
 
@@ -147,6 +153,12 @@
     :add-entity-forms {:page-id     page
                        :type-or-nil type
                        :id-or-nil   nil}
+    :list-tasks      {:page-id page
+                      :type-or-nil :category
+                      :id-or-nil id}
+    :list-periods    {:page-id page
+                      :type-or-nil :task
+                      :id-or-nil id}
     ;;default
     {:page-id     page
      :type-or-nil nil
@@ -165,20 +177,22 @@
       :period [:load-new-period-entity-form query-params]
       nil)))
 
+(defn set-active-page
+  [cofx [_ params]]
+  (let [db           (:db cofx)
+        page         (:page-id params)
+        type         (:type params)
+        id           (:id params)
+        query-params (:query-params params)
+        view-page    (determine-page page type id)
+        to-load      (determine-dispatched type id query-params)]
+
+    (merge {:db (assoc-in db [:view :page] view-page)
+            :dispatch-n (filter some? (list to-load))})))
 (reg-event-fx
  :set-active-page
  [persist-ls send-analytic validate-app-db]
- (fn [cofx [_ params]]
-   (let [db           (:db cofx)
-         page         (:page-id params)
-         type         (:type params)
-         id           (:id params)
-         query-params (:query-params params)
-         view-page    (determine-page page type id)
-         to-load      (determine-dispatched type id query-params)]
-
-     (merge {:db (assoc-in db [:view :page] view-page)
-             :dispatch-n (filter some? (list to-load))}))))
+ set-active-page)
 
 (reg-event-db
  :load-category-entity-form
@@ -203,8 +217,6 @@
                 :name      ""
                 :color-map {:red 0 :blue 0 :green 0}}))))
 
-
-
 (reg-event-db
  :load-task-entity-form
  [persist-ls send-analytic validate-app-db]
@@ -214,7 +226,9 @@
          id          (:id this-task)
          name        (str (:name this-task))
          description (str (:description this-task))
-         complete    (:complete this-task)
+         complete    (if (some? (:complete this-task))
+                       (:complete this-task)
+                       false)
          category-id (:category-id this-task)]
      (assoc-in db [:view :task-form]
                {:id-or-nil   id
@@ -278,7 +292,7 @@
          stop        (if (contains? query-params :stop-time)
                        (->> query-params
                             :stop-time
-                            (js/parseInt)
+                            (js/parseInt) ;; TODO this is probably the kind of spot to utilize time zones
                             (new js/Date))
                        nil)
 
@@ -368,12 +382,11 @@
  (fn [cofx [_ task-id]]
    (let [db (:db cofx)]
 
-     {:db       (assoc-in db [:view :selected]
-                          {:current-selection {:type-or-nil :task
-                                               :id-or-nil task-id}
-                           :previous-selection (get-in db [:view :selected :current-selection])})
-       ;; :dispatch [:action-buttons-back] ;; no selecting task on home yet
-})))
+     {:db (assoc-in db [:view :selected]
+                    {:current-selection {:type-or-nil :task
+                                         :id-or-nil task-id}
+                     :previous-selection
+                     (get-in db [:view :selected :current-selection])})})))
 
 (reg-event-fx
  :set-selected-period
@@ -385,14 +398,12 @@
          curr {:type-or-nil type :id-or-nil period-id}
          in-play-id (get-in db [:view :period-in-play])]
 
-     {:db       (assoc-in db [:view :selected]
-                          {:current-selection  curr
-                           :previous-selection prev})
-      :dispatch-n (filter some? (list ;; TODO upgrade re-frame and remove filter
-                                 (when (and (some? in-play-id)
-                                            (= in-play-id period-id))
-                                   [:pause-period-play])
-                                 [:action-buttons-back]))})))
+     (merge
+      {:db       (assoc-in db [:view :selected]
+                           {:current-selection  curr
+                            :previous-selection prev})}
+      (when (and (some? in-play-id) (= in-play-id period-id))
+        {:dispatch [:pause-period-play]})))))
 
 (reg-event-db
  :action-buttons-expand
@@ -610,11 +621,14 @@
                   #(= category-id (:id %))
                   :tasks specter/END]
 
-                 [clean-task] new-db-removed-old-task)]
+                 [clean-task] new-db-removed-old-task)
+
+         remove-task-nils-db (set-nil-tasks-to-empty new-db)
+         remove-period-nils-db (set-nil-periods-to-empty remove-task-nils-db)]
 
      (if (some? category-id)           ;; secondary, view should not dispatch when nil
 
-       {:db       new-db
+       {:db       remove-period-nils-db
         :route    [:back]
         :dispatch [:clear-task-form]}
 
@@ -650,17 +664,17 @@
  :set-period-form-time
  [persist-ls send-analytic validate-app-db]
  (fn [db [_ [new-s start-or-stop]]]
-   (let [o (get-in db [:view :period-form start-or-stop])]
+   (let [o (get-in db [:view :period-form start-or-stop])] ;; pull out the time in the form already
      (if (some? o)
-       (let [old-s (new js/Date o)]
+       (let [old-s (new js/Date o)] ;; if there is one just update the hours mins and secs like this function should
          (do
            (.setHours old-s (.getHours new-s))
            (.setMinutes old-s (.getMinutes new-s))
            (.setSeconds old-s (.getSeconds new-s))
            (assoc-in db [:view :period-form start-or-stop] old-s)))
        (do
-         (let [n (new js/Date)]
-           (.setFullYear new-s (.getFullYear n))
+         (let [n (get-in db [:view :displayed-day])] ;; if there isn't a date already there then we need to assume the year month day
+           (.setFullYear new-s (.getFullYear n))     ;; and just use the value coming from the action for hours minutes seconds
            (.setDate new-s (.getDate n))
            (assoc-in db [:view :period-form start-or-stop] new-s)))))))
 
@@ -710,13 +724,18 @@
                                  :periods specter/ALL #(= period-id (:id %))]
 
                                 specter/NONE db)
+         ;; above will set {:task nil} for any category without a task key because idk TODO file complaint
+         ;; this line below fixes that
+         remove-task-nils-db (set-nil-tasks-to-empty removed-old-period-db)
+         remove-period-nils-db (set-nil-periods-to-empty remove-task-nils-db)
+
          new-db (specter/setval
                  [:categories specter/ALL :tasks specter/ALL #(= task-id (:id %))
                   :periods specter/END]
 
                  [clean-period]
 
-                 removed-old-period-db)]
+                 remove-period-nils-db)]
 
      (if (or (and (nil? start) (nil? stop))  ;; TODO add error state for not planned with no stamps
              (< start-v stop-v))
@@ -803,6 +822,13 @@
  (fn [db [_ is-planned]]
    (assoc-in db [:view :period-form :planned] is-planned)))
 
+(defn set-displayed-day [db [_ day]]
+  (assoc-in db [:view :displayed-day] day))
+(reg-event-db
+ :set-displayed-day
+ [persist-ls send-analytic validate-app-db]
+ set-displayed-day)
+
 (reg-event-db
  :iterate-displayed-day
  [persist-ls send-analytic validate-app-db]
@@ -826,9 +852,10 @@
 (reg-event-fx
  :play-period
  [persist-ls send-analytic validate-app-db]
- (fn [cofx [_ id]]
+ (fn [cofx [_ _]]
    (let [db                 (:db cofx)
           ;; find the period
+         id                  (get-in db [:view :selected :current-selection :id-or-nil])
          periods            (cutils/pull-periods db)
          this-period        (some #(if (= (:id %) id) %) periods)
 
@@ -836,7 +863,7 @@
          new-id             (random-uuid)
          start              (new js/Date)
          stop               (as-> (new js/Date) d
-                                  (.setMinutes d (+ 1 (.getMinutes d))) ;; TODO adjustable increment
+                                  (.setMinutes d (+ 5 (.getMinutes d))) ;; TODO adjustable increment
                                   (new js/Date d))    ;; TODO we need to abstract out this mutative toxin
 
          new-actual-period  (merge
@@ -857,11 +884,9 @@
          other-categories   (filter #(not (= (:id %) category-id))
                                     all-categories)
          all-tasks          (:tasks this-category)
-         this-task          (some #(if (= (:id %) task-id) %)
-                                  all-tasks)
-         other-tasks        (filter #(not (= (:id %) task-id))
-                                    all-tasks)
-         periods (:periods this-task)
+         this-task          (some #(if (= (:id %) task-id) %) all-tasks)
+         other-tasks        (filter #(not (= (:id %) task-id)) all-tasks)
+         periods            (:periods this-task)
 
           ;; place
          new-task           (merge this-task
@@ -974,8 +999,8 @@
 (reg-event-db
   :reset-app-db
   [persist-ls send-analytic validate-app-db]
-  (fn [_ [_ new-db]]
-    new-db))
+  (fn [db [_ new-db]]
+    (merge db (select-keys new-db [:categories]))))
 
 (reg-fx
   :load-db-to-import
@@ -985,3 +1010,41 @@
                                     imported-app-db (time-align.storage/transit-json->map result)]
                                 (re-frame.core/dispatch [:reset-app-db imported-app-db])))
       (.readAsText reader imported-db-file))))
+
+(defn set-displayed-month [db [_ [year month]]]
+  (assoc-in db [:view :displayed-month] [year month]))
+(reg-event-db
+ :set-displayed-month
+ [persist-ls send-analytic validate-app-db] set-displayed-month)
+
+(defn advance-displayed-month [db _]
+  ;; TODO use specter here
+  (let [[year month] (get-in db [:view :displayed-month])
+        year-inc (if (>= month 11) (inc year) year)
+        month-inc (mod (inc month) 12)]
+    (assoc-in db [:view :displayed-month] [year-inc month-inc])))
+
+(reg-event-db
+ :advance-displayed-month
+ [persist-ls send-analytic validate-app-db]
+ advance-displayed-month)
+
+(defn decrease-displayed-month [db _]
+  ;; TODO use specter here
+  (let [[year month] (get-in db [:view :displayed-month])
+        year-dec (if (<= month 0) (dec year) year)
+        month-dec (mod (dec month) 12)]
+    (assoc-in db [:view :displayed-month] [year-dec month-dec])))
+
+(reg-event-db
+ :decrease-displayed-month
+ [persist-ls send-analytic validate-app-db]
+ decrease-displayed-month)
+
+(defn set-calendar-orientation [db [_ orientation]]
+  (assoc-in db [:view :calendar-orientation] orientation))
+
+(reg-event-db
+ :set-calendar-orientation
+ [persist-ls send-analytic validate-app-db]
+ set-calendar-orientation)
