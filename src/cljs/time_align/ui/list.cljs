@@ -85,9 +85,7 @@
                                         (:border-color uic/app-theme))}
                           {:border (str "0.125em solid "
                                         (:canvas-color uic/app-theme))})
-       :onClick         (if is-selected
-                          (fn [_] (rf/dispatch [:set-selected-task nil]))
-                          (fn [_] (rf/dispatch [:set-selected-task id])))}
+       :onClick         (fn [_] (hist/nav! (str "/list/periods/" id)))}
 
       {:rightIconButton (r/as-element
                          [ui/icon-button
@@ -96,8 +94,8 @@
                              ;; mui docs say we don't need this
                              (jsi/stop-propagation e)
                              ;; but we really do (at least on mobile)
-                             (hist/nav! (str "/list/periods/" id)))}
-                          [ic/navigation-subdirectory-arrow-left
+                             (hist/nav! (str "/edit/task/" id)))}
+                          [ic/image-edit
                            {:color (:primary uic/app-theme)}]])})]))
 
 (defn list-item-category [current-selection category]
@@ -117,9 +115,8 @@
                                       {:border (str "0.125em solid "
                                                     (:canvas-color uic/app-theme))})
                    :leftIcon        (r/as-element (uic/svg-mui-circle color))
-                    :onClick         (if is-selected
-                                       (fn [_] (rf/dispatch [:set-selected-category nil]))
-                                       (fn [_] (rf/dispatch [:set-selected-category id])))}
+                    :onClick         (fn [_]
+                                       (hist/nav! (str "/list/tasks/" id)))}
 
                    {:rightIconButton
                     (r/as-element
@@ -129,8 +126,8 @@
                          ;; mui docs say we don't need this
                          (jsi/stop-propagation e)
                          ;; but we really do (at least on mobile)
-                         (hist/nav! (str "/list/tasks/" id)))}
-                      [ic/navigation-subdirectory-arrow-left
+                         (hist/nav! (str "/edit/category/" id)))}
+                      [ic/image-edit
                        {:color (:primary uic/app-theme)}]])})]))
 
 (defn chip-item-category [category]
