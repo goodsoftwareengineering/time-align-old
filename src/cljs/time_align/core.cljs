@@ -165,6 +165,10 @@
     [:div {:style {:padding-bottom "10em"}}
      (app-bar)
      [ui/paper {:style {:width "100%"}}
+
+      (lp/breadcrumbs [{:label "---" :link "#/list/categories"}])
+      [ui/divider]
+
       [ui/list
        (->> categories
             (sort-by :name)
@@ -197,10 +201,12 @@
       [:div {:style {:padding-bottom "10em"}}
        (app-bar)
        [ui/paper {:style {:width "100%"}}
-        [:div {:style {:display "flex"
-                       :flex-wrap "wrap"}}
-         (lp/chip-item-category parent-category)]
 
+        (lp/breadcrumbs [{:label "---"
+                          :link "#/list/categories"
+                          :color (:color parent-category)}
+                         {:label (:name parent-category)
+                          :link (str "#/list/tasks/" (:id parent-category))}])
         [ui/divider]
 
         [ui/list
@@ -242,11 +248,13 @@
        (app-bar)
        [ui/paper {:style {:width "100%"}}
 
-        [:div {:style {:display "flex"
-                       :flex-wrap "wrap"}}
-         (lp/chip-item-category parent-category)
-         (lp/chip-item-task parent-task)]
-
+        (lp/breadcrumbs [{:label "---"
+                          :link "#/list/categories"
+                          :color (:color parent-category)}
+                         {:label (:name parent-category)
+                          :link (str "#/list/tasks/" (:id parent-category))}
+                         {:label (:name parent-task)
+                          :link (str "#/list/periods/" (:id parent-task))}])
         [ui/divider]
 
         [ui/list

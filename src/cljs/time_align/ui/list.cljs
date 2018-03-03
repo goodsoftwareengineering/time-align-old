@@ -156,3 +156,21 @@
       [ui/checkbox {:checked   complete
                     :iconStyle {:fill color}}]]
      [:span {:color (:text-color uic/app-theme)} name]]))
+
+(defn breadcrumbs [[root & rest]]
+  (let [link-style {:text-decoration "none"
+                    :color (:text-color uic/app-theme)}
+        span-style {:text-decoration "underline"
+                    :text-decoration-color (if-let [color (:color root)]
+                                             color
+                                             (:alternate-text-color uic/app-theme))}]
+
+    [:div {:style {:padding "0.5em"}}
+     [:a {:href (:link root) :style link-style}
+      [:span {:style span-style} (:label root)]]
+     (when (some? rest)
+       (->> rest
+            (map (fn [r] (when (some? r)
+                       [:a {:href (:link r) :style link-style}
+                        " > "
+                        [:span {:style span-style} (:label r) ]])))))]))
