@@ -59,7 +59,7 @@
    [:div {:style {:padding "0.25em"}}] ;; TODO get rid of this style hack pad
    (if (some? period-in-play) (pause-button) (play-button))])
 
-(defn action-buttons-pause [selected period-in-play]
+(defn action-buttons-pause [period-in-play]
   [:div (pause-button)])
 
 (defn action-buttons-add [add-fn]

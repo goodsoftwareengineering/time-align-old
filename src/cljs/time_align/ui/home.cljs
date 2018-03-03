@@ -4,6 +4,7 @@
             [re-learn.core :as re-learn]
             [time-align.ui.svg-day-view :as day-view]
             [time-align.ui.app-bar :as ab :refer [app-bar]]
+            [time-align.history :as hist]
             [time-align.ui.queue :as qp]
             [cljs-react-material-ui.reagent :as ui]
             [cljs-react-material-ui.icons :as ic]
@@ -114,13 +115,17 @@
 (defn home-page-comp []
   (let [tasks                @(rf/subscribe [:tasks])
         selected             @(rf/subscribe [:selected])
+        current-selection    (:current-selection selected)
+        selected-id          (:id-or-nil current-selection)
         action-button-state  @(rf/subscribe [:action-buttons])
         displayed-day        @(rf/subscribe [:displayed-day])
         periods              @(rf/subscribe [:periods])
+        selected-period   (some #(if (= selected-id (:id %)) %) periods)
         period-in-play       @(rf/subscribe [:period-in-play])
         ;; dashboard-tab       @(rf/subscribe [:dashboard-tab])
         zoom                 @(rf/subscribe [:zoom])
-        inline-period-dialog @(rf/subscribe [:inline-period-add-dialog])]
+        inline-period-dialog @(rf/subscribe [:inline-period-add-dialog])
+        ]
 
     [:div.app-container
      {:style {:display         "flex"
@@ -182,15 +187,25 @@
                :box-sizing "border-box"}}
 
 
-      ;; playing    selection
-        ;; pause edit copy
       ;; playing    no selection
-        ;; pause
-      ;; no playing selection
-        ;; edit copy
-      ;; no playing no selection
-        ;;
-      ]]))
+      (if (and (some? period-in-play)
+               (nil? selected-id))
+        (actb/action-buttons-pause period-in-play)
+
+        ;; playing    selection
+        ;; no playing selection
+        (if (some? selected-id)
+          (actb/action-buttons-period-selection
+           period-in-play
+           selected-id
+           (fn [_]
+             (let [{:keys [description start stop task-id]} selected-period]
+               (hist/nav! (str "#/add/period?"
+                               (when (cutils/period-has-stamps selected-period)
+                                 (str "start-time=" (.valueOf start)
+                                      "&stop-time=" (.valueOf stop)))
+                               "&description=" description
+                               "&task-id=" task-id)))))))]]))
 
 (def home-page
   (re-learn/with-lesson
