@@ -130,33 +130,6 @@
                       [ic/image-edit
                        {:color (:primary uic/app-theme)}]])})]))
 
-(defn chip-item-category [category]
-  (let [{:keys [id name color tasks]} category]
-    [ui/chip
-     {:background-color (:primary-1-color uic/app-theme)
-      :style {:border (str "0.125em solid " color)
-              :padding "0.125em"
-              :margin "0.5em 0.25em 0.5em 0.25em"}
-      :on-click (fn [e]
-                  (hist/nav! (str "/list/tasks/" id)))}
-     [ui/avatar {:background-color (:primary-1-color uic/app-theme)}
-      (uic/svg-mui-circle color)]
-     [:span {:color (:text-color uic/app-theme)} name]]))
-
-(defn chip-item-task [task]
-  (let [{:keys [id name color complete]} task]
-    [ui/chip
-     {:background-color (:primary-2-color uic/app-theme)
-      :style {:border (str "0.125em solid " color)
-              :padding "0.125em"
-              :margin "0.5em 0.25em 0.5em 0.25em"}
-      :on-click (fn [e]
-                  (hist/nav! (str "/list/periods/" id)))}
-     [ui/avatar {:background-color (:primary-2-color uic/app-theme)}
-      [ui/checkbox {:checked   complete
-                    :iconStyle {:fill color}}]]
-     [:span {:color (:text-color uic/app-theme)} name]]))
-
 (defn breadcrumbs [[root & rest]]
   (let [color (if-let [color (:color root)]
                 color
