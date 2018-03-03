@@ -170,7 +170,8 @@
      (when (some? rest)
        (->> rest
             (map (fn [r] (when (some? r)
-                           [:span {:style {:display "flex"
+                           [:span {:key (random-uuid)
+                                   :style {:display "flex"
                                            :align-items "center"}}
                             [ic/image-navigate-next
                              {:color (:text-color uic/app-theme)}]
