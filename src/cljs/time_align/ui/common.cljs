@@ -21,8 +21,6 @@
     (string/join " " ["M" (:x p-start) (:y p-start)
                       "A" r r 0 large-arc-flag 1 (:x p-stop) (:y p-stop)])))
 
-
-
 (def basic-ic {:style {:marginTop "7.5px"}
                :color "white"})
 
@@ -143,19 +141,27 @@
     [ui/svg-icon
      {:viewBox "0 0 41 41"}
      [:g
-      [:circle {:cx           "20.5" :cy "20.5" :r "20"
+      [:circle {:cx      "20.5" :cy "20.5" :r "20"
                 :opacity "0.66"
-                :fill         (:border-color app-theme)}]
-      [:circle {:cx           "20.5" :cy "20.5" :r "10"
+                                :fill    (:border-color app-theme)}]
+      [:circle {:cx      "20.5" :cy "20.5" :r "10"
                 :opacity "0.66"
-                :fill         (:border-color app-theme)}]
-      [:path
-       {:d            (describe-arc 20.5 20.5
-                                    (if planned 5 15)
-                                    start-used stop-used)
-        :stroke       color
-        :stroke-width "5"
-        :fill         "transparent"}]]]))
+                :fill    (:border-color app-theme)}]
+      [:circle {:cx      "20.5" :cy "20.5"
+                :r (if planned "8" "18")
+                :opacity "1"
+                :stroke  color
+                :stroke-width "4"
+                :fill    "transparent"}]
+
+      ;; [:path
+      ;;  {:d            (describe-arc 20.5 20.5
+      ;;                               (if planned 5 15)
+      ;;                               start-used stop-used)
+      ;;   :stroke       color
+      ;;   :stroke-width "5"
+      ;;   :fill         "transparent"}]
+      ]]))
 
 (def svg-consts {:viewBox       "0 0 100 100"
                  ;; :width "90" :height "90" :x "5" :y "5"
