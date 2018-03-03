@@ -394,16 +394,19 @@
 
 (secretary/defroute list-categories-route "/list/categories" []
   (rf/dispatch [:set-main-drawer false])
+  (rf/dispatch [:set-selected-period nil])
   (rf/dispatch [:set-active-page {:page-id :list-categories}]))
 
 (secretary/defroute list-tasks-route "/list/tasks/:category" [category]
   (rf/dispatch [:set-main-drawer false])
+  (rf/dispatch [:set-selected-period nil])
   (rf/dispatch [:set-active-page {:page-id :list-tasks
                                   :type nil
                                   :id (uuid category)}]))
 
 (secretary/defroute list-periods-route "/list/periods/:task" [task]
   (rf/dispatch [:set-main-drawer false])
+  (rf/dispatch [:set-selected-period nil])
   (rf/dispatch [:set-active-page {:page-id :list-periods
                                   :type nil
                                   :id (uuid task)}]))
