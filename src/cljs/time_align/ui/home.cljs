@@ -180,7 +180,17 @@
                :padding    "0.75em"
                ;; :border "green solid 0.1em"
                :box-sizing "border-box"}}
-      (actb/action-buttons action-button-state selected period-in-play)]]))
+
+
+      ;; playing    selection
+        ;; pause edit copy
+      ;; playing    no selection
+        ;; pause
+      ;; no playing selection
+        ;; edit copy
+      ;; no playing no selection
+        ;;
+      ]]))
 
 (def home-page
   (re-learn/with-lesson
