@@ -158,19 +158,34 @@
      [:span {:color (:text-color uic/app-theme)} name]]))
 
 (defn breadcrumbs [[root & rest]]
-  (let [link-style {:text-decoration "none"
-                    :color (:text-color uic/app-theme)}
-        span-style {:text-decoration "underline"
-                    :text-decoration-color (if-let [color (:color root)]
-                                             color
-                                             (:alternate-text-color uic/app-theme))}]
+  (let [color (if-let [color (:color root)]
+                color
+                (:alternate-text-color uic/app-theme))
+        link-style {:text-decoration "none"
+                    :color (:text-color uic/app-theme)
+                    :margin "0.125em"
+                    :padding "0.25em"
+                    :border-radius "0.25em"
+                    :border (str "0.125em solid " color)
+                    :background-color (:primary-2-color uic/app-theme)}
+        span-style {:text-decoration "none"
+                    :text-decoration-color color}]
 
-    [:div {:style {:padding "0.5em"}}
+    [:div {:style {:padding "1em"
+                   :display "flex"
+                   :flex-wrap "nowrap"}}
+
      [:a {:href (:link root) :style link-style}
-      [:span {:style span-style} (:label root)]]
+      [:span {:style span-style}
+       (uic/concatenated-text (:label root) 10 "...")]]
+
      (when (some? rest)
        (->> rest
             (map (fn [r] (when (some? r)
-                       [:a {:href (:link r) :style link-style}
-                        " > "
-                        [:span {:style span-style} (:label r) ]])))))]))
+                           [:span {:style {:display "flex"
+                                           :align-items "center"}}
+                            [ic/image-navigate-next
+                             {:color (:text-color uic/app-theme)}]
+                            [:a {:href (:link r) :style link-style}
+                             [:span {:style span-style}
+                              (uic/concatenated-text (:label r) 8 "...")]]])))))]))

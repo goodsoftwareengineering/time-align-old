@@ -166,7 +166,10 @@
      (app-bar)
      [ui/paper {:style {:width "100%"}}
 
-      (lp/breadcrumbs [{:label "---" :link "#/list/categories"}])
+      (lp/breadcrumbs [{:label (uic/svg-mui-entity
+                                {:type :category
+                                 :color (:text-color uic/app-theme)})
+                        :link "#/list/categories"}])
       [ui/divider]
 
       [ui/list
@@ -202,7 +205,9 @@
        (app-bar)
        [ui/paper {:style {:width "100%"}}
 
-        (lp/breadcrumbs [{:label "---"
+        (lp/breadcrumbs [{:label (uic/svg-mui-entity
+                                  {:type :task
+                                   :color (:text-color uic/app-theme)})
                           :link "#/list/categories"
                           :color (:color parent-category)}
                          {:label (:name parent-category)
@@ -248,7 +253,9 @@
        (app-bar)
        [ui/paper {:style {:width "100%"}}
 
-        (lp/breadcrumbs [{:label "---"
+        (lp/breadcrumbs [{:label (uic/svg-mui-entity
+                                  {:type :period
+                                   :color (:text-color uic/app-theme)})
                           :link "#/list/categories"
                           :color (:color parent-category)}
                          {:label (:name parent-category)
