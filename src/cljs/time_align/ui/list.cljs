@@ -132,7 +132,18 @@
                                     [ui/svg-icon
                                      [ic/image-edit
                                       {:color (:text-color uic/app-theme)}]])}
-                       ]))})]))
+                       {:key (str id "-copy-menu-item")
+                        :primary-text "Copy"
+                        :on-click (fn [e]
+                                    ;; mui docs say we don't need this
+                                    (jsi/stop-propagation e)
+                                    ;; but we really do (at least on mobile)
+                                    (hist/nav! (str "/add/category?name="name
+                                                    "&color="color)))
+                        :left-icon (r/as-element
+                                    [ui/svg-icon
+                                     [ic/content-content-copy
+                                      {:color (:text-color uic/app-theme)}]])}]))})]))
 
 (defn breadcrumbs [[root & rest]]
   (let [color (if-let [color (:color root)]

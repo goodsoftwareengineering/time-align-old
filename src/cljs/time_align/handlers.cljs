@@ -211,11 +211,17 @@
  :load-new-category-entity-form
  [persist-ls send-analytic validate-app-db]
  (fn [db [_ query-params]]
-   (let [] ;; TODO pull query-params
+   (let [name  (if-let [name (:name query-params)] name "")
+         color (if-let [color (:color query-params)]
+                 (cutils/color-hex->255 color)
+                 {:red 0 :blue 0 :green 0})]
+
+     (.log js/console {:name name :color color
+                       :query-params query-params})
      (assoc-in db [:view :category-form]
                {:id-or-nil nil
-                :name      ""
-                :color-map {:red 0 :blue 0 :green 0}}))))
+                :name      name
+                :color-map color}))))
 
 (reg-event-db
  :load-task-entity-form
