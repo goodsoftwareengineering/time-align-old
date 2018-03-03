@@ -11,19 +11,19 @@
             [time-align.js-interop :as jsi]))
 
 ;; Kept this for example of menu
-;; (defn list-item-right-menu []
-;;   [ui/icon-menu
-;;    {:list-style {:backgroundColor (:primary-1-color uic/app-theme)}
-;;     :icon-button-element
-;;     (r/as-element
-;;      [ui/icon-button
-;;       {:touch true
-;;        :tooltip "more"
-;;        :tooltip-position "bottom-left"}
-;;       [ic/navigation-more-vert {:color (:text-color uic/app-theme)}]])}
+(defn list-item-right-menu [menu-item-property-col]
+  [ui/icon-menu
+   {:list-style {:backgroundColor (:primary-1-color uic/app-theme)}
+    :use-layer-for-click-away true
+    :icon-button-element
+    (r/as-element
+     [ui/icon-button
+      {:touch true
+       :tooltip "more"
+       :tooltip-position "bottom-left"}
+      [ic/navigation-more-vert {:color (:text-color uic/app-theme)}]])}
 
-;;    [ui/menu-item "Jump To"]
-;;    [ui/menu-item "Edit"]])
+   (map (fn [i] [ui/menu-item i]) menu-item-property-col) ])
 
 (defn list-item-period [current-selection period]
   (let [{:keys [id description color]} period
@@ -106,29 +106,33 @@
 
     [ui/list-item (merge
                    {:key             id
-                   :primaryText     (uic/concatenated-text name 20
+                    :primaryText     (uic/concatenated-text name 20
                                                            "no name entered ...")
-                   :secondaryText   (str "Tasks: " number-of-tasks)
-                   :style           (if is-selected
+                    :secondaryText   (str "Tasks: " number-of-tasks)
+                    :style           (if is-selected
                                       {:border (str "0.125em solid "
                                                     (:border-color uic/app-theme))}
                                       {:border (str "0.125em solid "
                                                     (:canvas-color uic/app-theme))})
-                   :leftIcon        (r/as-element (uic/svg-mui-circle color))
+                    :leftIcon        (r/as-element (uic/svg-mui-circle color))
                     :onClick         (fn [_]
                                        (hist/nav! (str "/list/tasks/" id)))}
 
                    {:rightIconButton
                     (r/as-element
-                     [ui/icon-button
-                      {:onClick
-                       (fn [e]
-                         ;; mui docs say we don't need this
-                         (jsi/stop-propagation e)
-                         ;; but we really do (at least on mobile)
-                         (hist/nav! (str "/edit/category/" id)))}
-                      [ic/image-edit
-                       {:color (:primary uic/app-theme)}]])})]))
+                     (list-item-right-menu
+                      [{:key (str id "-edit-menu-item")
+                        :primary-text "Edit"
+                        :on-click (fn [e]
+                                    ;; mui docs say we don't need this
+                                    (jsi/stop-propagation e)
+                                    ;; but we really do (at least on mobile)
+                                    (hist/nav! (str "/edit/category/" id)))
+                        :left-icon (r/as-element
+                                    [ui/svg-icon
+                                     [ic/image-edit
+                                      {:color (:text-color uic/app-theme)}]])}
+                       ]))})]))
 
 (defn breadcrumbs [[root & rest]]
   (let [color (if-let [color (:color root)]
@@ -139,7 +143,7 @@
                     :margin "0.125em"
                     :padding "0.25em"
                     :border-radius "0.25em"
-                    :border (str "0.125em solid " color)
+                    :border-bottom (str "0.25em solid " color)
                     :background-color (:primary-2-color uic/app-theme)}
         span-style {:text-decoration "none"
                     :text-decoration-color color}]
@@ -162,3 +166,4 @@
                             [:a {:href (:link r) :style link-style}
                              [:span {:style span-style}
                               (uic/concatenated-text (:label r) 8 "...")]]])))))]))
+
