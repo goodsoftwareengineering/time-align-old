@@ -26,6 +26,7 @@
    (map (fn [i] [ui/menu-item i]) menu-item-property-col) ])
 
 (defn list-item-period [current-selection period]
+  ;; TODO in play period indicator here or in app-bar (tracing dash array?)
   (let [{:keys [id description color]} period
         sel-id                         (:id-or-nil current-selection)
         is-selected                    (= id sel-id)]
