@@ -247,13 +247,19 @@
  :load-new-task-entity-form
  [persist-ls send-analytic validate-app-db]
  (fn [db [_ query-params]]
-   (let [] ;; TODO parse query-params
+   (let [name        (if-let [name (:name query-params)] name "")
+         complete    (if-let [complete (:complete query-params)]
+                       (= complete "true") false)
+         description (if-let [description (:description query-params)]
+                       description "")
+         category-id (if-let [category-id (:category-id query-params)]
+                       (uuid category-id) nil)]
      (assoc-in db [:view :task-form]
                {:id-or-nil   nil
-                :name        ""
-                :description ""
-                :complete    false
-                :category-id nil}))))
+                :name        name
+                :description description
+                :complete    complete
+                :category-id category-id}))))
 
 (reg-event-db
  :load-period-entity-form

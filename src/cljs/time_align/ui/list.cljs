@@ -67,7 +67,7 @@
                 ))]))
 
 (defn list-item-task [current-selection task]
-  (let [{:keys [id name periods complete color]} task
+  (let [{:keys [id name periods complete color category-id description]} task
         sel-id            (:id-or-nil current-selection)
         number-of-periods (count periods)
         is-selected       (= id sel-id)]
@@ -88,15 +88,32 @@
        :onClick         (fn [_] (hist/nav! (str "/list/periods/" id)))}
 
       {:rightIconButton (r/as-element
-                         [ui/icon-button
-                          {:onClick
-                           (fn [e]
-                             ;; mui docs say we don't need this
-                             (jsi/stop-propagation e)
-                             ;; but we really do (at least on mobile)
-                             (hist/nav! (str "/edit/task/" id)))}
-                          [ic/image-edit
-                           {:color (:primary uic/app-theme)}]])})]))
+                     (list-item-right-menu
+                      [{:key (str id "-edit-menu-item")
+                        :primary-text "Edit"
+                        :on-click (fn [e]
+                                    ;; mui docs say we don't need this
+                                    (jsi/stop-propagation e)
+                                    ;; but we really do (at least on mobile)
+                                    (hist/nav! (str "/edit/task/" id)))
+                        :left-icon (r/as-element
+                                    [ui/svg-icon
+                                     [ic/image-edit
+                                      {:color (:text-color uic/app-theme)}]])}
+                       {:key (str id "-copy-menu-item")
+                        :primary-text "Copy"
+                        :on-click (fn [e]
+                                    ;; mui docs say we don't need this
+                                    (jsi/stop-propagation e)
+                                    ;; but we really do (at least on mobile)
+                                    (hist/nav! (str "/add/task?name=" name
+                                                    "&complete=" complete
+                                                    "&category-id=" category-id
+                                                    "&description=" description)))
+                        :left-icon (r/as-element
+                                    [ui/svg-icon
+                                     [ic/content-content-copy
+                                      {:color (:text-color uic/app-theme)}]])}]))})]))
 
 (defn list-item-category [current-selection category]
   (let [{:keys [id name color tasks]} category
@@ -138,8 +155,8 @@
                                     ;; mui docs say we don't need this
                                     (jsi/stop-propagation e)
                                     ;; but we really do (at least on mobile)
-                                    (hist/nav! (str "/add/category?name="name
-                                                    "&color="color)))
+                                    (hist/nav! (str "/add/category?name=" name
+                                                    "&color=" color)))
                         :left-icon (r/as-element
                                     [ui/svg-icon
                                      [ic/content-content-copy
@@ -153,7 +170,7 @@
                     :color (:text-color uic/app-theme)
                     :margin "0.125em"
                     :padding "0.25em"
-                    :border-radius "0.25em"
+                    :border-radius "0.25em" ;; TODO animation w/ stylefy
                     :border-bottom (str "0.25em solid " color)
                     :background-color (:primary-2-color uic/app-theme)}
         span-style {:text-decoration "none"
