@@ -308,7 +308,7 @@
                             (new js/Date))
                        nil)
 
-         description (if (contains? query-params :description-time)
+         description (if (contains? query-params :description)
                        (:description query-params)
                        nil)]
 
