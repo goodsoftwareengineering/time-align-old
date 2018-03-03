@@ -270,6 +270,7 @@
                          (if (cutils/period-has-stamps period)
                            (.valueOf (:stop period))
                            0)))
+              (reverse)
               (map (partial lp/list-item-period current-selection)))]]
 
        [:div.action-container ;; TODO this is used in two spots need to refactor to comp
