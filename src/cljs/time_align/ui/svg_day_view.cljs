@@ -341,9 +341,7 @@
                                                displayed-day))))
         )]]))
 
-(stylefy/keyframes "grow-indicator"
-                   [:from {:stroke-dasharray "0, 215"}]
-                   [:to   {:stroke-dasharray "215, 0"}])
+
 
 (defn day [tasks selected day]
   (let [date-str                 (subs (jsi/->iso-string day) 0 10)
@@ -387,10 +385,10 @@
                                    (utils/get-ms indicator-start))
         indicator-angle          (if (some? indicator-start)
                                    (cutils/ms-to-angle indicator-relative-ms))
-        indicator-max-duration   30000
-        indicator-duration       (- indicator-max-duration
-                                    (* indicator-max-duration
-                                       (/ indicator-angle 720 )))
+        indicator-max-duration   60000
+        indicator-arc-angle      (- 360 indicator-angle)
+        indicator-duration       (* indicator-max-duration
+                                    (/ indicator-arc-angle  360))
 
         mobile-user-agent         (re-seq
                                    #"(?i)Android|webOS|iPhone|iPad|iPod|BlackBerry"
@@ -440,16 +438,16 @@
                                             (not (:press-on long-press-state)))
                                      (fn [e]
                                        (.clearTimeout js/window (:timeout-id long-press-state))
-                                       (println
-                                        (str "cancelling inline add..."
-                                             (:timeout-id long-press-state)))
                                        (rf/dispatch [:set-inline-period-long-press
                                                      {:indicator-start nil
                                                       :stop-time nil
                                                       :timeout-id nil
-                                                      :press-on false}]))
+                                                      :press-on false}])
+                                       (println
+                                        (str "cancelling inline add..."
+                                             (:timeout-id long-press-state))))
 
-                                     ;; either no timeout id or press on true
+                                     ;; either no timeout id or press-on true
                                      (if (:press-on long-press-state)
                                        (fn [_]
                                          (println "This is where we would add")
@@ -554,17 +552,24 @@
 
       (when (and (:press-on long-press-state)
                  (nil? selected-period))
-        (let [cx (js/parseInt (:cx uic/svg-consts))
-              cy (js/parseInt (:cy uic/svg-consts))
-              r (js/parseInt (:inner-r uic/svg-consts)) ;; TODO jsi int cast integration and replace all these
-              indicator-r (/ (-> (:period-width uic/svg-consts)
-                                 (js/parseInt))
-                             3)
-              point (cutils/polar-to-cartesian cx cy r indicator-angle)
-              indicator-cx (:x point)
-              period-width (js/parseInt (:period-width uic/svg-consts))
-              arc          (uic/describe-arc cx cy r indicator-angle 359)
-              indicator-cy (:y point)]
+        (let [cx            (js/parseInt (:cx uic/svg-consts))
+              cy            (js/parseInt (:cy uic/svg-consts))
+              r             (js/parseInt (:inner-r uic/svg-consts)) ;; TODO jsi int cast integration and replace all these
+              indicator-r   (/ (-> (:period-width uic/svg-consts)
+                                   (js/parseInt))
+                               3)
+              circumference (* (* 2 (jsi/pi)) r)
+              arc-length    (* circumference (/ indicator-arc-angle 360))
+              point         (cutils/polar-to-cartesian cx cy r indicator-angle)
+              indicator-cx  (:x point)
+              period-width  (js/parseInt (:period-width uic/svg-consts))
+              arc           (uic/describe-arc cx cy r indicator-angle 359)
+              indicator-cy  (:y point)]
+
+          (stylefy/keyframes "grow-indicator"
+                             [:from {:stroke-dasharray (str "0, " arc-length)}]
+                             [:to   {:stroke-dasharray (str arc-length " , 0")}])
+
           [:g
 
            [:path
@@ -585,7 +590,7 @@
                     :stroke-width (* 1.5 period-width)
                     ;; guessed and checked the dasharray
                     ;; the length of the whole circle is a little over 210
-                    :stroke-dasharray "1 215"
+                    :stroke-dasharray (str "0 " arc-length)
                     :fill         "transparent"})]]))]]))
 
 (defn days [days tasks selected-period]

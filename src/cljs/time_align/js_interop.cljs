@@ -52,3 +52,6 @@
 
 (defn user-agent []
   (.-userAgent js/navigator))
+
+(defn pi []
+  (.-PI js/Math))
