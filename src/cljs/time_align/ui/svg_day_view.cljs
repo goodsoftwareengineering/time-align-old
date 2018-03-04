@@ -55,6 +55,11 @@
                    [:50%  {:opacity "0.5"}]
                    [:100% {:opacity "0.1"}])
 
+(stylefy/keyframes "moving-period"
+                   [:0%   {:opacity "0.25" :stroke-dasharray "10, 0"}]
+                   [:50%  {:opacity "0.5"  :stroke-dasharray "15, 10"}]
+                   [:100% {:opacity "0.25" :stroke-dasharray "10, 0"}])
+
 (defn period [selected curr-time is-moving-period type period displayed-day]
   (let [id               (:id period)
         start-date       (:start period)
@@ -182,7 +187,22 @@
                   :stroke           (:text-color uic/app-theme)
                   :stroke-width     "1"
                   :onClick          set-moving-handler
-                  :fill             (:text-color uic/app-theme)})]])]
+                  :fill             (:text-color uic/app-theme)})]
+
+         (when is-moving-period
+           [:path
+            (merge (stylefy/use-style
+                    (merge
+                     {:animation-duration (str "2s")
+                      :animation-timing-function "linear"
+                      :animation-iteration-count "infinite"
+                      :animation-name "moving-period"}))
+
+                   {:d                arc
+                    :stroke           (:accent-1-color uic/app-theme)
+                    :stroke-width     "1"
+                    :onClick          set-moving-handler
+                    :fill             (:accent-1-color uic/app-theme)})])])]
 
      ;; yesterday arrows TODO change all yesterdays and tomorrows to next and previous days
      (if starts-yesterday
@@ -421,12 +441,12 @@
                                                            "start-time=" absolute-start-time
                                                            "&stop-time=" absolute-stop-time)))))))
 
-        deselect                  (if (not is-moving-period)
-                                   (fn [e]
-                                     (println "deselect")
-                                     (jsi/prevent-default e)
-                                     (rf/dispatch-sync
-                                      [:set-selected-period nil])))
+        deselect                  (fn [e]
+                                    (println "deselect")
+                                    (jsi/prevent-default e)
+                                    (rf/dispatch-sync [:set-moving-period false])
+                                    (rf/dispatch-sync [:set-selected-period nil]))
+
         zoom @(rf/subscribe [:zoom])]
 
     [:div {:style {:height "100%" :width "100%"}}
