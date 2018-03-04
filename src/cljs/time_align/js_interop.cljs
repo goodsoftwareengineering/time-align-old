@@ -49,3 +49,6 @@
 (defn click!
   [x]
   (.click x))
+
+(defn user-agent []
+  (.-userAgent js/navigator))

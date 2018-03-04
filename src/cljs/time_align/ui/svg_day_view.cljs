@@ -390,8 +390,11 @@
         indicator-max-duration   30000
         indicator-duration       (- indicator-max-duration
                                     (* indicator-max-duration
-                                       (/ indicator-angle 359.9 )))
+                                       (/ indicator-angle 720 )))
 
+        mobile-user-agent         (re-seq
+                                   #"(?i)Android|webOS|iPhone|iPad|iPod|BlackBerry"
+                                   (jsi/user-agent))
         start-touch-click-handler (if (and (not is-moving-period)
                                            (not (:press-on long-press-state)))
                                     (fn [elem-id ui-type e]
@@ -416,9 +419,13 @@
                                                    [:set-inline-period-long-press
                                                     {:press-on true}]))
                                                 indicator-delay)]
+
+                                        ;; (jsi/stop-propagation e)
+                                        ;; (jsi/prevent-default e)
+
                                         ;; set the id to cancel the animation
                                         ;; set the time indicated initially
-                                        (println "maybe starting...")
+                                        (println (str "maybe starting..." id))
                                         (rf/dispatch [:set-inline-period-long-press
                                                       {:timeout-id id
                                                        :indicator-start time-date-obj}]))))
@@ -427,16 +434,22 @@
                                      (jsi/prevent-default e)
                                      (rf/dispatch
                                       [:set-moving-period false]))
+
+                                   ;; not moving period and...
                                    (if (and (some? (:timeout-id long-press-state))
                                             (not (:press-on long-press-state)))
                                      (fn [e]
-                                       (println "Cancelling inline add!")
                                        (.clearTimeout js/window (:timeout-id long-press-state))
+                                       (println
+                                        (str "cancelling inline add..."
+                                             (:timeout-id long-press-state)))
                                        (rf/dispatch [:set-inline-period-long-press
                                                      {:indicator-start nil
                                                       :stop-time nil
                                                       :timeout-id nil
                                                       :press-on false}]))
+
+                                     ;; either no timeout id or press on true
                                      (if (:press-on long-press-state)
                                        (fn [_]
                                          (println "This is where we would add")
@@ -450,6 +463,7 @@
                                          ;; use the indicated starte time and derived stop to ...
                                          ;; TODO eventually nav to edit period with start and stop query params
                                          ))))
+
         deselect                  (if (not is-moving-period)
                                    (fn [e]
                                      (jsi/prevent-default e)
@@ -470,24 +484,29 @@
                                  }
                    :width       "100%"
                    :height      "100%"
-                   :onMouseDown (if (some? start-touch-click-handler) ;; catch the case when handler is nil otherwise partial freaks out when called
-                                                                ;; TODO this should be moved up into the let
-                                  (partial start-touch-click-handler
-                                           date-str :mouse))
-                   :onTouchStart (if (some? start-touch-click-handler)
-                                   (partial start-touch-click-handler
-                                            date-str :touch))
-
-                   :onTouchEnd  stop-touch-click-handler
-                   :onMouseUp   stop-touch-click-handler
-
-                   :onTouchMove (if is-moving-period
-                                  (partial handle-period-move
-                                           date-str :touch))
-                   :onMouseMove (if is-moving-period
-                                  (partial handle-period-move
-                                           date-str :mouse))
                    :onClick     deselect}
+
+                  ;; start gets triggered twice on mobile unless we use when statements
+                  (when (some? mobile-user-agent)
+                    {:onTouchStart (if (some? start-touch-click-handler)
+                                     (partial start-touch-click-handler
+                                              date-str :touch))
+                     :onTouchEnd  stop-touch-click-handler
+                     :onTouchMove (if is-moving-period
+                                    (partial handle-period-move
+                                             date-str :touch))})
+
+                  (when (nil? mobile-user-agent)
+                    {:onMouseDown (if (some? start-touch-click-handler)
+                                    ;; catch the case when handler is nil otherwise partial freaks out when called
+                                    ;; TODO this should be moved up into the let
+                                    (partial start-touch-click-handler
+                                             date-str :mouse))
+                     :onMouseUp   stop-touch-click-handler
+                     :onMouseMove (if is-moving-period
+                                    (partial handle-period-move
+                                             date-str :mouse))})
+
                   (case zoom
                     :q1 {:viewBox "40 0 55 100"}
                     :q2 {:viewBox "0 0 60 100"}
