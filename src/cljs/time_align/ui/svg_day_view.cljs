@@ -384,7 +384,7 @@
                                                 (fn [_]
                                                   (rf/dispatch [:set-inline-period-add-dialog ;; TODO rename, shouldn't be 'dialog'
                                                                 true]))
-                                                1500)
+                                                50000)
                                             svg-coords    (cutils/client-to-view-box elem-id e ui-type)
                                             circle-coords (cutils/point-to-centered-circle
                                                            (merge (select-keys uic/svg-consts [:cx :cy])
@@ -505,20 +505,26 @@
               indicator-r (/ (js/parseInt (:period-width uic/svg-consts)) 3)
               point (cutils/polar-to-cartesian cx cy r angle)
               indicator-cx (:x point)
+              period-width (js/parseInt (:period-width uic/svg-consts))
+              arc          (uic/describe-arc cx cy r angle 359)
               indicator-cy (:y point)]
           [:g
-           [:circle#inline-period-add-indicator-bottom
-            {:cx indicator-cx :cy indicator-cy
-             :r 0
-             :opacity "0.1"
-             :fill (:text-color uic/app-theme)
-             :stroke (:primary1-color uic/app-theme)}]
-           [:circle#inline-period-add-indicator-top
-            {:cx indicator-cx :cy indicator-cy
-             :r 0
-             :opacity "0.6"
-             :fill (:text-color uic/app-theme)
-             :stroke (:primary1-color uic/app-theme)}]]))]]))
+           [:path#base-inline-period-add-indicator
+            {:d            arc
+             :stroke       (:text-color uic/app-theme)
+             :opacity      "0.1"
+             :stroke-width (* 1.5 period-width)
+             :fill         "transparent"}]
+           [:path#active-inline-period-add-indicator
+            {:d            arc
+             :stroke       (:text-color uic/app-theme)
+             :opacity      "0.5"
+             :stroke-width (* 1.5 period-width)
+             ;; guessed and checked the dasharray
+             ;; the length of the whole circle is a little over 210
+             :stroke-dasharray "1 215"
+             :fill         "transparent"}]
+           ]))]]))
 
 (defn days [days tasks selected-period]
   (->> days
