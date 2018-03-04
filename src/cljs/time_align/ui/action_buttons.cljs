@@ -16,8 +16,8 @@
    (merge basic-button
           {:onTouchTap
            (fn [e]
-             (rf/dispatch
-              [:play-period]))})
+             (rf/dispatch [:play-period])
+             (hist/nav! "/"))})
    [ic/av-play-arrow uic/basic-ic]])
 
 (defn pause-button []
