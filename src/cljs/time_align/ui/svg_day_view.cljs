@@ -72,15 +72,6 @@
                      359.5
                                      (cutils/ms-to-angle stop-ms))
 
-        straddles-now              (utils/straddles-now? start-date stop-date)
-        now-ms                     (utils/get-ms (new js/Date))
-        broken-stop-before-angle   (cutils/ms-to-angle now-ms)
-        broken-start-after-angle   (cutils/ms-to-angle now-ms)
-
-        curr-time-ms               (jsi/value-of curr-time)
-        start-abs-ms               (jsi/value-of start-date)
-        stop-abs-ms                (jsi/value-of stop-date)
-
         is-period-selected         (= :period
                                       (get-in
                                         selected
@@ -98,9 +89,6 @@
         period-width               (js/parseInt (:period-width uic/svg-consts))
         cx                         (js/parseInt (:cx uic/svg-consts))
         cy                         (js/parseInt (:cy uic/svg-consts))
-        ;; radii need to be offset to account for path using
-        ;; A (arc) command having radius as the center of path
-        ;; instead of edge (like circle)
         r                          (-> (case type
                                          :actual (:r uic/svg-consts)
                                          :planned (:inner-r uic/svg-consts)
@@ -129,6 +117,7 @@
                                        ;; initiate moving period
                                        (fn [e]
                                          (jsi/stop-propagation e)
+                                         (jsi/prevent-default e)
                                          (rf/dispatch
                                           [:set-moving-period true]))))
 
@@ -167,7 +156,7 @@
         :onClick      touch-click-handler}]
 
       (when  (= selected-period id)
-        [:g
+        [:g {:key (str id "-selected-playing-moving-indicators")}
          [:path
           (merge (stylefy/use-style
                   (if is-moving-period
@@ -181,7 +170,7 @@
                   :stroke       (:text-color uic/app-theme)
                   :stroke-dasharray selected-dash-array
                   :opacity      "0.7"
-                  :stroke-width  period-width
+                  :stroke-width  "1"
                   :fill         "transparent"})]])]
 
      ;; yesterday arrows TODO change all yesterdays and tomorrows to next and previous days
