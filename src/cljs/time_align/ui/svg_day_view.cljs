@@ -60,6 +60,11 @@
                    [:50%  {:opacity "0.5"  :stroke-dasharray "15, 10"}]
                    [:100% {:opacity "0.25" :stroke-dasharray "10, 0"}])
 
+(stylefy/keyframes "playing-period"
+                   [:0%   {:opacity "0.1" :stroke-dasharray "0, 214"}]
+                   [:50%  {:opacity "0.9"}]
+                   [:100% {:opacity "0.1" :stroke-dasharray "214, 0"}])
+
 (defn period [selected curr-time is-moving-period type period displayed-day period-in-play]
   (let [id               (:id period)
         start-date       (:start period)
@@ -109,6 +114,8 @@
                                   inner-arc (uic/describe-arc-reverse
                                              cx cy inner-r stop-angle start-angle)]
                               (str outer-arc inner-arc "Z"))
+
+        play-arc             (uic/describe-arc cx cy r start-angle stop-angle)
 
         set-selected-handler (if (not is-period-selected)
                                (fn [e]
@@ -202,7 +209,21 @@
                     :stroke           (:accent-1-color uic/app-theme)
                     :stroke-width     "1"
                     :onClick          set-moving-handler
-                    :fill             (:accent-1-color uic/app-theme)})])])]
+                    :fill             (:accent-1-color uic/app-theme)})])])
+
+      (when (= period-in-play id)
+        [:path (merge (stylefy/use-style
+                       {:animation-duration (str "5s")
+                        :animation-timing-function "linear"
+                        :animation-iteration-count "infinite"
+                        :animation-name "playing-period"})
+
+                      {:d            play-arc
+                       :opacity      "0.7"
+                       :fill         "transparent"
+                       :onClick      set-selected-handler
+                       :stroke-width period-width
+                       :stroke       (:text-color uic/app-theme)})])]
 
      ;; yesterday arrows TODO change all yesterdays and tomorrows to next and previous days
      (if starts-yesterday
@@ -260,14 +281,26 @@
 
 (defn periods [periods selected is-moving-period curr-time displayed-day period-in-play]
   (let [
-        ;; whole song and dance for putting the selected period on _top_
+        ;; whole song and dance for putting the
+        ;; selected and in play periods on _top_
+        ;; TODO make this not horrible
         sel-id (get-in selected [:current-selection :id-or-nil])
         selected-period (some #(if (= sel-id (:id %)) %) periods)
-        no-sel-periods (filter #(not= (:id %) sel-id) periods)
+        in-play-period (some #(if (= period-in-play (:id %)) %) periods)
+        no-sel-periods (->> periods
+                            (filter #(not= (:id %) sel-id))
+                            (filter #(not= (:id %) period-in-play)))
         sel-last-periods (filter cutils/period-has-stamps
                                  (if (some? sel-id)
-                                   (reverse (cons selected-period no-sel-periods))
-                                   periods))
+                                   (reverse (if (some? period-in-play)
+                                              (cons in-play-period
+                                                    (cons selected-period no-sel-periods))
+                                              (cons selected-period no-sel-periods)))
+
+                                   (if (some? period-in-play)
+                                     (reverse (cons in-play-period
+                                                    no-sel-periods))
+                                     no-sel-periods)))
         ;; dance done
         actual (filter #(not (:planned %)) sel-last-periods)
         planned (filter #(:planned %) sel-last-periods)
@@ -293,11 +326,6 @@
                                                planned-period
                                                displayed-day
                                                period-in-play)))))]]))
-
-(stylefy/keyframes "playing-period-ticker-center"
-                   [:0%   {:opacity "0.1" :r "0"}]
-                   [:50%  {:opacity "0.5" :r "0.7"}]
-                   [:100% {:opacity "0.1" :r "0"}])
 
 (defn day [tasks selected day]
   (let [date-str                 (subs (jsi/->iso-string day) 0 10)
