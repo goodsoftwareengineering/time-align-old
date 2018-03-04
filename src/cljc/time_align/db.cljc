@@ -192,13 +192,22 @@
 (s/def ::displayed-month (s/with-gen (s/coll-of int? :min-count 2 :max-count 2 :gen-max 2)
                            #(gen/return [2018 1]))) ;; TODO make this dynamically today
 (s/def ::period-in-play ::id-or-nil)
-(s/def ::callback-id ::id-or-nil)
-(s/def ::press-start  (s/with-gen (s/or :some ::moment
+(s/def ::timeout-id ::id-or-nil)
+(s/def ::indicator-start  (s/with-gen (s/or :some ::moment
                                         :none nil?)
                         #(gen/return nil)))
-(s/def ::press-on boolean?)
-(s/def ::inline-period-long-press (s/with-gen (s/keys ::req-un [::callback-id
-                                                                ::press-start
+(s/def ::start-time  (s/with-gen (s/or :some ::moment
+                                        :none nil?)
+                        #(gen/return nil)))
+(s/def ::stop-time  (s/with-gen (s/or :some ::moment
+                                       :none nil?)
+                       #(gen/return nil)))
+(s/def ::press-on (s/with-gen boolean?
+                    #(gen/return false)))
+(s/def ::inline-period-long-press (s/with-gen (s/keys ::req-un [::timeout-id
+                                                                ::indicator-start
+                                                                ::start-time
+                                                                ::stop-time
                                                                 ::press-on])
                                     #(gen/return {:callback-id nil
                                                   :press-start nil
@@ -247,8 +256,9 @@
   :id (random-uuid),
   :email ""},
  :view
- {:inline-period-long-press {:callback-id nil
-                             :press-start nil
+ {:inline-period-long-press {:indicator-start nil
+                             :stop-time nil
+                             :timeout-id nil
                              :press-on false}
   :inline-period-add-dialog false
   :dashboard-tab :calendar

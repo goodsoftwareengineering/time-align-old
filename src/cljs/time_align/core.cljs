@@ -32,7 +32,8 @@
             [time-align.ui.queue :as qp]
             [time-align.ui.action-buttons :as actb]
             [time-align.ui.calendar :as cp]
-            [time-align.js-interop :as jsi]))
+            [time-align.js-interop :as jsi]
+            [stylefy.core :as stylefy]))
 
 ;;Forward declarations to make file linting easier
 
@@ -461,6 +462,7 @@
   (hist/hook-browser-navigation!)
   (re-learn/init)
   (mount-components)
+  (stylefy/init)
   (js/setInterval uic/clock-tick 5000) ;; TODO this is bad
   )
 

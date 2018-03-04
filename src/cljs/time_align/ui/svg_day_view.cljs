@@ -5,7 +5,8 @@
             [time-align.history :as hist]
             [time-align.ui.common :as uic]
             [time-align.js-interop :as jsi]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [stylefy.core :as stylefy]))
 
 (def shadow-filter
   [:defs
@@ -340,6 +341,10 @@
                                                displayed-day))))
         )]]))
 
+(stylefy/keyframes "grow-indicator"
+                   [:from {:stroke-dasharray "0, 215"}]
+                   [:to   {:stroke-dasharray "215, 0"}])
+
 (defn day [tasks selected day]
   (let [date-str                 (subs (jsi/->iso-string day) 0 10)
         curr-time                (:time @uic/clock-state)
@@ -373,18 +378,25 @@
         is-moving-period         @(rf/subscribe [:is-moving-period])
         period-in-play-color     @(rf/subscribe [:period-in-play-color])
         long-press-state         @(rf/subscribe [:inline-period-long-press])
-        ;; start touch sets timeout callback
-        ;; passes id to view state along with time stamp
-        ;; when view state on set start stop to abort timeout callback using id from view
+        indicator-delay          2000 ;; slightly longer than standard touch (125ms)
+
+        ;; this is all for figuring out how long to set the animation
+        ;; relative to where the user indicated they want start for this period
+        indicator-start          (:indicator-start long-press-state)
+        indicator-relative-ms    (if (some? indicator-start)
+                                   (utils/get-ms indicator-start))
+        indicator-angle          (if (some? indicator-start)
+                                   (cutils/ms-to-angle indicator-relative-ms))
+        indicator-max-duration   30000
+        indicator-duration       (- indicator-max-duration
+                                    (* indicator-max-duration
+                                       (/ indicator-angle 359.9 )))
+
         start-touch-click-handler (if (and (not is-moving-period)
                                            (not (:press-on long-press-state)))
                                     (fn [elem-id ui-type e]
-                                      (let [id (.setTimeout
-                                                js/window
-                                                (fn [_]
-                                                  (rf/dispatch [:set-inline-period-add-dialog ;; TODO rename, shouldn't be 'dialog'
-                                                                true]))
-                                                50000)
+                                      (let [
+                                            ;; figure out what time the user initially touched
                                             svg-coords    (cutils/client-to-view-box elem-id e ui-type)
                                             circle-coords (cutils/point-to-centered-circle
                                                            (merge (select-keys uic/svg-consts [:cx :cy])
@@ -393,25 +405,51 @@
                                             relative-time (Math/floor (cutils/angle-to-ms angle))
                                             absolute-time (+ relative-time
                                                              (jsi/value-of (utils/zero-in-day day)))
-                                            time-date-obj (new js/Date absolute-time)]
-
+                                            time-date-obj (new js/Date absolute-time)
+                                            ;; set a function to go off after standard touch time
+                                            ;; to start the animation and timer
+                                            id (.setTimeout
+                                                js/window
+                                                (fn [_]
+                                                  (println "KICKOFF!")
+                                                  (rf/dispatch
+                                                   [:set-inline-period-long-press
+                                                    {:press-on true}]))
+                                                indicator-delay)]
+                                        ;; set the id to cancel the animation
+                                        ;; set the time indicated initially
+                                        (println "maybe starting...")
                                         (rf/dispatch [:set-inline-period-long-press
-                                                      {:press-time time-date-obj
-                                                       :callback-id id
-                                                       :press-on true}]))))
+                                                      {:timeout-id id
+                                                       :indicator-start time-date-obj}]))))
         stop-touch-click-handler  (if is-moving-period
                                    (fn [e]
                                      (jsi/prevent-default e)
                                      (rf/dispatch
                                       [:set-moving-period false]))
-                                   (if (:press-on long-press-state)
+                                   (if (and (some? (:timeout-id long-press-state))
+                                            (not (:press-on long-press-state)))
                                      (fn [e]
-                                       (println "stopping long press")
-                                       (.clearTimeout js/window (:callback-id long-press-state))
+                                       (println "Cancelling inline add!")
+                                       (.clearTimeout js/window (:timeout-id long-press-state))
                                        (rf/dispatch [:set-inline-period-long-press
-                                                     {:press-time nil
-                                                      :callback-id nil
-                                                      :press-on false}]))))
+                                                     {:indicator-start nil
+                                                      :stop-time nil
+                                                      :timeout-id nil
+                                                      :press-on false}]))
+                                     (if (:press-on long-press-state)
+                                       (fn [_]
+                                         (println "This is where we would add")
+                                         (rf/dispatch [:set-inline-period-long-press
+                                                       {:indicator-start nil
+                                                        :stop-time nil
+                                                        :timeout-id nil
+                                                        :press-on false}])
+                                         ;; get now
+                                         ;; using the start time of long press state derive the intended duration of the period
+                                         ;; use the indicated starte time and derived stop to ...
+                                         ;; TODO eventually nav to edit period with start and stop query params
+                                         ))))
         deselect                  (if (not is-moving-period)
                                    (fn [e]
                                      (jsi/prevent-default e)
@@ -497,34 +535,39 @@
 
       (when (and (:press-on long-press-state)
                  (nil? selected-period))
-        (let [relative-ms (utils/get-ms (:press-time long-press-state))
-              angle (cutils/ms-to-angle relative-ms)
-              cx (js/parseInt (:cx uic/svg-consts))
+        (let [cx (js/parseInt (:cx uic/svg-consts))
               cy (js/parseInt (:cy uic/svg-consts))
               r (js/parseInt (:inner-r uic/svg-consts)) ;; TODO jsi int cast integration and replace all these
-              indicator-r (/ (js/parseInt (:period-width uic/svg-consts)) 3)
-              point (cutils/polar-to-cartesian cx cy r angle)
+              indicator-r (/ (-> (:period-width uic/svg-consts)
+                                 (js/parseInt))
+                             3)
+              point (cutils/polar-to-cartesian cx cy r indicator-angle)
               indicator-cx (:x point)
               period-width (js/parseInt (:period-width uic/svg-consts))
-              arc          (uic/describe-arc cx cy r angle 359)
+              arc          (uic/describe-arc cx cy r indicator-angle 359)
               indicator-cy (:y point)]
           [:g
-           [:path#base-inline-period-add-indicator
+
+           [:path
             {:d            arc
              :stroke       (:text-color uic/app-theme)
              :opacity      "0.1"
              :stroke-width (* 1.5 period-width)
              :fill         "transparent"}]
-           [:path#active-inline-period-add-indicator
-            {:d            arc
-             :stroke       (:text-color uic/app-theme)
-             :opacity      "0.5"
-             :stroke-width (* 1.5 period-width)
-             ;; guessed and checked the dasharray
-             ;; the length of the whole circle is a little over 210
-             :stroke-dasharray "1 215"
-             :fill         "transparent"}]
-           ]))]]))
+
+           [:path
+            (merge (stylefy/use-style
+                    {:animation-duration (str (/ indicator-duration 1000) "s")
+                     :animation-timing-function "linear"
+                     :animation-name "grow-indicator"})
+                   {:d            arc
+                    :stroke       (:text-color uic/app-theme)
+                    :opacity      "0.5"
+                    :stroke-width (* 1.5 period-width)
+                    ;; guessed and checked the dasharray
+                    ;; the length of the whole circle is a little over 210
+                    :stroke-dasharray "1 215"
+                    :fill         "transparent"})]]))]]))
 
 (defn days [days tasks selected-period]
   (->> days

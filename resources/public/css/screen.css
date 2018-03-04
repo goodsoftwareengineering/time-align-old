@@ -20,18 +20,6 @@ div#app > div {
   height: inherit;
 }
 
-
-#active-inline-period-add-indicator {
-  animation-duration: 5s;
-  animation-delay: 0.25s;
-  animation-name: active-inline-period-add-indicator-grow;
-}
-
-@keyframes active-inline-period-add-indicator-grow {
-  from {stroke-dasharray: 0, 215;}
-  to   {stroke-dasharray: 215, 0;}
-}
-
 .showbox {
   position: absolute;
   top: 0;

@@ -58,6 +58,7 @@
                  [ring/ring-defaults "0.3.1"]
                  [secretary "1.2.3"]
                  [selmer "1.11.5"]
+                 [stylefy "1.2.0"]
                  [org.clojure/test.check "0.9.0"] ;; TODO: move to dev deps when we don't need generation of data
                ]
 

@@ -983,7 +983,8 @@
  :set-inline-period-long-press
  [persist-ls send-analytic validate-app-db]
  (fn [db [_ long-press-state]]
-   (assoc-in db [:view :inline-period-long-press] long-press-state)))
+   (assoc-in db [:view :inline-period-long-press]
+             (merge (get-in db [:view :inline-period-long-press]) long-press-state))))
 
 (reg-event-fx
  :set-inline-period-add-dialog
