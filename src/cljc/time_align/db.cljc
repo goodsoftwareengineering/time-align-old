@@ -258,6 +258,7 @@
  :view
  {:inline-period-long-press {:indicator-start nil
                              :stop-time nil
+                             :start-time nil
                              :timeout-id nil
                              :press-on false}
   :inline-period-add-dialog false

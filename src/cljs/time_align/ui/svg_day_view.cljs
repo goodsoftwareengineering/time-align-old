@@ -415,7 +415,8 @@
                                                   (println "KICKOFF!")
                                                   (rf/dispatch
                                                    [:set-inline-period-long-press
-                                                    {:press-on true}]))
+                                                    {:press-on true
+                                                     :start-time (new js/Date)}]))
                                                 indicator-delay)]
 
                                         ;; (jsi/stop-propagation e)
@@ -451,16 +452,43 @@
                                      (if (:press-on long-press-state)
                                        (fn [_]
                                          (println "This is where we would add")
-                                         (rf/dispatch [:set-inline-period-long-press
-                                                       {:indicator-start nil
-                                                        :stop-time nil
-                                                        :timeout-id nil
-                                                        :press-on false}])
-                                         ;; get now
-                                         ;; using the start time of long press state derive the intended duration of the period
-                                         ;; use the indicated starte time and derived stop to ...
-                                         ;; TODO eventually nav to edit period with start and stop query params
-                                         ))))
+                                         (let [now (.valueOf (new js/Date))
+                                               started (if-let [s (:start-time long-press-state)]
+                                                         (.valueOf s))
+
+                                               time-held-down (if-let [started started]
+                                                                (- now started)
+                                                                indicator-max-duration) ;; shouldn't ever use this
+
+                                               desired-period-arc-angle (if (>= time-held-down indicator-duration)
+                                                                           indicator-arc-angle
+                                                                           (* (/ time-held-down indicator-duration)
+                                                                              indicator-arc-angle))
+                                               indicator-start-angle indicator-angle
+                                               indicator-stop-angle (.min js/Math
+                                                                          (+ indicator-start-angle
+                                                                             desired-period-arc-angle)
+                                                                          359.9)
+                                               relative-start-time  (cutils/angle-to-ms indicator-start-angle)
+                                               relative-stop-time   (cutils/angle-to-ms indicator-stop-angle)
+
+                                               absolute-start-time (+ relative-start-time
+                                                                      (jsi/value-of (utils/zero-in-day day)))
+                                               absolute-stop-time  (+ relative-stop-time
+                                                                      (jsi/value-of (utils/zero-in-day day)))]
+
+                                           (.log js/console {:start (new js/Date absolute-start-time)
+                                                             :stop  (new js/Date absolute-stop-time)})
+
+                                           (rf/dispatch [:set-inline-period-long-press
+                                                         {:indicator-start nil
+                                                          :stop-time nil
+                                                          :timeout-id nil
+                                                          :press-on false}])
+
+                                           (hist/nav! (str "/add/period?"
+                                                           "start-time=" absolute-start-time
+                                                           "&stop-time=" absolute-stop-time)))))))
 
         deselect                  (if (not is-moving-period)
                                    (fn [e]
