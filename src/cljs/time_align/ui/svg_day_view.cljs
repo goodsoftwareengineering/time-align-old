@@ -60,7 +60,7 @@
                    [:50%  {:opacity "0.5"  :stroke-dasharray "15, 10"}]
                    [:100% {:opacity "0.25" :stroke-dasharray "10, 0"}])
 
-(defn period [selected curr-time is-moving-period type period displayed-day]
+(defn period [selected curr-time is-moving-period type period displayed-day period-in-play]
   (let [id               (:id period)
         start-date       (:start period)
         starts-yesterday (utils/is-this-day-before-that-day?
@@ -258,7 +258,7 @@
                                       (:x tomorrow-2-arrow-point-bb) ","
                                       (:y tomorrow-2-arrow-point-bb) " ")}]])]))
 
-(defn periods [periods selected is-moving-period curr-time displayed-day]
+(defn periods [periods selected is-moving-period curr-time displayed-day period-in-play]
   (let [
         ;; whole song and dance for putting the selected period on _top_
         sel-id (get-in selected [:current-selection :id-or-nil])
@@ -281,7 +281,8 @@
                                               is-moving-period
                                               :actual
                                               actual-period
-                                              displayed-day)))))]
+                                              displayed-day
+                                              period-in-play)))))]
      [:g
       (if (some? planned)
         (->> planned
@@ -290,7 +291,13 @@
                                                is-moving-period
                                                :planned
                                                planned-period
-                                               displayed-day)))))]]))
+                                               displayed-day
+                                               period-in-play)))))]]))
+
+(stylefy/keyframes "playing-period-ticker-center"
+                   [:0%   {:opacity "0.1" :r "0"}]
+                   [:50%  {:opacity "0.5" :r "0.7"}]
+                   [:100% {:opacity "0.1" :r "0"}])
 
 (defn day [tasks selected day]
   (let [date-str                 (subs (jsi/->iso-string day) 0 10)
@@ -505,26 +512,23 @@
                        :r  (:inner-border-r uic/svg-consts)}
                       (select-keys uic/svg-consts [:cx :cy]))]
 
-      (periods filtered-periods selected is-moving-period curr-time day)
+      (periods filtered-periods selected is-moving-period curr-time day period-in-play)
 
       (when display-ticker
         [:g
-         [:circle {:cx (:cx uic/svg-consts) :cy (:cy uic/svg-consts)
-                   :r ".7"
+         [:circle {:cx (:cx uic/svg-consts) :cy (:cy uic/svg-consts) :r ".7"
                    :fill (if (some? period-in-play)
-                           period-in-play-color
-                           (:text-color uic/app-theme))
+                           (:text-color uic/app-theme)
+                           (:alternate-text-color uic/app-theme))
                    :stroke "transparent"}]
+
          [:line {:fill         "transparent"
                  :stroke-width "1.4"
                  :stroke       (if (some? period-in-play)
-                                 period-in-play-color
-                                 "white")
+                                 (:text-color uic/app-theme)
+                                 (:alternate-text-color uic/app-theme))
                  :stroke-linecap "butt"
                  :opacity      "1"
-                 ;; :filter       "url(#shadow-2dp)"
-                 ;; filter breaks bounding box and results in zero width or height
-                 ;; on vertical and horizontal lines (6, 9, 12, 0)
                  :x1           (:cx uic/svg-consts)
                  :y1           (:cy uic/svg-consts)
                  :x2           (:x ticker-pos)
