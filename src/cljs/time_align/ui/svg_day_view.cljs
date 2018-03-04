@@ -104,22 +104,26 @@
                                              cx cy inner-r stop-angle start-angle)]
                               (str outer-arc inner-arc "Z"))
 
-        touch-click-handler        (if (not is-period-selected)
-                                     ;; select period
-                                     (fn [e]
-                                       (jsi/stop-propagation e)
-                                       (jsi/prevent-default e)
-                                       (rf/dispatch-sync
-                                        [:set-selected-period id]))
-
-                                     (if (and is-period-selected
-                                              (= selected-period id))
-                                       ;; initiate moving period
-                                       (fn [e]
-                                         (jsi/stop-propagation e)
-                                         (jsi/prevent-default e)
-                                         (rf/dispatch-sync
-                                          [:set-moving-period true]))))
+        set-selected-handler (if (not is-period-selected)
+                               (fn [e]
+                                 (jsi/stop-propagation e)
+                                 (jsi/prevent-default e)
+                                 (rf/dispatch-sync
+                                  [:set-selected-period id])))
+        set-moving-handler   (if (and is-period-selected
+                                      (= selected-period id)
+                                      (not is-moving-period))
+                               (fn [e]
+                                 (jsi/stop-propagation e)
+                                 (jsi/prevent-default e)
+                                 (rf/dispatch-sync
+                                  [:set-moving-period true]))
+                               (if is-moving-period
+                                 (fn [e]
+                                   (jsi/stop-propagation e)
+                                   (jsi/prevent-default e)
+                                   (rf/dispatch-sync
+                                    [:set-moving-period false]))))
 
         yesterday-arrow-point      (cutils/polar-to-cartesian cx cy r 1)
         yesterday-arrow-point-bt   (cutils/polar-to-cartesian
@@ -153,25 +157,27 @@
        {:d            arc
         :opacity      opacity
         :fill         color
-        :onClick      touch-click-handler}]
+        :onClick      set-selected-handler}]
 
       (when  (= selected-period id)
         [:g {:key (str id "-selected-playing-moving-indicators")}
          [:path
           (merge (stylefy/use-style
                   (if is-moving-period
-                    {:animation-duration (str "1s")
-                     :animation-timing-function "ease-in"
-                     :animation-iteration-count "infinite"
-                     :animation-name "moving-period"}
+                    {:animation "none"}
 
-                    {:animation "none"}))
+                    {:animation-duration (str "1s")
+                     :animation-timing-function "linear"
+                     :animation-iteration-count "infinite"
+                     :animation-name "moving-period"}))
+
                  {:d            arc
                   :stroke       (:text-color uic/app-theme)
                   :stroke-dasharray selected-dash-array
                   :opacity      "0.7"
                   :stroke-width  "1"
-                  :fill         "transparent"})]])]
+                  :onClick set-moving-handler
+                  :fill         color})]])]
 
      ;; yesterday arrows TODO change all yesterdays and tomorrows to next and previous days
      (if starts-yesterday
@@ -259,8 +265,7 @@
                                                is-moving-period
                                                :planned
                                                planned-period
-                                               displayed-day))))
-        )]]))
+                                               displayed-day)))))]]))
 
 (defn day [tasks selected day]
   (let [date-str                 (subs (jsi/->iso-string day) 0 10)
@@ -413,6 +418,7 @@
 
         deselect                  (if (not is-moving-period)
                                    (fn [e]
+                                     (println "deselect")
                                      (jsi/prevent-default e)
                                      (rf/dispatch-sync
                                       [:set-selected-period nil])))
