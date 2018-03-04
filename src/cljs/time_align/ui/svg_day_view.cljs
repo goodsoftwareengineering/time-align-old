@@ -50,9 +50,10 @@
 
     (rf/dispatch [:move-selected-period mid-point-time-ms])))
 
-(stylefy/keyframes "moving-period"
-                   [:from {:stroke-dasharray (str "0, 10")}]
-                   [:to   {:stroke-dasharray (str "10 , 0")}])
+(stylefy/keyframes "selected-period"
+                   [:0%   {:opacity "0.1"}]
+                   [:50%  {:opacity "0.5"}]
+                   [:100% {:opacity "0.1"}])
 
 (defn period [selected curr-time is-moving-period type period displayed-day]
   (let [id               (:id period)
@@ -154,30 +155,34 @@
     [:g {:key (str id)}
      [:g
       [:path
-       {:d            arc
-        :opacity      opacity
-        :fill         color
-        :onClick      set-selected-handler}]
+       (merge
+        ;; base with nothing selected or moving
+        {:d            arc
+         :opacity      opacity
+         :fill         color
+         :onClick      set-selected-handler}
 
+        ;; when selected added some underneath stroke
+        (when (= selected-period id)
+          {:stroke       (:alternate-text-color uic/app-theme)
+           :stroke-width "1"}))]
+
+      ;; add overlay for animations and click event for setting moving state
       (when  (= selected-period id)
-        [:g {:key (str id "-selected-playing-moving-indicators")}
+        [:g {:key (str id "-selected-and-moving-animation-stuff")}
          [:path
           (merge (stylefy/use-style
-                  (if is-moving-period
-                    {:animation "none"}
+                  (merge
+                   {:animation-duration (str "2s")
+                    :animation-timing-function "linear"
+                    :animation-iteration-count "infinite"
+                    :animation-name "selected-period"}))
 
-                    {:animation-duration (str "1s")
-                     :animation-timing-function "linear"
-                     :animation-iteration-count "infinite"
-                     :animation-name "moving-period"}))
-
-                 {:d            arc
-                  :stroke       (:text-color uic/app-theme)
-                  :stroke-dasharray selected-dash-array
-                  :opacity      "0.7"
-                  :stroke-width  "1"
-                  :onClick set-moving-handler
-                  :fill         color})]])]
+                 {:d                arc
+                  :stroke           (:text-color uic/app-theme)
+                  :stroke-width     "1"
+                  :onClick          set-moving-handler
+                  :fill             (:text-color uic/app-theme)})]])]
 
      ;; yesterday arrows TODO change all yesterdays and tomorrows to next and previous days
      (if starts-yesterday
