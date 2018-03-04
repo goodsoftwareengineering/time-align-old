@@ -62,7 +62,7 @@
 
 (stylefy/keyframes "playing-period"
                    [:0%   {:opacity "0.1" :stroke-dasharray "0, 214"}]
-                   [:50%  {:opacity "0.9"}]
+                   [:50%  {:opacity "0.5"}]
                    [:100% {:opacity "0.1" :stroke-dasharray "214, 0"}])
 
 (defn period [selected curr-time is-moving-period type period displayed-day period-in-play]
@@ -115,7 +115,7 @@
                                              cx cy inner-r stop-angle start-angle)]
                               (str outer-arc inner-arc "Z"))
 
-        play-arc             (uic/describe-arc cx cy r start-angle stop-angle)
+        play-arc             (uic/describe-arc cx cy r start-angle 359)
 
         set-selected-handler (if (not is-period-selected)
                                (fn [e]
