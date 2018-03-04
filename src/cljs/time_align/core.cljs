@@ -215,6 +215,8 @@
         [ui/list
          (->> tasks
               (sort-by :name)
+              (group-by :complete)
+              (#(concat (get % false) (get % true)))
               (map (partial lp/list-item-task current-selection)))]]
 
        [:div.action-container ;; TODO this is used in two spots need to refactor to comp

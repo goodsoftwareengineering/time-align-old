@@ -79,8 +79,14 @@
        :primaryText   (uic/concatenated-text name 15 "no name entered ...")
        :secondaryText   (str "Periods: " number-of-periods)
        :leftIcon      (r/as-element
-                       [ui/checkbox {:checked   complete
-                                     :iconStyle {:fill color}}])
+                        [ui/checkbox {:checked   complete
+                                      :on-click
+                                      (fn [e]
+                                        ;; mui docs say we don't need this
+                                        (jsi/stop-propagation e)
+                                        ;; but we really do (at least on mobile)
+                                        (hist/nav! (str "/edit/task/" id)))
+                                      :iconStyle {:fill color}}])
        :style           (if is-selected
                           {:border (str "0.125em solid "
                                         (:border-color uic/app-theme))}
