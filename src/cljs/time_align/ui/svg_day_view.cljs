@@ -109,7 +109,7 @@
                                      (fn [e]
                                        (jsi/stop-propagation e)
                                        (jsi/prevent-default e)
-                                       (rf/dispatch
+                                       (rf/dispatch-sync
                                         [:set-selected-period id]))
 
                                      (if (and is-period-selected
@@ -118,7 +118,7 @@
                                        (fn [e]
                                          (jsi/stop-propagation e)
                                          (jsi/prevent-default e)
-                                         (rf/dispatch
+                                         (rf/dispatch-sync
                                           [:set-moving-period true]))))
 
         yesterday-arrow-point      (cutils/polar-to-cartesian cx cy r 1)
@@ -333,7 +333,7 @@
                                                 js/window
                                                 (fn [_]
                                                   (println "KICKOFF!")
-                                                  (rf/dispatch
+                                                  (rf/dispatch-sync
                                                    [:set-inline-period-long-press
                                                     {:press-on true
                                                      :start-time (new js/Date)}]))
@@ -345,14 +345,14 @@
                                         ;; set the id to cancel the animation
                                         ;; set the time indicated initially
                                         (println (str "maybe starting..." id))
-                                        (rf/dispatch [:set-inline-period-long-press
-                                                      {:timeout-id id
-                                                       :indicator-start time-date-obj}]))))
+                                        (rf/dispatch-sync [:set-inline-period-long-press
+                                                           {:timeout-id id
+                                                            :indicator-start time-date-obj}]))))
 
         stop-touch-click-handler  (if is-moving-period
                                    (fn [e]
                                      (jsi/prevent-default e)
-                                     (rf/dispatch
+                                     (rf/dispatch-sync
                                       [:set-moving-period false]))
 
                                    ;; not moving period and...
@@ -360,11 +360,11 @@
                                             (not (:press-on long-press-state)))
                                      (fn [e]
                                        (.clearTimeout js/window (:timeout-id long-press-state))
-                                       (rf/dispatch [:set-inline-period-long-press
-                                                     {:indicator-start nil
-                                                      :stop-time nil
-                                                      :timeout-id nil
-                                                      :press-on false}])
+                                       (rf/dispatch-sync [:set-inline-period-long-press
+                                                          {:indicator-start nil
+                                                           :stop-time nil
+                                                           :timeout-id nil
+                                                           :press-on false}])
                                        (println
                                         (str "cancelling inline add..."
                                              (:timeout-id long-press-state))))
@@ -401,11 +401,11 @@
                                            (.log js/console {:start (new js/Date absolute-start-time)
                                                              :stop  (new js/Date absolute-stop-time)})
 
-                                           (rf/dispatch [:set-inline-period-long-press
-                                                         {:indicator-start nil
-                                                          :stop-time nil
-                                                          :timeout-id nil
-                                                          :press-on false}])
+                                           (rf/dispatch-sync [:set-inline-period-long-press
+                                                              {:indicator-start nil
+                                                               :stop-time nil
+                                                               :timeout-id nil
+                                                               :press-on false}])
 
                                            (hist/nav! (str "/add/period?"
                                                            "start-time=" absolute-start-time
@@ -414,7 +414,7 @@
         deselect                  (if (not is-moving-period)
                                    (fn [e]
                                      (jsi/prevent-default e)
-                                     (rf/dispatch
+                                     (rf/dispatch-sync
                                       [:set-selected-period nil])))
         zoom @(rf/subscribe [:zoom])]
 
