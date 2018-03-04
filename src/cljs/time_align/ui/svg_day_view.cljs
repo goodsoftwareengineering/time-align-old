@@ -50,13 +50,17 @@
 
     (rf/dispatch [:move-selected-period mid-point-time-ms])))
 
+(stylefy/keyframes "moving-period"
+                   [:from {:stroke-dasharray (str "0, 10")}]
+                   [:to   {:stroke-dasharray (str "10 , 0")}])
+
 (defn period [selected curr-time is-moving-period type period displayed-day]
-  (let [id                         (:id period)
-        start-date                 (:start period)
+  (let [id               (:id period)
+        start-date       (:start period)
         starts-yesterday (utils/is-this-day-before-that-day?
                           start-date displayed-day)
-        start-ms                   (utils/get-ms start-date)
-        start-angle                (if starts-yesterday
+        start-ms         (utils/get-ms start-date)
+        start-angle      (if starts-yesterday
                                      0.5
                                      (cutils/ms-to-angle start-ms))
 
@@ -88,34 +92,8 @@
                                      nil)
         this-period-selected       (= selected-period id)
 
-        opacity-minor              "0.66"
-        opacity-major              "0.99"
         is-planned                 (= type :planned)
-        ;; actual is boldest in the past (before now)
-        ;; planned is boldest in the future (after now)
-        ;; opacity-before/after is used for task straddling now
-        opacity-before        opacity-major
-                              ;; (if is-planned
-                              ;;   opacity-minor
-                              ;;   opacity-major)
-        opacity-after         opacity-major
-                              ;; (if is-planned
-                              ;;   opacity-major
-                              ;;   opacity-minor)
-        opacity               opacity-major
-                                   ;; (cond
-                                   ;;   this-period-selected opacity-major
-
-                                   ;;   ;; planned after now
-                                   ;;   (and is-planned (< curr-time-ms stop-abs-ms))
-                                   ;;   opacity-major
-
-                                   ;;   ;; actual before now
-                                   ;;   (and (not is-planned) (> curr-time-ms stop-abs-ms))
-                                   ;;   opacity-major
-
-                                   ;;   :else opacity-minor)
-
+        opacity                    "0.99"
         color                      (:color period)
         period-width               (js/parseInt (:period-width uic/svg-consts))
         cx                         (js/parseInt (:cx uic/svg-consts))
@@ -150,17 +128,20 @@
                                                             (cutils/ms-to-angle))))
 
         touch-click-handler        (if (not is-period-selected)
+                                     ;; select period
                                      (fn [e]
                                        (jsi/stop-propagation e)
                                        (jsi/prevent-default e)
                                        (rf/dispatch
-                                        [:set-selected-period id])))
-        movement-trigger-handler   (if (and is-period-selected
-                                            (= selected-period id))
-                                     (fn [e]
-                                       (jsi/stop-propagation e)
-                                       (rf/dispatch
-                                         [:set-moving-period true])))
+                                        [:set-selected-period id]))
+
+                                     (if (and is-period-selected
+                                              (= selected-period id))
+                                       ;; initiate moving period
+                                       (fn [e]
+                                         (jsi/stop-propagation e)
+                                         (rf/dispatch
+                                          [:set-moving-period true]))))
 
         yesterday-arrow-point      (cutils/polar-to-cartesian cx cy r 1)
         yesterday-arrow-point-bt   (cutils/polar-to-cartesian
@@ -188,69 +169,33 @@
         prev-next-stroke "0.15"
         selected-dash-array "0.5 0.4"]
 
-
     [:g {:key (str id)}
-     (if (and straddles-now ;; ticker splitting should only happen when displaying today
-              (= (utils/zero-in-day displayed-day)
-                 (utils/zero-in-day (new js/Date)))
-              (not is-period-selected))
-       ;; broken arc
-       [:g
-        [:path
-         {:d            broken-arc-before
-          :stroke       color
-          :opacity      opacity-before
-          :stroke-width period-width
-          :fill         "transparent"
-          :onClick      touch-click-handler
-          :onTouchStart movement-trigger-handler
-          :onMouseDown  movement-trigger-handler}]
-        [:path
-         {:d            broken-arc-after
-          :stroke       color
-          :opacity      opacity-after
-          :stroke-width period-width
-          :fill         "transparent"
-          :onClick      touch-click-handler
-          :onTouchStart movement-trigger-handler
-          :onMouseDown  movement-trigger-handler}]
-        (when  (= selected-period id)
-          [:g
-           [:path
-            {:d            broken-arc-before
-             :stroke       (:text-color uic/app-theme)
-             :stroke-dasharray selected-dash-array
-             :opacity      opacity
-             :stroke-width (* 1.1 period-width)
-             :fill         "transparent"}]
-           [:path
-            {:d            broken-arc-after
-             :stroke       (:text-color uic/app-theme)
-             :stroke-dasharray selected-dash-array
-             :opacity      opacity
-             :stroke-width (* 1.1 period-width)
-             :fill         "transparent"}]])]
+     [:g
+      [:path
+       {:d            arc
+        :stroke       color
+        :opacity      opacity
+        :stroke-width period-width
+        :fill         "transparent"
+        :onClick      touch-click-handler}]
 
-       ;; solid arc
-       [:g
-        [:path
-         {:d            arc
-          :stroke       color
-          :opacity      opacity
-          :stroke-width period-width
-          :fill         "transparent"
-          :onClick      touch-click-handler
-          :onTouchStart movement-trigger-handler
-          :onMouseDown  movement-trigger-handler}]
-        (when  (= selected-period id)
-          [:g
-           [:path
-            {:d            arc
-             :stroke       (:text-color uic/app-theme)
-             :stroke-dasharray selected-dash-array
-             :opacity      "0.7"
-             :stroke-width  period-width
-             :fill         "transparent"}]])])
+      (when  (= selected-period id)
+        [:g
+         [:path
+          (merge (stylefy/use-style
+                  (if is-moving-period
+                    {:animation-duration (str "1s")
+                     :animation-timing-function "ease-in"
+                     :animation-iteration-count "infinite"
+                     :animation-name "moving-period"}
+
+                    {:animation "none"}))
+                 {:d            arc
+                  :stroke       (:text-color uic/app-theme)
+                  :stroke-dasharray selected-dash-array
+                  :opacity      "0.7"
+                  :stroke-width  period-width
+                  :fill         "transparent"})]])]
 
      ;; yesterday arrows TODO change all yesterdays and tomorrows to next and previous days
      (if starts-yesterday
@@ -341,8 +286,6 @@
                                                displayed-day))))
         )]]))
 
-
-
 (defn day [tasks selected day]
   (let [date-str                 (subs (jsi/->iso-string day) 0 10)
         curr-time                (:time @uic/clock-state)
@@ -376,7 +319,7 @@
         is-moving-period         @(rf/subscribe [:is-moving-period])
         period-in-play-color     @(rf/subscribe [:period-in-play-color])
         long-press-state         @(rf/subscribe [:inline-period-long-press])
-        indicator-delay          2000 ;; slightly longer than standard touch (125ms)
+        indicator-delay          900 ;; slightly longer than standard touch (125ms)
 
         ;; this is all for figuring out how long to set the animation
         ;; relative to where the user indicated they want start for this period
@@ -385,7 +328,7 @@
                                    (utils/get-ms indicator-start))
         indicator-angle          (if (some? indicator-start)
                                    (cutils/ms-to-angle indicator-relative-ms))
-        indicator-max-duration   60000
+        indicator-max-duration   15000
         indicator-arc-angle      (- 360 indicator-angle)
         indicator-duration       (* indicator-max-duration
                                     (/ indicator-arc-angle  360))
@@ -394,7 +337,8 @@
                                    #"(?i)Android|webOS|iPhone|iPad|iPod|BlackBerry"
                                    (jsi/user-agent))
         start-touch-click-handler (if (and (not is-moving-period)
-                                           (not (:press-on long-press-state)))
+                                           (not (:press-on long-press-state))
+                                           (nil? selected-period))
                                     (fn [elem-id ui-type e]
                                       (let [
                                             ;; figure out what time the user initially touched
@@ -428,6 +372,7 @@
                                         (rf/dispatch [:set-inline-period-long-press
                                                       {:timeout-id id
                                                        :indicator-start time-date-obj}]))))
+
         stop-touch-click-handler  (if is-moving-period
                                    (fn [e]
                                      (jsi/prevent-default e)
@@ -553,7 +498,7 @@
                        :r  (:inner-border-r uic/svg-consts)}
                       (select-keys uic/svg-consts [:cx :cy]))]
 
-      (periods filtered-periods selected is-moving-period curr-time day)
+      ;; (periods filtered-periods selected is-moving-period curr-time day)
 
       (when display-ticker
         [:g
@@ -619,7 +564,36 @@
                     ;; guessed and checked the dasharray
                     ;; the length of the whole circle is a little over 210
                     :stroke-dasharray (str "0 " arc-length)
-                    :fill         "transparent"})]]))]]))
+                    :fill         "transparent"})]]))
+
+      [:path
+       {:d            (let [cx 50 cy 50 r 34 st 1 sp 359
+                            outer-arc (uic/describe-arc cx cy r st sp)
+                            inner-arc (uic/describe-arc-reverse cx cy (- r 10) sp st)]
+                        (str outer-arc inner-arc "Z"))
+
+        :stroke       (:accent-1-color uic/app-theme)
+        :stroke-width "1"
+        :fill         "white"}]
+      ]]))
+
+
+(str
+ ;; orginal arc
+ "M 50 84 A 34 34 0 0 1 16 50"
+ ;; swap start adn stop befor describe-arc
+ ;; replace M with L and flip the sweep
+ "L 26 50 A 24 24 0 0 0 50 74"
+ ;; close path with z
+ "Z"
+ )
+
+(let [cx 50 cy 50 r 24 st 180 sp 270
+      outer-arc (uic/describe-arc cx cy r st sp)
+      inner-arc (uic/describe-arc-reverse cx cy (- r 10) sp st)]
+  (str outer-arc inner-arc "Z"))
+
+(uic/describe-arc 50 50 24 270 180)
 
 (defn days [days tasks selected-period]
   (->> days

@@ -21,6 +21,16 @@
     (string/join " " ["M" (:x p-start) (:y p-start)
                       "A" r r 0 large-arc-flag 1 (:x p-stop) (:y p-stop)])))
 
+(defn describe-arc-reverse [cx cy r start stop]
+  (let [
+        p-start        (cutils/polar-to-cartesian cx cy r start)
+        p-stop         (cutils/polar-to-cartesian cx cy r stop)
+
+        large-arc-flag (if (<= (- start stop) 180) "0" "1")]
+
+    (string/join " " ["L" (:x p-start) (:y p-start)
+                      "A" r r 0 large-arc-flag 0 (:x p-stop) (:y p-stop)])))
+
 (def basic-ic {:style {:marginTop "7.5px"}
                :color "white"})
 
