@@ -313,7 +313,7 @@
                                    (:cy uic/svg-consts)
                                    (if (some? period-in-play)
                                      (+ (js/parseFloat
-                                         (:border-r uic/svg-consts))
+                                         (:r uic/svg-consts))
                                         (js/parseFloat
                                          (:circle-stroke uic/svg-consts)))
                                      (+ (js/parseFloat
