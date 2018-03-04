@@ -666,11 +666,12 @@
 
        (let [old-d (new js/Date o)]
          (do
-           (.setFullYear old-d (.getFullYear new-d))
-           (.setDate old-d (.getDate new-d))
-           (assoc-in db [:view :period-form start-or-stop] old-d)))
+           (.setHours new-d (.getHours old-d))
+           (.setMinutes new-d (.getMinutes old-d))
+           (.setSeconds new-d (.getSeconds old-d))
+           (assoc-in db [:view :period-form start-or-stop] (new js/Date new-d))))
 
-       (assoc-in db [:view :period-form start-or-stop] new-d)))))
+       (assoc-in db [:view :period-form start-or-stop] (new js/Date new-d))))))
 
 (reg-event-db
  :set-period-form-time
@@ -683,12 +684,13 @@
            (.setHours old-s (.getHours new-s))
            (.setMinutes old-s (.getMinutes new-s))
            (.setSeconds old-s (.getSeconds new-s))
-           (assoc-in db [:view :period-form start-or-stop] old-s)))
+           (assoc-in db [:view :period-form start-or-stop] (new js/Date old-s))))
        (do
-         (let [n (get-in db [:view :displayed-day])] ;; if there isn't a date already there then we need to assume the year month day
-           (.setFullYear new-s (.getFullYear n))     ;; and just use the value coming from the action for hours minutes seconds
-           (.setDate new-s (.getDate n))
-           (assoc-in db [:view :period-form start-or-stop] new-s)))))))
+         (let [n (new js/Date (get-in db [:view :displayed-day]))] ;; if there isn't a date already there then we need to assume the year month day
+           (.setHours n (.getHours new-s))
+           (.setMinutes n (.getMinutes new-s))
+           (.setSeconds n (.getSeconds new-s))
+           (assoc-in db [:view :period-form start-or-stop] (new js/Date n))))))))
 
 (reg-event-db
  :set-period-form-description
