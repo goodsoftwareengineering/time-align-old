@@ -104,28 +104,17 @@
         r                          (-> (case type
                                          :actual (:r uic/svg-consts)
                                          :planned (:inner-r uic/svg-consts)
-                                         (* 0.5 (:inner-r uic/svg-consts)))
-                                       (js/parseInt)
+                                         (:inner-r uic/svg-consts))
+                                       (js/parseFloat)
                                        (- (/ period-width 2)))
 
-        arc                        (uic/describe-arc cx cy r start-angle stop-angle)
-        broken-arc-before          (uic/describe-arc cx cy r
-                                                 start-angle
-                                                 broken-stop-before-angle)
-        broken-arc-after           (uic/describe-arc cx cy r
-                                                 broken-start-after-angle
-                                                 stop-angle)
-        future-handle-arc          (uic/describe-arc cx cy r
-                                                     (+ stop-angle
-                                                        (-> 5 ;; minutes
-                                                            (* 60) ;; seconds
-                                                            (* 1000) ;; milleseconds
-                                                            (cutils/ms-to-angle)))
-                                                     (+ stop-angle
-                                                        (-> 25 ;; minutes
-                                                            (* 60) ;; seconds
-                                                            (* 1000) ;; milleseconds
-                                                            (cutils/ms-to-angle))))
+        arc                 (let [outer-r (+ r (/ period-width 2))
+                                  inner-r (- r (/ period-width 2))
+                                  outer-arc (uic/describe-arc
+                                             cx cy outer-r start-angle stop-angle)
+                                  inner-arc (uic/describe-arc-reverse
+                                             cx cy inner-r stop-angle start-angle)]
+                              (str outer-arc inner-arc "Z"))
 
         touch-click-handler        (if (not is-period-selected)
                                      ;; select period
@@ -173,10 +162,8 @@
      [:g
       [:path
        {:d            arc
-        :stroke       color
         :opacity      opacity
-        :stroke-width period-width
-        :fill         "transparent"
+        :fill         color
         :onClick      touch-click-handler}]
 
       (when  (= selected-period id)
@@ -498,7 +485,7 @@
                        :r  (:inner-border-r uic/svg-consts)}
                       (select-keys uic/svg-consts [:cx :cy]))]
 
-      ;; (periods filtered-periods selected is-moving-period curr-time day)
+      (periods filtered-periods selected is-moving-period curr-time day)
 
       (when display-ticker
         [:g
@@ -564,36 +551,7 @@
                     ;; guessed and checked the dasharray
                     ;; the length of the whole circle is a little over 210
                     :stroke-dasharray (str "0 " arc-length)
-                    :fill         "transparent"})]]))
-
-      [:path
-       {:d            (let [cx 50 cy 50 r 34 st 1 sp 359
-                            outer-arc (uic/describe-arc cx cy r st sp)
-                            inner-arc (uic/describe-arc-reverse cx cy (- r 10) sp st)]
-                        (str outer-arc inner-arc "Z"))
-
-        :stroke       (:accent-1-color uic/app-theme)
-        :stroke-width "1"
-        :fill         "white"}]
-      ]]))
-
-
-(str
- ;; orginal arc
- "M 50 84 A 34 34 0 0 1 16 50"
- ;; swap start adn stop befor describe-arc
- ;; replace M with L and flip the sweep
- "L 26 50 A 24 24 0 0 0 50 74"
- ;; close path with z
- "Z"
- )
-
-(let [cx 50 cy 50 r 24 st 180 sp 270
-      outer-arc (uic/describe-arc cx cy r st sp)
-      inner-arc (uic/describe-arc-reverse cx cy (- r 10) sp st)]
-  (str outer-arc inner-arc "Z"))
-
-(uic/describe-arc 50 50 24 270 180)
+                    :fill         "transparent"})]]))]]))
 
 (defn days [days tasks selected-period]
   (->> days
