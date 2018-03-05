@@ -173,16 +173,16 @@
       ;;   :fill         "transparent"}]
       ]]))
 
-(def svg-consts {:viewBox       "0 0 100 100"
+(def svg-consts {:viewBox        "0 0 100 100"
                  ;; :width "90" :height "90" :x "5" :y "5"
-                 :cx            "50" :cy "50"
-                 :r             "45"
-                 :inner-r       "34"
-                 :ticker-r      "5"
-                 :center-r      "5"  ;; TODO might not be used
-                 :circle-stroke "0.25"
-                 :period-width  "10"
-                 :border-r "34.5"
+                 :cx             "50" :cy "50"
+                 :r              "45"
+                 :inner-r        "34"
+                 :ticker-r       "5"
+                 :center-r       "5"  ;; TODO might not be used
+                 :circle-stroke  "0.25"
+                 :period-width   "10"
+                 :border-r       "34.5"
                  :inner-border-r "23.5"})
 
 (defn svg-mui-time-align [{:keys [color style]}]

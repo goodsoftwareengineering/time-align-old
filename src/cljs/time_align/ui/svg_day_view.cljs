@@ -60,10 +60,12 @@
                    [:50%  {:opacity "0.5"  :stroke-dasharray "15, 10"}]
                    [:100% {:opacity "0.25" :stroke-dasharray "10, 0"}])
 
+;; circumference of circle at r = 40 is ~ 251.33
+;; length of 45 deg arc on circle is ~ 31.41
 (stylefy/keyframes "playing-period"
-                   [:0%   {:opacity "0.1" :stroke-dasharray "0, 214"}]
-                   [:50%  {:opacity "0.5"}]
-                   [:100% {:opacity "0.1" :stroke-dasharray "214, 0"}])
+                   [:0%   {:opacity "0" :stroke-dasharray "0, 31.41"}]
+                   [:50%  {:opacity "0.3"}]
+                   [:100% {:opacity "0" :stroke-dasharray "31.41, 0"}])
 
 (defn period [selected curr-time is-moving-period type period displayed-day period-in-play]
   (let [id               (:id period)
@@ -95,7 +97,7 @@
         this-period-selected       (= selected-period id)
 
         is-planned                 (= type :planned)
-        opacity                    "0.99"
+        opacity                    "0.85"
         color                      (:color period)
         period-width               (js/parseInt (:period-width uic/svg-consts))
         cx                         (js/parseInt (:cx uic/svg-consts))
@@ -115,7 +117,8 @@
                                              cx cy inner-r stop-angle start-angle)]
                               (str outer-arc inner-arc "Z"))
 
-        play-arc             (uic/describe-arc cx cy r start-angle 359)
+        play-arc             (uic/describe-arc cx cy r start-angle
+                                               (+ 45 start-angle))
 
         set-selected-handler (if (not is-period-selected)
                                (fn [e]
@@ -177,6 +180,7 @@
         ;; when selected added some underneath stroke
         (when (= selected-period id)
           {:stroke       (:alternate-text-color uic/app-theme)
+           :opacity ".9"
            :stroke-width "1"}))]
 
       ;; add overlay for animations and click event for setting moving state
