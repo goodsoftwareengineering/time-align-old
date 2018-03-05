@@ -87,19 +87,13 @@
   )
 
 ;; from here https://cimdalli.github.io/mui-theme-generator/
-;; take export
-;; JSON.stringinfy(export)
-;; /s/"/\\"/g
-;; surround with final "
-;; paste here
-(def json-string-mui-theme-palette
-  (str "{\"primary1Color\":\"#607d8b\",\"primary2Color\":\"#78909c\",\"primary3Color\":\"#90a4ae\",\"accent1Color\":\"#e91e63\",\"accent2Color\":\"#d81b60\",\"accent3Color\":\"#90a4ae\",\"alternateTextColor\":\"#cfd8dc\",\"secondaryTextColor\":\"#607d8b\",\"textColor\":\"#ffffff\",\"canvasColor\":\"#263238\",\"borderColor\":\"#cfd8dc\",\"disabledColor\":\"#b0bec5\",\"pickerHeaderColor\":\"#90a4ae\",\"clockCircleColor\":\"#607d8b\",\"shadowColor\":\"#212121\"}"))
-(def json-string-mui-theme-overides
-  (str "{\"snackbar\":{\"backgroundColor\":\"#546e7a\",\"actionColor\":\"#263238\"},\"raisedButton\":{\"color\":\"#546e7a\",\"disabledColor\":\"#455a64\"},\"tableRow\":{\"selectedColor\":\"#455a64\"},\"toggle\":{\"thumbOffColor\":\"#455a64\",\"thumbOnColor\":\"#90a4ae\",\"trackOnColor\":\"rgba(120, 144, 156, 0.5)\",\"trackDisabledColor\":\"#37474f\",\"thumbDisabledColor\":\"#37474f\",\"trackOffColor\":\"#455a64\",\"thumbRequiredColor\":\"#78909c\"},\"slider\":{\"trackColor\":\"#607d8b\",\"trackColorSelected\":\"#b0bec5\",\"selectionColor\":\"#e91e63\"},\"timePicker\":{\"clockColor\":\"#37474f\",\"clockCircleColor\":\"#455a64\",\"headerColor\":\"#546e7a\"},\"textField\":{\"textColor\":\"#ffffff\",\"focusColor\":\"#ffffff\"},\"datePicker\":{\"selectColor\":\"#546e7a\",\"textColor\":\"#eceff1\"}}" ))
+;; set in home.html template
+(def json-mui-theme-palette  (.-mui_theme_palette js/window))
+(def json-mui-theme-overides (.-mui_theme_overides js/window))
 
 (defn convert-js-mui-theme [string]
   (->> string
-       (.parse js/JSON)
+       ;; (.parse js/JSON)
        (js->clj)
        (seq)
        (reduce
@@ -109,7 +103,7 @@
                         (keyword))
                     v})) {})))
 
-(def converted-js-mui-theme-palette (convert-js-mui-theme json-string-mui-theme-palette))
+(def converted-js-mui-theme-palette (convert-js-mui-theme json-mui-theme-palette))
 (def app-theme (merge converted-js-mui-theme-palette
                       {;; TODO refactor primary & secondary
                        :primary   (:primary-1-color converted-js-mui-theme-palette)
@@ -117,7 +111,7 @@
 
 (def app-theme-with-component-overides
   (merge {:palette app-theme}
-         (convert-js-mui-theme json-string-mui-theme-overides)))
+         (convert-js-mui-theme json-mui-theme-overides)))
 
 (defn mini-arc [period]
   (let [{:keys [id description color planned]} period
