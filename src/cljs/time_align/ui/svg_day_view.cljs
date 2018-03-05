@@ -124,7 +124,11 @@
         set-selected-handler (if (not is-period-selected)
                                (fn [e]
                                  (jsi/stop-propagation e)
-                                 (jsi/prevent-default e)
+                                 ;; I think this caused the problem on desktop
+                                 ;; in mobile mode of stopping the touch/click end handler
+                                 ;; from firing, which kept the inline add timeout from being canceled
+                                 ;; resulting in every click event causing an inline add navigation
+                                 ;; (jsi/prevent-default e)
                                  (rf/dispatch-sync
                                   [:set-selected-period id])))
         set-moving-handler   (if (and is-period-selected
@@ -284,7 +288,8 @@
                                       (:x tomorrow-2-arrow-point-bb) ","
                                       (:y tomorrow-2-arrow-point-bb) " ")}]])]))
 
-(defn periods [periods selected is-moving-period curr-time displayed-day period-in-play]
+(defn periods
+  [periods selected is-moving-period curr-time displayed-day period-in-play]
   (let [
         ;; whole song and dance for putting the
         ;; selected and in play periods on _top_
