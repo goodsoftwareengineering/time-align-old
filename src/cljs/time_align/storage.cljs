@@ -31,6 +31,6 @@
   (js/saveAs (js/File. [(key->transit-str
                          ;; re-learn keeps putting itself in app-db
                          ;; ignore it by using select-keys
-                         (select-keys @re-frame.db/app-db [:view :categories :user]))]
+                         (select-keys @re-frame.db/app-db [:categories]))]
                        (str (.toLocaleString (new js/Date)) " time align export.json")
                        (clj->js {:type "application/json+transit;charset=utf-8"}))))

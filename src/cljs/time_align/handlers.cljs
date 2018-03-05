@@ -1023,7 +1023,9 @@
     (let [reader (js/FileReader.)]
       (oset! reader "onload" #(let [result (oget % "target.result")
                                     imported-app-db (time-align.storage/transit-json->map result)]
-                                (re-frame.core/dispatch [:reset-app-db imported-app-db])))
+                                (re-frame.core/dispatch [:reset-app-db
+                                                         (merge db/default-db
+                                                                (select-keys imported-app-db [:categories]))])))
       (.readAsText reader imported-db-file))))
 
 (defn set-displayed-month [db [_ [year month]]]
