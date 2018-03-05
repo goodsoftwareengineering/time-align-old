@@ -63,7 +63,7 @@
   [period]
 
   (let [description (:description period)]
-    (concatenated-text description 20 "no description...")))
+    (concatenated-text description 20 "...")))
 
 (defn period-list-item-secondary-text
   [period]
@@ -73,8 +73,7 @@
       (str (utils/date-string (:start period))
            " : "
            (duration-ms-to-string duration-ms))
-      "Queue item"
-      )))
+      "Queue item")))
 
 (defn clock-tick []
   (swap! clock-state assoc :time (new js/Date))

@@ -52,7 +52,7 @@
 
 (stylefy/keyframes "selected-period"
                    [:0%   {:opacity "0.1"}]
-                   [:50%  {:opacity "0.5"}]
+                   [:50%  {:opacity "0.3"}]
                    [:100% {:opacity "0.1"}])
 
 (stylefy/keyframes "moving-period"
@@ -194,7 +194,7 @@
          [:path
           (merge (stylefy/use-style
                   (merge
-                   {:animation-duration (str "2s")
+                   {:animation-duration (str "3s")
                     :animation-timing-function "linear"
                     :animation-iteration-count "infinite"
                     :animation-name "selected-period"}))
@@ -209,16 +209,16 @@
            [:path
             (merge (stylefy/use-style
                     (merge
-                     {:animation-duration (str "2s")
+                     {:animation-duration (str "1s")
                       :animation-timing-function "linear"
                       :animation-iteration-count "infinite"
                       :animation-name "moving-period"}))
 
                    {:d                arc
-                    :stroke           (:text-color uic/app-theme)
+                    :stroke           (:primary-1-color uic/app-theme)
                     :stroke-width     "1"
                     :onClick          set-moving-handler
-                    :fill             (:accent-1-color uic/app-theme)})])])
+                    :fill             (:alternate-1-color uic/app-theme)})])])
 
       (when (= period-in-play id)
         [:path (merge (stylefy/use-style

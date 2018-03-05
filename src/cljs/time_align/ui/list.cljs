@@ -179,13 +179,15 @@
                     :padding "0.25em"
                     :border-radius "0.25em" ;; TODO animation w/ stylefy
                     :border-bottom (str "0.25em solid " color)
-                    :background-color (:primary-2-color uic/app-theme)}
+                    :background-color (:primary-1-color uic/app-theme)}
         span-style {:text-decoration "none"
-                    :text-decoration-color color}]
+                    :text-decoration-color color
+                    :height "100%"}]
 
     [:div {:style {:padding "1em"
                    :display "flex"
-                   :flex-wrap "nowrap"}}
+                   :flex-wrap "nowrap"
+                   :align-content "stretch"}}
 
      [:a {:href (:link root) :style link-style}
       [:span {:style span-style}
@@ -194,7 +196,7 @@
      (when (some? rest)
        (->> rest
             (map (fn [r] (when (some? r)
-                           [:span {:key (random-uuid)
+                           [:div {:key (random-uuid)
                                    :style {:display "flex"
                                            :align-items "center"}}
                             [ic/image-navigate-next
