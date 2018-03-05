@@ -52,7 +52,7 @@
 
 (defn action-buttons-period-selection [period-in-play id copy-fn]
   [:div {:style {:display "flex"
-                 :flex-direction "column"}}
+                 :flex-direction "row"}}
    (edit-button id)
    [:div {:style {:padding "0.25em"}}] ;; TODO get rid of this style hack pad
    (copy-button copy-fn)
