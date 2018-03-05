@@ -56,9 +56,9 @@
                    [:100% {:opacity "0.1"}])
 
 (stylefy/keyframes "moving-period"
-                   [:0%   {:opacity "0.25" :stroke-dasharray "10, 0"}]
-                   [:50%  {:opacity "0.5"  :stroke-dasharray "15, 10"}]
-                   [:100% {:opacity "0.25" :stroke-dasharray "10, 0"}])
+                   [:0%   {:opacity "0.2" :stroke-dasharray "0, 250"}]
+                   [:50%  {:opacity "0.5"}]
+                   [:100% {:opacity "0.2" :stroke-dasharray "250, 0"}])
 
 ;; circumference of circle at r = 40 is ~ 251.33
 ;; length of 45 deg arc on circle is ~ 31.41
@@ -67,7 +67,8 @@
                    [:50%  {:opacity "0.3"}]
                    [:100% {:opacity "0" :stroke-dasharray "31.41, 0"}])
 
-(defn period [selected curr-time is-moving-period type period displayed-day period-in-play]
+(defn period
+  [selected curr-time is-moving-period type period displayed-day period-in-play]
   (let [id               (:id period)
         start-date       (:start period)
         starts-yesterday (utils/is-this-day-before-that-day?
@@ -210,7 +211,7 @@
                       :animation-name "moving-period"}))
 
                    {:d                arc
-                    :stroke           (:accent-1-color uic/app-theme)
+                    :stroke           (:text-color uic/app-theme)
                     :stroke-width     "1"
                     :onClick          set-moving-handler
                     :fill             (:accent-1-color uic/app-theme)})])])
