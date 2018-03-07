@@ -544,11 +544,6 @@
                        :stroke-width (:circle-stroke uic/svg-consts)
                        :r  (:border-r uic/svg-consts)}
                       (select-keys uic/svg-consts [:cx :cy]))]
-      [:circle (merge {:fill "transparent"
-                       :stroke (:border-color uic/app-theme)
-                       :stroke-width (:circle-stroke uic/svg-consts)
-                       :r  (:inner-border-r uic/svg-consts)}
-                      (select-keys uic/svg-consts [:cx :cy]))]
 
       (periods filtered-periods selected is-moving-period curr-time day period-in-play)
 

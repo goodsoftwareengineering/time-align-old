@@ -85,6 +85,19 @@
   ;; have handler that ticks the clock + resets any "playing" period
   )
 
+;; TODO def a colors.co url that is default nil
+;; TODO defn use-colors-co-url-if-present that
+;; takes in the output of conver-js-mui-theme
+;; and replaces canvas, primaries, and accents using order of colors in url
+;; make sure to search the original values cavnas, primaries, and accents and replace them with new colors
+;; return the original map if url is nil or isn't parsable
+;; This will allow for very quick testing of color schemes
+;; compiling different versions of the app to AB test will also be easy, they can all just point to the same DB
+;; - https://coolors.co/fefeff-d6efff-fed18c-fed99b-fe654f
+;; - https://coolors.co/0f1108-190933-acfcd9-eb5e55-d81e5b
+;; - https://coolors.co/0f1108-25332d-acfcd9-665c77-e3e4db
+;; - https://coolors.co/e4fde1-8acb88-648381-575761-ffbf46
+
 ;; from here https://cimdalli.github.io/mui-theme-generator/
 ;; set in home.html template
 (def json-mui-theme-palette  (.-mui_theme_palette js/window))
