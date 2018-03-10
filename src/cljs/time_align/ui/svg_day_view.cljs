@@ -393,8 +393,12 @@
           (:timeout-id long-press-state)))))
 
 (defn stop-touch-successful-long-press-handler
-  [long-press-state indicator-max-duration
-   indicator-duration indicator-arc-angle indicator-angle day]
+  [long-press-state
+   indicator-max-duration
+   indicator-duration
+   indicator-arc-angle
+   indicator-angle
+   day]
   (fn [_]
     (println "This is where we would add")
     (let [now (jsi/value-of (new js/Date))
@@ -517,17 +521,20 @@
                                            (nil? selected-period))
                                     (start-touch-handler indicator-delay day))
 
-        stop-touch-click-handler  (if is-moving-period
-                                   (stop-touch-stop-moving-handler)
+        stop-touch-click-handler  (cond
+                                    is-moving-period
+                                    (stop-touch-stop-moving-handler)
 
-                                   (if (and (some? (:timeout-id long-press-state))
-                                            (not (:press-on long-press-state)))
-                                     (stop-touch-cancel-inline-add-handler long-press-state)
+                                    (and (some? (:timeout-id long-press-state)) (not (:press-on long-press-state)))
+                                    (stop-touch-cancel-inline-add-handler long-press-state)
 
-                                     (if (:press-on long-press-state)
-                                       (stop-touch-successful-long-press-handler
-                                        long-press-state indicator-max-duration
-                                        indicator-duration indicator-arc-angle indicator-angle day))))
+                                    (:press-on long-press-state)
+                                    (stop-touch-successful-long-press-handler long-press-state
+                                                                              indicator-max-duration
+                                                                              indicator-duration
+                                                                              indicator-arc-angle
+                                                                              indicator-angle
+                                                                              day))
 
         deselect                  (fn [e]
                                     (println "deselect")
