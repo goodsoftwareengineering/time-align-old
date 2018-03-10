@@ -220,12 +220,11 @@
           ;; circumference of circle at r = 40 is ~ 251.33
           ;; length of 45 deg arc on circle is ~ 31.41
           (stylefy/keyframes "playing-period"
-                             [:0%   {:opacity "0.1" :stroke-dasharray (str 0 ", " 0 ", " 10 ", " arc-length)}]
-                             [:50%  {:opacity "0.05" }]
-                             [:100% {:opacity "0.0" :stroke-dasharray (str 0 ", " arc-length ", " 10 ", " arc-length)}])
+                             [:0%   {:opacity "0.25" :stroke-dasharray (str 0 ", " arc-length )}]
+                             [:100% {:opacity "0.0" :stroke-dasharray (str arc-length ", " 0)}])
 
           [:path (merge (stylefy/use-style
-                         {:animation-duration (str "5s")
+                         {:animation-duration (str "6s")
                           :animation-timing-function "linear"
                           :animation-iteration-count "infinite"
                           :animation-name "playing-period"})
