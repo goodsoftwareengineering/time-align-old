@@ -6,7 +6,8 @@
             [time-align.ui.common :as uic]
             [time-align.js-interop :as jsi]
             [clojure.string :as string]
-            [stylefy.core :as stylefy]))
+            [stylefy.core :as stylefy]
+            [reagent.core :as r]))
 
 (def shadow-filter
   [:defs
@@ -339,6 +340,12 @@
                                                displayed-day
                                                period-in-play)))))]]))
 
+(defonce long-press-state-atom (r/atom {:indicator-start nil
+                                   :stop-time       nil
+                                   :start-time      nil
+                                   :timeout-id      nil
+                                   :press-on        false}))
+
 (defn start-touch-handler [indicator-delay day]
   (fn [elem-id ui-type e]
     (let [
@@ -358,10 +365,9 @@
               js/window
               (fn [_]
                 (println "KICKOFF!")
-                (rf/dispatch-sync
-                 [:set-inline-period-long-press
-                  {:press-on true
-                   :start-time (new js/Date)}]))
+                (swap! long-press-state-atom merge
+                       {:press-on true
+                        :start-time (new js/Date)}))
               indicator-delay)]
 
       ;; (jsi/stop-propagation e)
@@ -370,9 +376,9 @@
       ;; set the id to cancel the animation
       ;; set the time indicated initially
       (println (str "maybe starting..." id))
-      (rf/dispatch-sync [:set-inline-period-long-press
-                         {:timeout-id id
-                          :indicator-start time-date-obj}]))))
+      (swap! long-press-state-atom merge
+             {:timeout-id id
+              :indicator-start time-date-obj}))))
 
 (defn stop-touch-stop-moving-handler []
   (fn [e]
@@ -380,17 +386,19 @@
     (rf/dispatch-sync
      [:set-moving-period false])))
 
-(defn stop-touch-cancel-inline-add-handler [long-press-state]
+(defn stop-touch-cancel-inline-add-handler []
   (fn [e]
-    (.clearTimeout js/window (:timeout-id long-press-state))
-    (rf/dispatch-sync [:set-inline-period-long-press
-                       {:indicator-start nil
-                        :stop-time nil
-                        :timeout-id nil
-                        :press-on false}])
-    (println
-     (str "cancelling inline add..."
-          (:timeout-id long-press-state)))))
+    (let [long-press-state @long-press-state-atom]
+      (.clearTimeout js/window (:timeout-id long-press-state))
+      (swap! long-press-state-atom merge
+             {:indicator-start nil
+              :stop-time nil
+              :timeout-id nil
+              :press-on false})
+
+      (println
+       (str "cancelling inline add..."
+            (:timeout-id long-press-state))))))
 
 (defn stop-touch-successful-long-press-handler
   [long-press-state
@@ -429,11 +437,11 @@
       (.log js/console {:start (new js/Date absolute-start-time)
                         :stop  (new js/Date absolute-stop-time)})
 
-      (rf/dispatch-sync [:set-inline-period-long-press
-                         {:indicator-start nil
-                          :stop-time nil
-                          :timeout-id nil
-                          :press-on false}])
+      (swap! long-press-state-atom merge
+             {:indicator-start nil
+              :stop-time nil
+              :timeout-id nil
+              :press-on false})
 
       (hist/nav! (str "/add/period?"
                       "start-time=" absolute-start-time
@@ -500,8 +508,7 @@
                                            [:current-selection :id-or-nil])
                                    nil)
         is-moving-period         @(rf/subscribe [:is-moving-period])
-        period-in-play-color     @(rf/subscribe [:period-in-play-color])
-        long-press-state         @(rf/subscribe [:inline-period-long-press])
+        long-press-state         @long-press-state-atom
         indicator-delay          900 ;; slightly longer than standard touch (125ms)
 
         ;; this is all for figuring out how long to set the animation
@@ -525,8 +532,6 @@
                                     is-moving-period
                                     (stop-touch-stop-moving-handler)
 
-                                    (and (some? (:timeout-id long-press-state)) (not (:press-on long-press-state)))
-                                    (stop-touch-cancel-inline-add-handler long-press-state)
 
                                     (:press-on long-press-state)
                                     (stop-touch-successful-long-press-handler long-press-state
@@ -534,7 +539,9 @@
                                                                               indicator-duration
                                                                               indicator-arc-angle
                                                                               indicator-angle
-                                                                              day))
+                                                                              day)
+
+                                    :else (stop-touch-cancel-inline-add-handler))
 
         deselect                  (fn [e]
                                     (println "deselect")
