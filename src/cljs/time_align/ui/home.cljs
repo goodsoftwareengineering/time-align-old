@@ -13,6 +13,7 @@
             [time-align.client-utilities :as cutils]
             [time-align.ui.action-buttons :as actb]
             [time-align.ui.agenda :as ap]
+            [time-align.ui.list :as lp]
             [time-align.js-interop :as jsi]))
 
 (defn svg-mui-zoom
@@ -138,10 +139,7 @@
 
      (app-bar)
 
-     [ui/paper {:style (merge {:width "100%"}
-                              (if (nil? zoom)
-                                {:margin-bottom "3em"}
-                                {:margin-bottom "0.05em"}))}
+     [ui/paper {:style (merge {:width "100%"})}
       [:div.navigation.zoom
        {:style {:display         "flex"
                 :justify-content "space-between"
@@ -166,6 +164,21 @@
         {:onClick (fn [e]
                     (rf/dispatch [:iterate-displayed-day :next]))}
         [ic/image-navigate-next {:color (:alternate-text-color uic/app-theme)}]]]]
+
+     [ui/divider {:style {:margin "0.125em"}}]
+
+     (when (some? selected-period)
+       (let [task (some #(if (= (:task-id selected-period)) %) tasks)
+             color (:color selected-period)
+             complete (:complete task)]
+
+         [ui/paper {:style (merge {:width "100%"})}
+          [:div {:style {:display         "flex"
+                         :justify-content "space-between"
+                         :flex-wrap       "nowrap"
+                         :padding         "0.125em"}}
+           [ui/checkbox {:checked  complete :iconStyle {:fill color}}]
+           (uic/mini-arc selected-period)]]))
 
      [:div.day-container
       {:style (merge
