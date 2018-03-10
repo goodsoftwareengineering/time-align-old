@@ -144,7 +144,7 @@
         ;; TODO use some sort of conform instead of only getting categories
         initial-db (merge
                     db/default-db
-                    (select-keys initial-db-raw [:categories]))]
+                    (select-keys initial-db-raw [:categories :view]))]
     {:db initial-db
      :init-worker (if js/goog.DEBUG "/bootstrap_worker.js" "js/worker.js") }))
 
