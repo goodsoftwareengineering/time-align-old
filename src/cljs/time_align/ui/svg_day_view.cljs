@@ -215,7 +215,7 @@
         (let [play-arc   (uic/describe-arc cx cy r start-angle 359)
               arc-angle (- 359 start-angle)
               arc-length (* (/ arc-angle 360) ;; percent of circle
-                            (* 2 (* (.-PI js/Math) r)))] ;; circumference of whole circle for this track (actual or planned)
+                            (* 2 (* Math/PI r)))] ;; circumference of whole circle for this track (actual or planned)
 
           ;; circumference of circle at r = 40 is ~ 251.33
           ;; length of 45 deg arc on circle is ~ 31.41
@@ -339,6 +339,132 @@
                                                displayed-day
                                                period-in-play)))))]]))
 
+(defn start-touch-handler [indicator-delay day]
+  (fn [elem-id ui-type e]
+    (let [
+          ;; figure out what time the user initially touched
+          svg-coords    (cutils/client-to-view-box elem-id e ui-type)
+          circle-coords (cutils/point-to-centered-circle
+                         (merge (select-keys uic/svg-consts [:cx :cy])
+                                svg-coords))
+          angle         (cutils/point-to-angle circle-coords)
+          relative-time (Math/floor (cutils/angle-to-ms angle))
+          absolute-time (+ relative-time
+                           (jsi/value-of (utils/zero-in-day day)))
+          time-date-obj (new js/Date absolute-time)
+          ;; set a function to go off after standard touch time
+          ;; to start the animation and timer
+          id (.setTimeout
+              js/window
+              (fn [_]
+                (println "KICKOFF!")
+                (rf/dispatch-sync
+                 [:set-inline-period-long-press
+                  {:press-on true
+                   :start-time (new js/Date)}]))
+              indicator-delay)]
+
+      ;; (jsi/stop-propagation e)
+      ;; (jsi/prevent-default e)
+
+      ;; set the id to cancel the animation
+      ;; set the time indicated initially
+      (println (str "maybe starting..." id))
+      (rf/dispatch-sync [:set-inline-period-long-press
+                         {:timeout-id id
+                          :indicator-start time-date-obj}]))))
+
+(defn stop-touch-stop-moving-handler []
+  (fn [e]
+    (jsi/prevent-default e)
+    (rf/dispatch-sync
+     [:set-moving-period false])))
+
+(defn stop-touch-cancel-inline-add-handler [long-press-state]
+  (fn [e]
+    (.clearTimeout js/window (:timeout-id long-press-state))
+    (rf/dispatch-sync [:set-inline-period-long-press
+                       {:indicator-start nil
+                        :stop-time nil
+                        :timeout-id nil
+                        :press-on false}])
+    (println
+     (str "cancelling inline add..."
+          (:timeout-id long-press-state)))))
+
+(defn stop-touch-successful-long-press-handler
+  [long-press-state indicator-max-duration
+   indicator-duration indicator-arc-angle indicator-angle day]
+  (fn [_]
+    (println "This is where we would add")
+    (let [now (jsi/value-of (new js/Date))
+          started (if-let [s (:start-time long-press-state)]
+                    (jsi/value-of s))
+
+          time-held-down (if-let [started started]
+                           (- now started)
+                           indicator-max-duration) ;; shouldn't ever use this
+
+          desired-period-arc-angle (if (>= time-held-down indicator-duration)
+                                     indicator-arc-angle
+                                     (* (/ time-held-down indicator-duration)
+                                        indicator-arc-angle))
+          indicator-start-angle indicator-angle
+          indicator-stop-angle (.min js/Math
+                                     (+ indicator-start-angle
+                                        desired-period-arc-angle)
+                                     359.9)
+          relative-start-time  (cutils/angle-to-ms indicator-start-angle)
+          relative-stop-time   (cutils/angle-to-ms indicator-stop-angle)
+
+          absolute-start-time (+ relative-start-time
+                                 (jsi/value-of (utils/zero-in-day day)))
+          absolute-stop-time  (+ relative-stop-time
+                                 (jsi/value-of (utils/zero-in-day day)))]
+
+      (.log js/console {:start (new js/Date absolute-start-time)
+                        :stop  (new js/Date absolute-stop-time)})
+
+      (rf/dispatch-sync [:set-inline-period-long-press
+                         {:indicator-start nil
+                          :stop-time nil
+                          :timeout-id nil
+                          :press-on false}])
+
+      (hist/nav! (str "/add/period?"
+                      "start-time=" absolute-start-time
+                      "&stop-time=" absolute-stop-time)))))
+
+(defn svg-day-touch-handlers
+  [date-str
+   start-touch-click-handler
+   stop-touch-click-handler
+   is-moving-period]
+
+  (let [mobile-user-agent (re-seq
+                           #"(?i)Android|webOS|iPhone|iPad|iPod|BlackBerry"
+                           (jsi/user-agent))]
+    (merge
+     (when (some? mobile-user-agent)
+       {:onTouchStart (if (some? start-touch-click-handler)
+                        (partial start-touch-click-handler
+                                 date-str :touch))
+        :onTouchEnd  stop-touch-click-handler
+        :onTouchMove (if is-moving-period
+                       (partial handle-period-move
+                                date-str :touch))})
+
+     (when (nil? mobile-user-agent)
+       {:onMouseDown (if (some? start-touch-click-handler)
+                       ;; catch the case when handler is nil otherwise partial freaks out when called
+                       ;; TODO this should be moved up into the let
+                       (partial start-touch-click-handler
+                                date-str :mouse))
+        :onMouseUp   stop-touch-click-handler
+        :onMouseMove (if is-moving-period
+                       (partial handle-period-move
+                                date-str :mouse))}))))
+
 (defn day [tasks selected day]
   (let [date-str                 (subs (jsi/->iso-string day) 0 10)
         curr-time                (:time @uic/clock-state)
@@ -386,107 +512,22 @@
         indicator-duration       (* indicator-max-duration
                                     (/ indicator-arc-angle  360))
 
-        mobile-user-agent         (re-seq
-                                   #"(?i)Android|webOS|iPhone|iPad|iPod|BlackBerry"
-                                   (jsi/user-agent))
         start-touch-click-handler (if (and (not is-moving-period)
                                            (not (:press-on long-press-state))
                                            (nil? selected-period))
-                                    (fn [elem-id ui-type e]
-                                      (let [
-                                            ;; figure out what time the user initially touched
-                                            svg-coords    (cutils/client-to-view-box elem-id e ui-type)
-                                            circle-coords (cutils/point-to-centered-circle
-                                                           (merge (select-keys uic/svg-consts [:cx :cy])
-                                                                  svg-coords))
-                                            angle         (cutils/point-to-angle circle-coords)
-                                            relative-time (Math/floor (cutils/angle-to-ms angle))
-                                            absolute-time (+ relative-time
-                                                             (jsi/value-of (utils/zero-in-day day)))
-                                            time-date-obj (new js/Date absolute-time)
-                                            ;; set a function to go off after standard touch time
-                                            ;; to start the animation and timer
-                                            id (.setTimeout
-                                                js/window
-                                                (fn [_]
-                                                  (println "KICKOFF!")
-                                                  (rf/dispatch-sync
-                                                   [:set-inline-period-long-press
-                                                    {:press-on true
-                                                     :start-time (new js/Date)}]))
-                                                indicator-delay)]
-
-                                        ;; (jsi/stop-propagation e)
-                                        ;; (jsi/prevent-default e)
-
-                                        ;; set the id to cancel the animation
-                                        ;; set the time indicated initially
-                                        (println (str "maybe starting..." id))
-                                        (rf/dispatch-sync [:set-inline-period-long-press
-                                                           {:timeout-id id
-                                                            :indicator-start time-date-obj}]))))
+                                    (start-touch-handler indicator-delay day))
 
         stop-touch-click-handler  (if is-moving-period
-                                   (fn [e]
-                                     (jsi/prevent-default e)
-                                     (rf/dispatch-sync
-                                      [:set-moving-period false]))
+                                   (stop-touch-stop-moving-handler)
 
-                                   ;; not moving period and...
                                    (if (and (some? (:timeout-id long-press-state))
                                             (not (:press-on long-press-state)))
-                                     (fn [e]
-                                       (.clearTimeout js/window (:timeout-id long-press-state))
-                                       (rf/dispatch-sync [:set-inline-period-long-press
-                                                          {:indicator-start nil
-                                                           :stop-time nil
-                                                           :timeout-id nil
-                                                           :press-on false}])
-                                       (println
-                                        (str "cancelling inline add..."
-                                             (:timeout-id long-press-state))))
+                                     (stop-touch-cancel-inline-add-handler long-press-state)
 
-                                     ;; either no timeout id or press-on true
                                      (if (:press-on long-press-state)
-                                       (fn [_]
-                                         (println "This is where we would add")
-                                         (let [now (.valueOf (new js/Date))
-                                               started (if-let [s (:start-time long-press-state)]
-                                                         (.valueOf s))
-
-                                               time-held-down (if-let [started started]
-                                                                (- now started)
-                                                                indicator-max-duration) ;; shouldn't ever use this
-
-                                               desired-period-arc-angle (if (>= time-held-down indicator-duration)
-                                                                           indicator-arc-angle
-                                                                           (* (/ time-held-down indicator-duration)
-                                                                              indicator-arc-angle))
-                                               indicator-start-angle indicator-angle
-                                               indicator-stop-angle (.min js/Math
-                                                                          (+ indicator-start-angle
-                                                                             desired-period-arc-angle)
-                                                                          359.9)
-                                               relative-start-time  (cutils/angle-to-ms indicator-start-angle)
-                                               relative-stop-time   (cutils/angle-to-ms indicator-stop-angle)
-
-                                               absolute-start-time (+ relative-start-time
-                                                                      (jsi/value-of (utils/zero-in-day day)))
-                                               absolute-stop-time  (+ relative-stop-time
-                                                                      (jsi/value-of (utils/zero-in-day day)))]
-
-                                           (.log js/console {:start (new js/Date absolute-start-time)
-                                                             :stop  (new js/Date absolute-stop-time)})
-
-                                           (rf/dispatch-sync [:set-inline-period-long-press
-                                                              {:indicator-start nil
-                                                               :stop-time nil
-                                                               :timeout-id nil
-                                                               :press-on false}])
-
-                                           (hist/nav! (str "/add/period?"
-                                                           "start-time=" absolute-start-time
-                                                           "&stop-time=" absolute-stop-time)))))))
+                                       (stop-touch-successful-long-press-handler
+                                        long-press-state indicator-max-duration
+                                        indicator-duration indicator-arc-angle indicator-angle day))))
 
         deselect                  (fn [e]
                                     (println "deselect")
@@ -511,27 +552,10 @@
                    :height      "100%"
                    :onClick     deselect}
 
-                  ;; start gets triggered twice on mobile unless we use when statements
-                  (when (some? mobile-user-agent)
-                    {:onTouchStart (if (some? start-touch-click-handler)
-                                     (partial start-touch-click-handler
-                                              date-str :touch))
-                     :onTouchEnd  stop-touch-click-handler
-                     :onTouchMove (if is-moving-period
-                                    (partial handle-period-move
-                                             date-str :touch))})
-
-                  (when (nil? mobile-user-agent)
-                    {:onMouseDown (if (some? start-touch-click-handler)
-                                    ;; catch the case when handler is nil otherwise partial freaks out when called
-                                    ;; TODO this should be moved up into the let
-                                    (partial start-touch-click-handler
-                                             date-str :mouse))
-                     :onMouseUp   stop-touch-click-handler
-                     :onMouseMove (if is-moving-period
-                                    (partial handle-period-move
-                                             date-str :mouse))})
-
+                  (svg-day-touch-handlers date-str
+                                          start-touch-click-handler
+                                          stop-touch-click-handler
+                                          is-moving-period)
                   (case zoom
                     :q1 {:viewBox "40 0 55 100"}
                     :q2 {:viewBox "0 0 60 100"}
@@ -611,7 +635,3 @@
                     ;; the length of the whole circle is a little over 210
                     :stroke-dasharray (str "0 " arc-length)
                     :fill         "transparent"})]]))]]))
-
-(defn days [days tasks selected-period]
-  (->> days
-       (map (partial day tasks selected-period))))
