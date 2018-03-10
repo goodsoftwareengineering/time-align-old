@@ -60,13 +60,6 @@
                    [:50%  {:opacity "0.5"}]
                    [:100% {:opacity "0.2" :stroke-dasharray "250, 0"}])
 
-;; circumference of circle at r = 40 is ~ 251.33
-;; length of 45 deg arc on circle is ~ 31.41
-(stylefy/keyframes "playing-period"
-                   [:0%   {:opacity "0" :stroke-dasharray "0, 31.41"}]
-                   [:50%  {:opacity "0.3"}]
-                   [:100% {:opacity "0" :stroke-dasharray "31.41, 0"}])
-
 (defn period
   [selected curr-time is-moving-period type period displayed-day period-in-play]
   (let [id               (:id period)
@@ -118,8 +111,6 @@
                                              cx cy inner-r stop-angle start-angle)]
                               (str outer-arc inner-arc "Z"))
 
-        play-arc             (uic/describe-arc cx cy r start-angle
-                                               (+ 45 start-angle))
 
         set-selected-handler (if (not is-period-selected)
                                (fn [e]
@@ -221,18 +212,30 @@
                     :fill             (:alternate-1-color uic/app-theme)})])])
 
       (when (= period-in-play id)
-        [:path (merge (stylefy/use-style
-                       {:animation-duration (str "5s")
-                        :animation-timing-function "linear"
-                        :animation-iteration-count "infinite"
-                        :animation-name "playing-period"})
+        (let [play-arc   (uic/describe-arc cx cy r start-angle 359)
+              arc-angle (- 359 start-angle)
+              arc-length (* (/ arc-angle 360) ;; percent of circle
+                            (* 2 (* (.-PI js/Math) r)))] ;; circumference of whole circle for this track (actual or planned)
 
-                      {:d            play-arc
-                       :opacity      "0.7"
-                       :fill         "transparent"
-                       :onClick      set-selected-handler
-                       :stroke-width period-width
-                       :stroke       (:text-color uic/app-theme)})])]
+          ;; circumference of circle at r = 40 is ~ 251.33
+          ;; length of 45 deg arc on circle is ~ 31.41
+          (stylefy/keyframes "playing-period"
+                             [:0%   {:opacity "0.1" :stroke-dasharray (str 0 ", " 0 ", " 10 ", " arc-length)}]
+                             [:50%  {:opacity "0.05" }]
+                             [:100% {:opacity "0.0" :stroke-dasharray (str 0 ", " arc-length ", " 10 ", " arc-length)}])
+
+          [:path (merge (stylefy/use-style
+                         {:animation-duration (str "5s")
+                          :animation-timing-function "linear"
+                          :animation-iteration-count "infinite"
+                          :animation-name "playing-period"})
+
+                        {:d            play-arc
+                         :opacity      "0.7"
+                         :fill         "transparent"
+                         :onClick      set-selected-handler
+                         :stroke-width period-width
+                         :stroke       (:text-color uic/app-theme)})]))]
 
      ;; yesterday arrows TODO change all yesterdays and tomorrows to next and previous days
      (if starts-yesterday
