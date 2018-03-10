@@ -20,3 +20,5 @@ GTAGS
 \.floo
 /node_modules/
 
+
+\.flooignore
