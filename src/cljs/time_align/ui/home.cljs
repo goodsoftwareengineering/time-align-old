@@ -82,16 +82,21 @@
 
 (defn selected-period-info [selected-period tasks]
   (when (some? selected-period)
-    (let [task (some #(if (= (:task-id selected-period)) %) tasks)
+    (let [task  (cutils/find-task-with-period tasks (:id selected-period))
           color (:color selected-period)
-          complete (:complete task)]
+          complete (:complete task)
+          line-style {:display         "flex"
+                      :justify-content "flex-start"
+                      :flex-wrap       "nowrap"
+                      :padding         "0.125em"}]
 
       [ui/paper {:style (merge {:width "100%"})}
-       [:div {:style {:display         "flex"
-                      :justify-content "space-between"
-                      :flex-wrap       "nowrap"
-                      :padding         "0.125em"}}
-        [ui/checkbox {:checked  complete :iconStyle {:fill color}}]
+       [:div {:style line-style}
+        [ui/checkbox {:checked  complete :iconStyle {:fill color}
+                      :style {:margin "0.125em"
+                              :width "auto"}}]
+        [:span (:name task)]]
+       [:div {:style line-style}
         (uic/mini-arc selected-period)]])))
 
 (defn action-buttons [period-in-play selected-id selected-period]

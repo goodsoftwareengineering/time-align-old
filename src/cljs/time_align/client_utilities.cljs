@@ -248,6 +248,12 @@
       (remove empty?)
       (remove nil?)))
 
+(defn find-task-with-period [tasks period-id]
+  (some (fn [t]
+          (some (fn [p]
+                  (if (= (:id p) period-id) t))
+                (:periods t))) tasks))
+
 (defn pad-one-b-16
   "given a base 10 number it will convert to a base 16 string and pad one zero if necessary"
   [number]
