@@ -50,6 +50,10 @@
   [x]
   (.click x))
 
+(declare .addEventListener)
+(defn add-event-listener [element event fn]
+  (.addEventListener element event fn))
+
 (defn user-agent []
   (.-userAgent js/navigator))
 

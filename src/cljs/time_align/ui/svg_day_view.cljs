@@ -478,174 +478,187 @@
                                 date-str :mouse))}))))
 
 (defn day [tasks selected day]
-  (let [date-str                 (subs (jsi/->iso-string day) 0 10)
-        curr-time                (:time @uic/clock-state)
-        period-in-play           @(rf/subscribe [:period-in-play])
-        display-ticker           (= (jsi/value-of (utils/zero-in-day day))
-                                    (jsi/value-of (utils/zero-in-day curr-time)))
+  (r/create-class
+   {:component-did-mount
+    (fn [comp]
+      (let [svg-el       (r/dom-node comp)
+            stop-menu-fn (fn [e] (jsi/prevent-default e))]
 
-        ticker-ms                (utils/get-ms curr-time)
-        ticker-angle             (cutils/ms-to-angle ticker-ms)
-        ticker-pos               (cutils/polar-to-cartesian
-                                   (:cx uic/svg-consts)
-                                   (:cy uic/svg-consts)
-                                   (if (some? period-in-play)
-                                     (+ (js/parseFloat
-                                         (:r uic/svg-consts))
-                                        (js/parseFloat
-                                         (:circle-stroke uic/svg-consts)))
-                                     (+ (js/parseFloat
-                                         (:inner-border-r uic/svg-consts))
-                                        (js/parseFloat
-                                         (:circle-stroke uic/svg-consts))))
-                                   ticker-angle)
-        filtered-periods         (cutils/filter-periods-for-day day tasks)
-        selected-period          (if (= :period
-                                        (get-in
-                                          selected
-                                          [:current-selection :type-or-nil]))
-                                   (get-in selected
-                                           [:current-selection :id-or-nil])
-                                   nil)
-        is-moving-period         @(rf/subscribe [:is-moving-period])
-        long-press-state         @long-press-state-atom
-        indicator-delay          900 ;; slightly longer than standard touch (125ms)
+        (jsi/add-event-listener svg-el "contextmenu" stop-menu-fn)))
 
-        ;; this is all for figuring out how long to set the animation
-        ;; relative to where the user indicated they want start for this period
-        indicator-start          (:indicator-start long-press-state)
-        indicator-relative-ms    (if (some? indicator-start)
-                                   (utils/get-ms indicator-start))
-        indicator-angle          (if (some? indicator-start)
-                                   (cutils/ms-to-angle indicator-relative-ms))
-        indicator-max-duration   15000
-        indicator-arc-angle      (- 360 indicator-angle)
-        indicator-duration       (* indicator-max-duration
-                                    (/ indicator-arc-angle  360))
+    :display-name "svg-day-display"
 
-        start-touch-click-handler (if (and (not is-moving-period)
-                                           (not (:press-on long-press-state))
-                                           (nil? selected-period))
-                                    (start-touch-handler indicator-delay day))
+    :reagent-render
+    (fn [tasks selected day]
+      (let [date-str                 (subs (jsi/->iso-string day) 0 10)
+            curr-time                (:time @uic/clock-state)
+            period-in-play           @(rf/subscribe [:period-in-play])
+            display-ticker           (= (jsi/value-of (utils/zero-in-day day))
+                                        (jsi/value-of (utils/zero-in-day curr-time)))
 
-        stop-touch-click-handler  (cond
-                                    is-moving-period
-                                    (stop-touch-stop-moving-handler)
+            ticker-ms                (utils/get-ms curr-time)
+            ticker-angle             (cutils/ms-to-angle ticker-ms)
+            ticker-pos               (cutils/polar-to-cartesian
+                                      (:cx uic/svg-consts)
+                                      (:cy uic/svg-consts)
+                                      (if (some? period-in-play)
+                                        (+ (js/parseFloat
+                                            (:r uic/svg-consts))
+                                           (js/parseFloat
+                                            (:circle-stroke uic/svg-consts)))
+                                        (+ (js/parseFloat
+                                            (:inner-border-r uic/svg-consts))
+                                           (js/parseFloat
+                                            (:circle-stroke uic/svg-consts))))
+                                      ticker-angle)
+            filtered-periods         (cutils/filter-periods-for-day day tasks)
+            selected-period          (if (= :period
+                                            (get-in
+                                             selected
+                                             [:current-selection :type-or-nil]))
+                                       (get-in selected
+                                               [:current-selection :id-or-nil])
+                                       nil)
+            is-moving-period         @(rf/subscribe [:is-moving-period])
+            long-press-state         @long-press-state-atom
+            indicator-delay          900 ;; slightly longer than standard touch (125ms)
+
+            ;; this is all for figuring out how long to set the animation
+            ;; relative to where the user indicated they want start for this period
+            indicator-start          (:indicator-start long-press-state)
+            indicator-relative-ms    (if (some? indicator-start)
+                                       (utils/get-ms indicator-start))
+            indicator-angle          (if (some? indicator-start)
+                                       (cutils/ms-to-angle indicator-relative-ms))
+            indicator-max-duration   15000
+            indicator-arc-angle      (- 360 indicator-angle)
+            indicator-duration       (* indicator-max-duration
+                                        (/ indicator-arc-angle  360))
+
+            start-touch-click-handler (if (and (not is-moving-period)
+                                               (not (:press-on long-press-state))
+                                               (nil? selected-period))
+                                        (start-touch-handler indicator-delay day))
+
+            stop-touch-click-handler  (cond
+                                        is-moving-period
+                                        (stop-touch-stop-moving-handler)
 
 
-                                    (:press-on long-press-state)
-                                    (stop-touch-successful-long-press-handler long-press-state
-                                                                              indicator-max-duration
-                                                                              indicator-duration
-                                                                              indicator-arc-angle
-                                                                              indicator-angle
-                                                                              day)
+                                        (:press-on long-press-state)
+                                        (stop-touch-successful-long-press-handler long-press-state
+                                                                                  indicator-max-duration
+                                                                                  indicator-duration
+                                                                                  indicator-arc-angle
+                                                                                  indicator-angle
+                                                                                  day)
 
-                                    :else (stop-touch-cancel-inline-add-handler))
+                                        :else (stop-touch-cancel-inline-add-handler))
 
-        deselect                  (fn [e]
-                                    (println "deselect")
-                                    (jsi/prevent-default e)
-                                    (rf/dispatch-sync [:set-moving-period false])
-                                    (rf/dispatch-sync [:set-selected-period nil]))
+            deselect                  (fn [e]
+                                        (println "deselect")
+                                        (jsi/prevent-default e)
+                                        (rf/dispatch-sync [:set-moving-period false])
+                                        (rf/dispatch-sync [:set-selected-period nil]))
 
-        zoom @(rf/subscribe [:zoom])]
+            zoom @(rf/subscribe [:zoom])]
 
-    [:div {:style {:height "100%" :width "100%"}}
-     [:svg (merge {:key         date-str
-                   :id          date-str
-                   :xmlns "http://www.w3.org/2000/svg"
-                   :version  "1.1"
-                   :style       {
-                                 :display      "inline-box"
-                                 ;; this stops scrolling
-                                 :touch-action "pinch-zoom"
-                                 ;; for moving period
-                                 }
-                   :width       "100%"
-                   :height      "100%"
-                   :onClick     deselect}
+        [:div {:style {:height "100%" :width "100%"}}
+         [:svg (merge {:key         date-str
+                       :id          "svg-day-display"
+                       :xmlns "http://www.w3.org/2000/svg"
+                       :version  "1.1"
+                       :style       {
+                                     :display      "inline-box"
+                                     ;; this stops scrolling
+                                     :touch-action "pinch-zoom"
+                                     ;; for moving period
+                                     }
+                       :width       "100%"
+                       :height      "100%"
+                       :onClick     deselect}
 
-                  (svg-day-touch-handlers date-str
-                                          start-touch-click-handler
-                                          stop-touch-click-handler
-                                          is-moving-period)
-                  (case zoom
-                    :q1 {:viewBox "40 0 55 100"}
-                    :q2 {:viewBox "0 0 60 100"}
-                    :q3 {:viewBox "0 40 60 60"}
-                    :q4 {:viewBox "40 40 60 60"}
-                    (select-keys uic/svg-consts [:viewBox])))
+                      (svg-day-touch-handlers date-str
+                                              start-touch-click-handler
+                                              stop-touch-click-handler
+                                              is-moving-period)
+                      (case zoom
+                        :q1 {:viewBox "40 0 55 100"}
+                        :q2 {:viewBox "0 0 60 100"}
+                        :q3 {:viewBox "0 40 60 60"}
+                        :q4 {:viewBox "40 40 60 60"}
+                        (select-keys uic/svg-consts [:viewBox])))
 
-      [:circle (merge {:fill (:canvas-color uic/app-theme)}
-                      (select-keys uic/svg-consts [:cx :cy :r]))]
-      [:circle (merge {:fill "transparent"
-                       :stroke (:border-color uic/app-theme)
-                       :stroke-width (:circle-stroke uic/svg-consts)
-                       :r  (:border-r uic/svg-consts)}
-                      (select-keys uic/svg-consts [:cx :cy]))]
+          [:circle (merge {:fill (:canvas-color uic/app-theme)}
+                          (select-keys uic/svg-consts [:cx :cy :r]))]
+          [:circle (merge {:fill "transparent"
+                           :stroke (:border-color uic/app-theme)
+                           :stroke-width (:circle-stroke uic/svg-consts)
+                           :r  (:border-r uic/svg-consts)}
+                          (select-keys uic/svg-consts [:cx :cy]))]
 
-      (periods filtered-periods selected is-moving-period curr-time day period-in-play)
+          (periods filtered-periods selected is-moving-period curr-time day period-in-play)
 
-      (when display-ticker
-        [:g
-         [:circle {:cx (:cx uic/svg-consts) :cy (:cy uic/svg-consts) :r ".7"
-                   :fill (if (some? period-in-play)
-                           (:text-color uic/app-theme)
-                           (:alternate-text-color uic/app-theme))
-                   :stroke "transparent"}]
+          (when display-ticker
+            [:g
+             [:circle {:cx (:cx uic/svg-consts) :cy (:cy uic/svg-consts) :r ".7"
+                       :fill (if (some? period-in-play)
+                               (:text-color uic/app-theme)
+                               (:alternate-text-color uic/app-theme))
+                       :stroke "transparent"}]
 
-         [:line {:fill         "transparent"
-                 :stroke-width "1.4"
-                 :stroke       (if (some? period-in-play)
-                                 (:text-color uic/app-theme)
-                                 (:alternate-text-color uic/app-theme))
-                 :stroke-linecap "butt"
-                 :opacity      "1"
-                 :x1           (:cx uic/svg-consts)
-                 :y1           (:cy uic/svg-consts)
-                 :x2           (:x ticker-pos)
-                 :y2           (:y ticker-pos)}]])
+             [:line {:fill         "transparent"
+                     :stroke-width "1.4"
+                     :stroke       (if (some? period-in-play)
+                                     (:text-color uic/app-theme)
+                                     (:alternate-text-color uic/app-theme))
+                     :stroke-linecap "butt"
+                     :opacity      "1"
+                     :x1           (:cx uic/svg-consts)
+                     :y1           (:cy uic/svg-consts)
+                     :x2           (:x ticker-pos)
+                     :y2           (:y ticker-pos)}]])
 
-      (when (and (:press-on long-press-state)
-                 (nil? selected-period))
-        (let [cx            (js/parseInt (:cx uic/svg-consts))
-              cy            (js/parseInt (:cy uic/svg-consts))
-              r             (js/parseInt (:inner-r uic/svg-consts)) ;; TODO jsi int cast integration and replace all these
-              indicator-r   (/ (-> (:period-width uic/svg-consts)
-                                   (js/parseInt))
-                               3)
-              circumference (* (* 2 (jsi/pi)) r)
-              arc-length    (* circumference (/ indicator-arc-angle 360))
-              point         (cutils/polar-to-cartesian cx cy r indicator-angle)
-              indicator-cx  (:x point)
-              period-width  (js/parseInt (:period-width uic/svg-consts))
-              arc           (uic/describe-arc cx cy r indicator-angle 359)
-              indicator-cy  (:y point)]
+          (when (and (:press-on long-press-state)
+                     (nil? selected-period))
+            (let [cx            (js/parseInt (:cx uic/svg-consts))
+                  cy            (js/parseInt (:cy uic/svg-consts))
+                  r             (js/parseInt (:inner-r uic/svg-consts)) ;; TODO jsi int cast integration and replace all these
+                  indicator-r   (/ (-> (:period-width uic/svg-consts)
+                                       (js/parseInt))
+                                   3)
+                  circumference (* (* 2 (jsi/pi)) r)
+                  arc-length    (* circumference (/ indicator-arc-angle 360))
+                  point         (cutils/polar-to-cartesian cx cy r indicator-angle)
+                  indicator-cx  (:x point)
+                  period-width  (js/parseInt (:period-width uic/svg-consts))
+                  arc           (uic/describe-arc cx cy r indicator-angle 359)
+                  indicator-cy  (:y point)]
 
-          (stylefy/keyframes "grow-indicator"
-                             [:from {:stroke-dasharray (str "0, " arc-length)}]
-                             [:to   {:stroke-dasharray (str arc-length " , 0")}])
+              (stylefy/keyframes "grow-indicator"
+                                 [:from {:stroke-dasharray (str "0, " arc-length)}]
+                                 [:to   {:stroke-dasharray (str arc-length " , 0")}])
 
-          [:g
+              [:g
 
-           [:path
-            {:d            arc
-             :stroke       (:text-color uic/app-theme)
-             :opacity      "0.1"
-             :stroke-width (* 1.5 period-width)
-             :fill         "transparent"}]
+               [:path
+                {:d            arc
+                 :stroke       (:text-color uic/app-theme)
+                 :opacity      "0.1"
+                 :stroke-width (* 1.5 period-width)
+                 :fill         "transparent"}]
 
-           [:path
-            (merge (stylefy/use-style
-                    {:animation-duration (str (/ indicator-duration 1000) "s")
-                     :animation-timing-function "linear"
-                     :animation-name "grow-indicator"})
-                   {:d            arc
-                    :stroke       (:text-color uic/app-theme)
-                    :opacity      "0.5"
-                    :stroke-width (* 1.5 period-width)
-                    ;; guessed and checked the dasharray
-                    ;; the length of the whole circle is a little over 210
-                    :stroke-dasharray (str "0 " arc-length)
-                    :fill         "transparent"})]]))]]))
+               [:path
+                (merge (stylefy/use-style
+                        {:animation-duration (str (/ indicator-duration 1000) "s")
+                         :animation-timing-function "linear"
+                         :animation-name "grow-indicator"})
+                       {:d            arc
+                        :stroke       (:text-color uic/app-theme)
+                        :opacity      "0.5"
+                        :stroke-width (* 1.5 period-width)
+                        ;; guessed and checked the dasharray
+                        ;; the length of the whole circle is a little over 210
+                        :stroke-dasharray (str "0 " arc-length)
+                        :fill         "transparent"})]]))]])
+      )}))

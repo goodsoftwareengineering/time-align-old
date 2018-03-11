@@ -39,11 +39,6 @@
     <script type="text/javascript">
      var context = "{{servlet-context}}";
      var csrfToken = "{{csrf-token}}";
-     document.addEventListener("contextmenu", function (e) {
-       /* this is to stop long pressing (when adding inline period) from bringing up the context menu*/
-       /* TODO find a way to isolate this to just the day view */
-       e.preventDefault();
-     }, false);
 
      window.mui_theme_palette = {
        "primary1Color": "#00bcd4",

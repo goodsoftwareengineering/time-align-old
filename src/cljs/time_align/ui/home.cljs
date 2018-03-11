@@ -152,7 +152,7 @@
                (when (some? zoom)
                  {:height          "100%"}))}
 
-      (day-view/day tasks selected displayed-day)]
+      [day-view/day tasks selected displayed-day]]
 
      [:div.action-container
       {:style {:position   "fixed"
