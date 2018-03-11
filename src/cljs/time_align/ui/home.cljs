@@ -107,7 +107,9 @@
       [:span  (:name task)]]
 
      [:div {:style (merge line-style {:margin-left "2em"})}
-      (uic/mini-arc selected-period)
+      (if (cutils/period-has-stamps selected-period)
+          (uic/mini-arc selected-period)
+          [ui/svg-icon [ic/action-list {:color color}]])
       [:div {:style {:margin-right "1em"}}]
       (uic/concatenated-text description "no description")]]))
 
@@ -132,7 +134,8 @@
                    :color           (:alternate-text-color uic/app-theme)}}
      [:span start]
      [:span stop]
-     [:span (str total-h " hours")]]))
+     [:span (if has-stamps (str total-h " hours")
+                "---")]]))
 
 (defn period-info [selected-period categories tasks]
   [ui/paper {:style {:width "100%"
