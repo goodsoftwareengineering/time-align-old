@@ -142,9 +142,12 @@
         ;; library handles ignoring default when already present
         initial-db-raw @(local-storage local-storage-atom :app-db)
         ;; TODO use some sort of conform instead of only getting categories
+        ;; TODO specter might also be nice here
         initial-db (merge
                     db/default-db
-                    (select-keys initial-db-raw [:categories :view]))]
+                    (merge (select-keys initial-db-raw [:categories])
+                           {:view (merge (:view db/default-db)
+                                         {:period-in-play (get-in initial-db-raw [:view :period-in-play])})}))]
     {:db initial-db
      :init-worker (if js/goog.DEBUG "/bootstrap_worker.js" "js/worker.js") }))
 
