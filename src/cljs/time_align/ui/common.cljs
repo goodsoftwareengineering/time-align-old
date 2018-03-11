@@ -103,9 +103,8 @@
 (def json-mui-theme-palette  (.-mui_theme_palette js/window))
 (def json-mui-theme-overides (.-mui_theme_overides js/window))
 
-(defn convert-js-mui-theme [string]
-  (->> string
-       ;; (.parse js/JSON)
+(defn convert-js-mui-theme [obj]
+  (->> obj
        (js->clj)
        (seq)
        (reduce
