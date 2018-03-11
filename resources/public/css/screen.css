@@ -3,7 +3,6 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  background-color: #1C2429; /* TODO refactor so this used by app theme and not even in css */
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -khtml-user-select: none;
