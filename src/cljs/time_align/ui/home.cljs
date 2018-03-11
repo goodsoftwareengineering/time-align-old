@@ -51,95 +51,8 @@
                                (:alternate-text-color uic/app-theme))}
                     d)]]]))
 
-(defn stats-selection [selected periods tasks]
-  (let [id (->> selected
-                (:current-selection)
-                (:id-or-nil))
-        period (some #(if (= id (:id %)) %) periods)
-        task-id (:task-id period)
-        task (some #(if (= task-id (:id %)) %) tasks)
-        ]
-    [:div
-     [ui/table {:selectable false}
-      [ui/table-body {:display-row-checkbox false}
-       [ui/table-row
-        [ui/table-row-column "task"]
-        [ui/table-row-column (:name task)]
-        ]
-       [ui/table-row
-        [ui/table-row-column "start"]
-        [ui/table-row-column (jsi/->time-string (:start period))]
-        ]
-       [ui/table-row
-        [ui/table-row-column "stop"]
-        [ui/table-row-column (jsi/->time-string (:stop period))]
-        ]
-       ]
-      ]
-     [:p {:style {:padding "0.25em"}} (:description period)]
-     ]
-    ))
-
-(defn stats-no-selection []
-  (let [planned-time @(rf/subscribe [:planned-time :selected-day])
-        accounted-time @(rf/subscribe [:accounted-time :selected-day])
-        tasks @(rf/subscribe [:tasks])
-        queue-items (cutils/filter-periods-no-stamps tasks)
-        queue-count (count queue-items)
-        incomplete-tasks (filter #(:complete %) tasks)
-        incomplete-count (count incomplete-tasks)
-        ]
-
-    [ui/table {:selectable false}
-     [ui/table-body {:display-row-checkbox false}
-      [ui/table-row
-       [ui/table-row-column "planned"]
-       [ui/table-row-column (uic/duration-ms-to-string planned-time)]
-       ]
-      [ui/table-row
-       [ui/table-row-column "accounted"]
-       [ui/table-row-column (uic/duration-ms-to-string accounted-time)]
-       ]
-      [ui/table-row
-       [ui/table-row-column "queue items"]
-       [ui/table-row-column queue-count]
-       ]
-      [ui/table-row
-       [ui/table-row-column "incomplete tasks"]
-       [ui/table-row-column incomplete-count]
-       ]
-      ]
-     ]
-    )
-  )
-
-(defn home-page-comp []
-  (let [tasks                @(rf/subscribe [:tasks])
-        selected             @(rf/subscribe [:selected])
-        current-selection    (:current-selection selected)
-        selected-id          (:id-or-nil current-selection)
-        action-button-state  @(rf/subscribe [:action-buttons])
-        displayed-day        @(rf/subscribe [:displayed-day])
-        periods              @(rf/subscribe [:periods])
-        selected-period   (some #(if (= selected-id (:id %)) %) periods)
-        period-in-play       @(rf/subscribe [:period-in-play])
-        ;; dashboard-tab       @(rf/subscribe [:dashboard-tab])
-        zoom                 @(rf/subscribe [:zoom])
-        inline-period-dialog @(rf/subscribe [:inline-period-add-dialog])
-        ]
-
-    [:div.app-container
-     {:style {:display         "flex"
-              :flex-wrap       "wrap"
-              :justify-content "center"
-              :align-content   "flex-start"
-              :height          "100%"
-              ;; :border "yellow solid 0.1em"
-              :box-sizing      "border-box"}}
-
-     (app-bar)
-
-     [ui/paper {:style (merge {:width "100%"})}
+(defn navigation-zoom-panel [displayed-day]
+  [ui/paper {:style (merge {:width "100%"})}
       [:div.navigation.zoom
        {:style {:display         "flex"
                 :justify-content "space-between"
@@ -152,18 +65,46 @@
 
        (svg-mui-zoom 1)
        (svg-mui-zoom 4)
+
        [ui/icon-button
         {:onClick (fn [e] (rf/dispatch [:set-displayed-day (new js/Date)]))}
         (if (cutils/same-day? displayed-day (new js/Date))
           [ic/device-gps-fixed {:color (:alternate-text-color uic/app-theme)}]
           [ic/device-gps-not-fixed {:color (:alternate-text-color uic/app-theme)}])]
+
        (svg-mui-zoom 3)
        (svg-mui-zoom 2)
 
        [ui/icon-button
         {:onClick (fn [e]
                     (rf/dispatch [:iterate-displayed-day :next]))}
-        [ic/image-navigate-next {:color (:alternate-text-color uic/app-theme)}]]]]
+        [ic/image-navigate-next {:color (:alternate-text-color uic/app-theme)}]]]])
+
+(defn home-page-comp []
+  (let [tasks                @(rf/subscribe [:tasks])
+        selected             @(rf/subscribe [:selected])
+        current-selection    (:current-selection selected)
+        selected-id          (:id-or-nil current-selection)
+        action-button-state  @(rf/subscribe [:action-buttons])
+        displayed-day        @(rf/subscribe [:displayed-day])
+        periods              @(rf/subscribe [:periods])
+        selected-period      (some #(if (= selected-id (:id %)) %) periods)
+        period-in-play       @(rf/subscribe [:period-in-play])
+        zoom                 @(rf/subscribe [:zoom])
+        inline-period-dialog @(rf/subscribe [:inline-period-add-dialog])]
+
+    [:div.app-container
+     {:style {:display         "flex"
+              :flex-wrap       "wrap"
+              :justify-content "center"
+              :align-content   "flex-start"
+              :height          "100%"
+              ;; :border "yellow solid 0.1em"
+              :box-sizing      "border-box"}}
+
+     (app-bar)
+
+     (navigation-zoom-panel displayed-day)
 
      [ui/divider {:style {:margin "0.125em"}}]
 
