@@ -20,6 +20,11 @@
   [x]
   (.toTimeString x))
 
+(declare .toLocaletimeString)
+(defn ->locale-time-string
+  [x]
+  (.toLocaleTimeString x))
+
 (declare .toDateString)
 (defn ->date-string
   [x]
@@ -59,3 +64,7 @@
 
 (defn pi []
   (.-PI js/Math))
+
+(declare .toFixed)
+(defn round-decimals [n d]
+  (.toFixed n d))
