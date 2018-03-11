@@ -88,16 +88,24 @@
           line-style {:display         "flex"
                       :justify-content "flex-start"
                       :flex-wrap       "nowrap"
-                      :padding         "0.125em"}]
+                      :padding         "0.125em"}
+          span-style {:overflow      "hidden"
+                      :white-space   "nowrap"
+                      :text-overflow "ellipsis"
+                      :width         "100%"
+                      :display       "inline-block"}]
 
       [ui/paper {:style (merge {:width "100%"})}
        [:div {:style line-style}
         [ui/checkbox {:checked  complete :iconStyle {:fill color}
                       :style {:margin "0.125em"
                               :width "auto"}}]
-        [:span (:name task)]]
-       [:div {:style line-style}
-        (uic/mini-arc selected-period)]])))
+        [:span {:style span-style} (:name task)]]
+
+       [:div {:style (merge line-style {:margin-left "1em"})}
+        (uic/mini-arc selected-period)
+        [:span {:style (merge span-style {:margin-left "1em"})}
+         (:description selected-period)]]])))
 
 (defn action-buttons [period-in-play selected-id selected-period]
   (if (and (some? period-in-play)
