@@ -235,7 +235,7 @@
   :id (random-uuid),
   :email ""},
  :view
- {  :inline-period-add-dialog false
+ {:inline-period-add-dialog false
   :dashboard-tab :calendar
   :period-in-play nil,
   :zoom nil,
