@@ -480,6 +480,10 @@
 (defn day [tasks selected day]
   (r/create-class
    {:component-did-mount
+    ;; utilizes create class just for this
+    ;; long press on mobile brings up the context menu
+    ;; since svg-day uses long press to inline period adding
+    ;; the context menu needs to be disabled
     (fn [comp]
       (let [svg-el       (r/dom-node comp)
             stop-menu-fn (fn [e] (jsi/prevent-default e))]
