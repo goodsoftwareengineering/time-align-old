@@ -192,26 +192,6 @@
 (s/def ::displayed-month (s/with-gen (s/coll-of int? :min-count 2 :max-count 2 :gen-max 2)
                            #(gen/return [2018 1]))) ;; TODO make this dynamically today
 (s/def ::period-in-play ::id-or-nil)
-(s/def ::timeout-id ::id-or-nil)
-(s/def ::indicator-start  (s/with-gen (s/or :some ::moment
-                                        :none nil?)
-                        #(gen/return nil)))
-(s/def ::start-time  (s/with-gen (s/or :some ::moment
-                                        :none nil?)
-                        #(gen/return nil)))
-(s/def ::stop-time  (s/with-gen (s/or :some ::moment
-                                       :none nil?)
-                       #(gen/return nil)))
-(s/def ::press-on (s/with-gen boolean?
-                    #(gen/return false)))
-(s/def ::inline-period-long-press (s/with-gen (s/keys ::req-un [::timeout-id
-                                                                ::indicator-start
-                                                                ::start-time
-                                                                ::stop-time
-                                                                ::press-on])
-                                    #(gen/return {:callback-id nil
-                                                  :press-start nil
-                                                  :press-on false})))
 (s/def ::inline-period-add-dialog boolean?)
 (s/def ::calendar-orientation (s/with-gen #{:traditional :github}
                                 #(gen/return :traditional)) )
@@ -229,8 +209,7 @@
                                       ::displayed-day
                                       ::displayed-month
                                       ::inline-period-add-dialog
-                                      ::calendar-orientation
-                                      ])
+                                      ::calendar-orientation])
                      (fn [view]
                        (if (get-in
                             view
@@ -256,12 +235,7 @@
   :id (random-uuid),
   :email ""},
  :view
- {:inline-period-long-press {:indicator-start nil
-                             :stop-time nil
-                             :start-time nil
-                             :timeout-id nil
-                             :press-on false}
-  :inline-period-add-dialog false
+ {  :inline-period-add-dialog false
   :dashboard-tab :calendar
   :period-in-play nil,
   :zoom nil,
