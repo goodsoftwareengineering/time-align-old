@@ -80,27 +80,34 @@
                     (rf/dispatch [:iterate-displayed-day :next]))}
         [ic/image-navigate-next {:color (:alternate-text-color uic/app-theme)}]]]])
 
-(defn selected-period-info [selected-period tasks]
+(defn selected-period-info [selected-period categories tasks]
   (when (some? selected-period)
     (let [task  (cutils/find-task-with-period tasks (:id selected-period))
-          color (:color selected-period)
+          category (cutils/find-category-with-task categories (:id task))
+          color (:color category)
           complete (:complete task)
           line-style {:display         "flex"
                       :justify-content "flex-start"
                       :flex-wrap       "nowrap"
+                      :aign-items      "center"
                       :padding         "0.125em"}
           description (:description selected-period)]
 
-      [ui/paper {:style (merge {:width "100%"})}
+      [ui/paper {:style {:width "100%"
+                         :padding "0.25em"}}
        [:div {:style line-style}
-        [ui/checkbox {:checked  complete :iconStyle {:fill color}
-                      :style {:margin "0.125em"
-                              :width "auto"}}]
+        (uic/svg-mui-circle color)
+        (uic/concatenated-text (:name category) "...")]
+
+       [:div {:style line-style}
+        [ui/checkbox {:checked  complete
+                      :iconStyle {:fill color
+                                  :margin "0"}
+                      :style {:width "auto"}}]
         [:span  (:name task)]]
 
-       [:div {:style (merge line-style)}
-        [:div {:style {:margin "0 0.5em"}}
-         (uic/mini-arc selected-period)]
+       [:div {:style line-style}
+        (uic/mini-arc selected-period)
         (uic/concatenated-text description "no description")]])))
 
 (defn action-buttons [period-in-play selected-id selected-period]
@@ -131,6 +138,7 @@
         action-button-state  @(rf/subscribe [:action-buttons])
         displayed-day        @(rf/subscribe [:displayed-day])
         periods              @(rf/subscribe [:periods])
+        categories           @(rf/subscribe [:categories])
         selected-period      (some #(if (= selected-id (:id %)) %) periods)
         period-in-play       @(rf/subscribe [:period-in-play])
         zoom                 @(rf/subscribe [:zoom])
@@ -151,7 +159,7 @@
 
      [ui/divider {:style {:margin "0.125em"}}]
 
-     (selected-period-info selected-period tasks)
+     (selected-period-info selected-period categories tasks)
 
      [:div.day-container
       {:style (merge

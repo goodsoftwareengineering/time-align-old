@@ -182,7 +182,7 @@
 
 (defn svg-mui-circle [color]
   [ui/svg-icon
-   {:viewBox "0 0 24 24" :style {:margin-left "0.5em"}}
+   {:viewBox "0 0 24 24" :style {:margin "0"}}
    [:circle {:cx "12" :cy "12" :r "11" :fill color}]])
 
 (defn svg-mui-entity [{:keys [type color style]}]

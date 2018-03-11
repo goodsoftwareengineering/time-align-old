@@ -254,6 +254,12 @@
                   (if (= (:id p) period-id) t))
                 (:periods t))) tasks))
 
+(defn find-category-with-task [categories task-id]
+  (some (fn [c]
+          (some (fn [t]
+                  (if (= (:id t) task-id) c))
+                (:tasks c))) categories))
+
 (defn pad-one-b-16
   "given a base 10 number it will convert to a base 16 string and pad one zero if necessary"
   [number]
