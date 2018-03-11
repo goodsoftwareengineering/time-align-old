@@ -51,7 +51,7 @@
                                (:alternate-text-color uic/app-theme))}
                     d)]]]))
 
-(defn navigation-zoom-panel [displayed-day]
+(defn navigation-zoom [displayed-day]
   [ui/paper {:style (merge {:width "100%"})}
       [:div.navigation.zoom
        {:style {:display         "flex"
@@ -80,6 +80,40 @@
                     (rf/dispatch [:iterate-displayed-day :next]))}
         [ic/image-navigate-next {:color (:alternate-text-color uic/app-theme)}]]]])
 
+(defn selected-period-info [selected-period tasks]
+  (when (some? selected-period)
+    (let [task (some #(if (= (:task-id selected-period)) %) tasks)
+          color (:color selected-period)
+          complete (:complete task)]
+
+      [ui/paper {:style (merge {:width "100%"})}
+       [:div {:style {:display         "flex"
+                      :justify-content "space-between"
+                      :flex-wrap       "nowrap"
+                      :padding         "0.125em"}}
+        [ui/checkbox {:checked  complete :iconStyle {:fill color}}]
+        (uic/mini-arc selected-period)]])))
+
+(defn action-buttons [period-in-play selected-id selected-period]
+  (if (and (some? period-in-play)
+           (nil? selected-id))
+    (actb/action-buttons-pause period-in-play)
+
+    ;; playing    selection
+    ;; no playing selection
+    (if (some? selected-id)
+      (actb/action-buttons-period-selection
+       period-in-play
+       selected-id
+       (fn [_]
+         (let [{:keys [description start stop task-id]} selected-period]
+           (hist/nav! (str "#/add/period?"
+                           (when (cutils/period-has-stamps selected-period)
+                             (str "start-time=" (.valueOf start)
+                                  "&stop-time=" (.valueOf stop)))
+                           "&description=" description
+                           "&task-id=" task-id))))))))
+
 (defn home-page-comp []
   (let [tasks                @(rf/subscribe [:tasks])
         selected             @(rf/subscribe [:selected])
@@ -104,22 +138,11 @@
 
      (app-bar)
 
-     (navigation-zoom-panel displayed-day)
+     (navigation-zoom displayed-day)
 
      [ui/divider {:style {:margin "0.125em"}}]
 
-     (when (some? selected-period)
-       (let [task (some #(if (= (:task-id selected-period)) %) tasks)
-             color (:color selected-period)
-             complete (:complete task)]
-
-         [ui/paper {:style (merge {:width "100%"})}
-          [:div {:style {:display         "flex"
-                         :justify-content "space-between"
-                         :flex-wrap       "nowrap"
-                         :padding         "0.125em"}}
-           [ui/checkbox {:checked  complete :iconStyle {:fill color}}]
-           (uic/mini-arc selected-period)]]))
+     (selected-period-info selected-period tasks)
 
      [:div.day-container
       {:style (merge
@@ -140,26 +163,7 @@
                ;; :border "green solid 0.1em"
                :box-sizing "border-box"}}
 
-
-      ;; playing    no selection
-      (if (and (some? period-in-play)
-               (nil? selected-id))
-        (actb/action-buttons-pause period-in-play)
-
-        ;; playing    selection
-        ;; no playing selection
-        (if (some? selected-id)
-          (actb/action-buttons-period-selection
-           period-in-play
-           selected-id
-           (fn [_]
-             (let [{:keys [description start stop task-id]} selected-period]
-               (hist/nav! (str "#/add/period?"
-                               (when (cutils/period-has-stamps selected-period)
-                                 (str "start-time=" (.valueOf start)
-                                      "&stop-time=" (.valueOf stop)))
-                               "&description=" description
-                               "&task-id=" task-id)))))))]]))
+      (action-buttons period-in-play selected-id selected-period)]]))
 
 (def home-page
   (re-learn/with-lesson
