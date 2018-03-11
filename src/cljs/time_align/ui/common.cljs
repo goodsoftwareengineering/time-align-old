@@ -11,6 +11,12 @@
 
 (defonce clock-state (r/atom {:time (new js/Date)}))
 
+(def span-style-ellipsis-one-line {:overflow      "hidden"
+                                   :white-space   "nowrap"
+                                   :max-width     "100%"
+                                   :text-overflow "ellipsis"
+                                   :display       "inline-block"})
+
 (defn describe-arc [cx cy r start stop]
   (let [
         p-start        (cutils/polar-to-cartesian cx cy r start)
@@ -42,38 +48,6 @@
                         (/ 60)
                         (/ 60)))
     " hours"))
-
-(defn concatenated-text
-  "Takes a text message, a cut off character limit, and a fall back message. Returns text concatonated with ellipsis, full text if it is less than 10 characters or an (r/element) styled grey if text is empty."
-  [text character-limit if-empty-message]
-  (if (and (some? text)
-           (not (empty? text)))
-    (if (< character-limit (count text))
-      (str (string/join "" (take character-limit text)) " ...")
-      text)
-    ;; returns empty message as an r/as-emelent because that is the only way to style
-    ;; text in a listem item primary-text attr
-    (r/as-element
-      [:span {:style {:text-decoration "italic"
-                      :color           "grey"}}
-       if-empty-message])))
-
-(defn period-list-item-primary-text
-  "takes in a period and gives back a string to use as info in a list item element"
-  [period]
-
-  (let [description (:description period)]
-    (concatenated-text description 20 "...")))
-
-(defn period-list-item-secondary-text
-  [period]
-  (let [duration-ms (- (:stop period) (:start period))
-        has-stamps (cutils/period-has-stamps period)]
-    (if has-stamps
-      (str (utils/date-string (:start period))
-           " : "
-           (duration-ms-to-string duration-ms))
-      "Queue item")))
 
 (defn clock-tick []
   (swap! clock-state assoc :time (new js/Date))
@@ -236,3 +210,33 @@
             :stroke       color
             :stroke-width "2"}]
     ]])
+
+(defn concatenated-text
+  "Takes a text message and a fall back message.
+   Returns a span element with ellispsis cutt off that fits the available width."
+  [text empty-text]
+  (let [some-text (and (some? text)
+                       (not (empty? text)))]
+    [:span {:style
+            (merge span-style-ellipsis-one-line
+                   (when (not some-text) {:color (:secondary-text app-theme)}))}
+     (if some-text
+       text
+       empty-text)]))
+
+(defn period-list-item-primary-text
+  "takes in a period and gives back a string to use as info in a list item element"
+  [period]
+
+  (let [description (:description period)]
+    (r/as-element (concatenated-text description "..."))))
+
+(defn period-list-item-secondary-text
+  [period]
+  (let [duration-ms (- (:stop period) (:start period))
+        has-stamps (cutils/period-has-stamps period)]
+    (if has-stamps
+      (str (utils/date-string (:start period))
+           " : "
+           (duration-ms-to-string duration-ms))
+      "Queue item")))

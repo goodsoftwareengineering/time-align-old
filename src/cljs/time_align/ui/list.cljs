@@ -76,7 +76,7 @@
     [ui/list-item
      (merge
       {:key           id
-       :primaryText   (uic/concatenated-text name 15 "no name entered ...")
+       :primaryText   (r/as-element (uic/concatenated-text name "no name entered"))
        :secondaryText   (str "Periods: " number-of-periods)
        :leftIcon      (r/as-element
                         [ui/checkbox {:checked   complete
@@ -130,8 +130,7 @@
 
     [ui/list-item (merge
                    {:key             id
-                    :primaryText     (uic/concatenated-text name 20
-                                                           "no name entered ...")
+                    :primaryText     (r/as-element (uic/concatenated-text name "no name entered"))
                     :secondaryText   (str "Tasks: " number-of-tasks)
                     :style           (if is-selected
                                       {:border (str "0.125em solid "
@@ -191,7 +190,7 @@
 
      [:a {:href (:link root) :style link-style}
       [:span {:style span-style}
-       (uic/concatenated-text (:label root) 10 "...")]]
+       (uic/concatenated-text (:label root) "...")]]
 
      (when (some? rest)
        (->> rest
@@ -203,5 +202,5 @@
                              {:color (:text-color uic/app-theme)}]
                             [:a {:href (:link r) :style link-style}
                              [:span {:style span-style}
-                              (uic/concatenated-text (:label r) 8 "...")]]])))))]))
+                              (uic/concatenated-text (:label r) "...")]]])))))]))
 
