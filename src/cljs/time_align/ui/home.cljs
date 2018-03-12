@@ -208,14 +208,15 @@
 
      [ui/divider {:style {:margin "0.125em"}}]
 
-     (cond (some? selected-period)
-           (period-info selected-period categories tasks)
+     (when (nil? zoom)
+       (cond (some? selected-period)
+             (period-info selected-period categories tasks)
 
-           (some? in-play-period)
-           (period-info in-play-period categories tasks)
+             (some? in-play-period)
+             (period-info in-play-period categories tasks)
 
-           :else
-           (period-info nil categories tasks))
+             :else
+             (period-info nil categories tasks)))
 
      [:div.day-container
       {:style (merge
