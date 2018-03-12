@@ -569,7 +569,7 @@
 
         [:div {:style {:height "100%" :width "100%"}}
          [:svg (merge {:key         date-str
-                       :id          "svg-day-display"
+                       :id          date-str
                        :xmlns "http://www.w3.org/2000/svg"
                        :version  "1.1"
                        :style       {
