@@ -11,7 +11,6 @@
   (println "TEST")
   to-prn)
 
-
 (defn make-date
   ([] #?(:cljs (.toDate (js/moment.tz (js/Date.) "UTC"))
          :clj  (t/with-zone (t/zoned-date-time) "UTC")))
@@ -44,7 +43,6 @@
        (* 60)
        (* 1000)))
 
-
 (def day-ms
   (->> 1
        (* 24)
@@ -52,13 +50,11 @@
        (* 60)
        (* 1000)))
 
-
 (def hour-ms
   (->> 1
        (* 60)
        (* 60)
        (* 1000)))
-
 
 (def ms-in-day
   (->> 1
@@ -66,7 +62,6 @@
        (* 60)
        (* 60)
        (* 1000)))
-
 
 (defn one-week-ago
   [date]
@@ -81,7 +76,6 @@
                t/instant
                .toEpochMilli)))
 
-
 (defn one-week-from-now
   [date]
   #?(:cljs (-> date
@@ -95,7 +89,6 @@
                t/instant
                .toEpochMilli)))
 
-
 (defn set-hour-for-date [date hour zone]
   #?(:cljs (-> (js/moment.tz date zone)
                (.hour hour)
@@ -106,14 +99,11 @@
                (t/adjust (t/local-time hour)) ;;See docs on adjust if unclear
                (t/with-zone-same-instant (t/zone-id "UTC")))))
 
-
 (defn start-of-today [date zone]
   (set-hour-for-date date 0 zone))
 
-
 (defn end-of-today [date zone]
   (set-hour-for-date date 20 zone)) ;;Set to 20 to avoid straddling the date line
-
 
 (def time-range
   #?(:cljs (range (.valueOf (start-of-today (make-date) (get-default-timezone)))
@@ -123,12 +113,10 @@
                        (iterate #(t/plus % (t/hours 1))
                                 (start-of-today (make-date) (get-default-timezone))))))
 
-
 (def time-set
   #?(:cljs (set (->> time-range
                      (map #(new js/Date %))))
      :clj  (set time-range)))
-
 
 (defn date-string
  "creates a string in yyyy-mm-dd format from a js date obj"
@@ -136,7 +124,6 @@
  (str (.getFullYear date) "-"
       (+ 1 (.getMonth date)) "-"
       (.getDate date)))
-
 
 (defn zero-in-day
   "taking a date obj, or string, will return a new date object with Hours, Minutes, Seconds, and Milliseconds set to 0"
@@ -180,7 +167,6 @@
                 (>= that-day-month this-day-month)
                 (> that-day-day this-day-day)))))
 
-
 (defn is-this-day-after-that-day? [this-day that-day]
   #?(:cljs (let [that-day-year  (.getFullYear that-day)
                that-day-month (.getMonth that-day)
@@ -193,7 +179,6 @@
            (and (<= that-day-year this-day-year)
                 (<= that-day-month this-day-month)
                 (< that-day-day this-day-day)))))
-
 
 ;; TODO would this function not work given utc dates?
 (defn before-today

@@ -3,7 +3,6 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  background-color: #1C2429; /* TODO refactor so this used by app theme and not even in css */
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -khtml-user-select: none;
@@ -20,28 +19,6 @@ div#app > div {
   height: inherit;
 }
 
-#inline-period-add-indicator-bottom {
-  animation-duration: 1.5s;
-  animation-delay: 0.25s;
-  animation-name: grow-fast;
-}
-
-#inline-period-add-indicator-top {
-  animation-duration: 1.5s;
-  animation-delay: 0.25s;
-  animation-name: grow-slow;
-}
-
-@keyframes grow-slow {
-  from {r: 0;}
-  to {r: 5;}
-}
-
-@keyframes grow-fast {
-  0% {r: 0;}
-  10% {r: 4;}
-  100% {r: 4;}
-}
 .showbox {
   position: absolute;
   top: 0;

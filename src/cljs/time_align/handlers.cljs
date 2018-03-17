@@ -138,7 +138,16 @@
           (time-align.worker-handlers/init! (js/Worker. worker-src-url))))
 
 (defn initialize-db [cofx _]
-  (let [initial-db @(local-storage local-storage-atom :app-db)] ;; library handles ignoring default when already present
+  (let [
+        ;; library handles ignoring default when already present
+        initial-db-raw @(local-storage local-storage-atom :app-db)
+        ;; TODO use some sort of conform instead of only getting categories
+        ;; TODO specter might also be nice here
+        initial-db (merge
+                    db/default-db
+                    (merge (select-keys initial-db-raw [:categories])
+                           {:view (merge (:view db/default-db)
+                                         {:period-in-play (get-in initial-db-raw [:view :period-in-play])})}))]
     {:db initial-db
      :init-worker (if js/goog.DEBUG "/bootstrap_worker.js" "js/worker.js") }))
 
@@ -211,11 +220,17 @@
  :load-new-category-entity-form
  [persist-ls send-analytic validate-app-db]
  (fn [db [_ query-params]]
-   (let [] ;; TODO pull query-params
+   (let [name  (if-let [name (:name query-params)] name "")
+         color (if-let [color (:color query-params)]
+                 (cutils/color-hex->255 color)
+                 {:red 0 :blue 0 :green 0})]
+
+     (.log js/console {:name name :color color
+                       :query-params query-params})
      (assoc-in db [:view :category-form]
                {:id-or-nil nil
-                :name      ""
-                :color-map {:red 0 :blue 0 :green 0}}))))
+                :name      name
+                :color-map color}))))
 
 (reg-event-db
  :load-task-entity-form
@@ -241,13 +256,19 @@
  :load-new-task-entity-form
  [persist-ls send-analytic validate-app-db]
  (fn [db [_ query-params]]
-   (let [] ;; TODO parse query-params
+   (let [name        (if-let [name (:name query-params)] name "")
+         complete    (if-let [complete (:complete query-params)]
+                       (= complete "true") false)
+         description (if-let [description (:description query-params)]
+                       description "")
+         category-id (if-let [category-id (:category-id query-params)]
+                       (uuid category-id) nil)]
      (assoc-in db [:view :task-form]
                {:id-or-nil   nil
-                :name        ""
-                :description ""
-                :complete    false
-                :category-id nil}))))
+                :name        name
+                :description description
+                :complete    complete
+                :category-id category-id}))))
 
 (reg-event-db
  :load-period-entity-form
@@ -296,7 +317,7 @@
                             (new js/Date))
                        nil)
 
-         description (if (contains? query-params :description-time)
+         description (if (contains? query-params :description)
                        (:description query-params)
                        nil)]
 
@@ -654,11 +675,12 @@
 
        (let [old-d (new js/Date o)]
          (do
-           (.setFullYear old-d (.getFullYear new-d))
-           (.setDate old-d (.getDate new-d))
-           (assoc-in db [:view :period-form start-or-stop] old-d)))
+           (.setHours new-d (.getHours old-d))
+           (.setMinutes new-d (.getMinutes old-d))
+           (.setSeconds new-d (.getSeconds old-d))
+           (assoc-in db [:view :period-form start-or-stop] (new js/Date new-d))))
 
-       (assoc-in db [:view :period-form start-or-stop] new-d)))))
+       (assoc-in db [:view :period-form start-or-stop] (new js/Date new-d))))))
 
 (reg-event-db
  :set-period-form-time
@@ -671,12 +693,13 @@
            (.setHours old-s (.getHours new-s))
            (.setMinutes old-s (.getMinutes new-s))
            (.setSeconds old-s (.getSeconds new-s))
-           (assoc-in db [:view :period-form start-or-stop] old-s)))
+           (assoc-in db [:view :period-form start-or-stop] (new js/Date old-s))))
        (do
-         (let [n (get-in db [:view :displayed-day])] ;; if there isn't a date already there then we need to assume the year month day
-           (.setFullYear new-s (.getFullYear n))     ;; and just use the value coming from the action for hours minutes seconds
-           (.setDate new-s (.getDate n))
-           (assoc-in db [:view :period-form start-or-stop] new-s)))))))
+         (let [n (new js/Date (get-in db [:view :displayed-day]))] ;; if there isn't a date already there then we need to assume the year month day
+           (.setHours n (.getHours new-s))
+           (.setMinutes n (.getMinutes new-s))
+           (.setSeconds n (.getSeconds new-s))
+           (assoc-in db [:view :period-form start-or-stop] (new js/Date n))))))))
 
 (reg-event-db
  :set-period-form-description
@@ -971,7 +994,8 @@
  :set-inline-period-long-press
  [persist-ls send-analytic validate-app-db]
  (fn [db [_ long-press-state]]
-   (assoc-in db [:view :inline-period-long-press] long-press-state)))
+   (assoc-in db [:view :inline-period-long-press]
+             (merge (get-in db [:view :inline-period-long-press]) long-press-state))))
 
 (reg-event-fx
  :set-inline-period-add-dialog
@@ -1008,7 +1032,9 @@
     (let [reader (js/FileReader.)]
       (oset! reader "onload" #(let [result (oget % "target.result")
                                     imported-app-db (time-align.storage/transit-json->map result)]
-                                (re-frame.core/dispatch [:reset-app-db imported-app-db])))
+                                (re-frame.core/dispatch [:reset-app-db
+                                                         (merge db/default-db
+                                                                (select-keys imported-app-db [:categories]))])))
       (.readAsText reader imported-db-file))))
 
 (defn set-displayed-month [db [_ [year month]]]

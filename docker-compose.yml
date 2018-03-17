@@ -13,7 +13,7 @@ services:
     user: "${UID}:0"
     volumes:
       - .:/usr/app/time-align
-      - /home/$USER/.lein:/.lein
+      - ./.lein:/.lein
     working_dir: /usr/app/time-align
     command: ["lein", "repl", ":headless", ":host", "0.0.0.0", ":port", "7000"]
 

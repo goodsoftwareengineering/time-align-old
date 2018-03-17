@@ -32,7 +32,8 @@
             [time-align.ui.queue :as qp]
             [time-align.ui.action-buttons :as actb]
             [time-align.ui.calendar :as cp]
-            [time-align.js-interop :as jsi]))
+            [time-align.js-interop :as jsi]
+            [stylefy.core :as stylefy]))
 
 ;;Forward declarations to make file linting easier
 
@@ -165,6 +166,13 @@
     [:div {:style {:padding-bottom "10em"}}
      (app-bar)
      [ui/paper {:style {:width "100%"}}
+
+      (lp/breadcrumbs [{:label (uic/svg-mui-entity
+                                {:type :category
+                                 :color (:text-color uic/app-theme)})
+                        :link "#/list/categories"}])
+      [ui/divider]
+
       [ui/list
        (->> categories
             (sort-by :name)
@@ -177,10 +185,8 @@
                :padding    "0.75em"
                ;; :border "green solid 0.1em"
                :box-sizing "border-box"}}
-      (actb/action-buttons-add-edit
-       (fn [_] (hist/nav! (str "#/add/category" ))) ;; TODO use query params to fill in category
-       current-selection
-       :category)]]))
+      (actb/action-buttons-add
+       (fn [_] (hist/nav! (str "#/add/category" ))))]]))
 
 (defn list-tasks-page [id]
   (let [categories        @(rf/subscribe [:categories])
@@ -197,15 +203,21 @@
       [:div {:style {:padding-bottom "10em"}}
        (app-bar)
        [ui/paper {:style {:width "100%"}}
-        [:div {:style {:display "flex"
-                       :flex-wrap "wrap"}}
-         (lp/chip-item-category parent-category)]
 
+        (lp/breadcrumbs [{:label (uic/svg-mui-entity
+                                  {:type :task
+                                   :color (:text-color uic/app-theme)})
+                          :link "#/list/categories"
+                          :color (:color parent-category)}
+                         {:label (:name parent-category)
+                          :link (str "#/list/tasks/" (:id parent-category))}])
         [ui/divider]
 
         [ui/list
          (->> tasks
               (sort-by :name)
+              (group-by :complete)
+              (#(concat (get % false) (get % true)))
               (map (partial lp/list-item-task current-selection)))]]
 
        [:div.action-container ;; TODO this is used in two spots need to refactor to comp
@@ -216,10 +228,9 @@
                  :padding    "0.75em"
                  ;; :border "green solid 0.1em"
                  :box-sizing "border-box"}}
-        (actb/action-buttons-add-edit
-         (fn [_] (hist/nav! (str "#/add/task" ))) ;; TODO use query params to fill in category
-         current-selection
-         :task)]])))
+        (actb/action-buttons-add
+         (fn [_] (hist/nav! (str "#/add/task?"
+                                 "category-id=" (:id parent-category)))))]])))
 
 (defn list-periods-page [id]
   (let [categories        @(rf/subscribe [:categories])
@@ -232,8 +243,11 @@
         parent-task       (first tasks)
         category-id       (:category-id parent-task)
         parent-category   (some #(if (= (:id %) category-id) %) categories)
+        period-in-play    @(rf/subscribe [:period-in-play])
         selected          @(rf/subscribe [:selected])
-        current-selection (:current-selection selected)]
+        current-selection (:current-selection selected)
+        selected-id       (:id-or-nil current-selection)
+        selected-period   (some #(if (= selected-id (:id %)) %) periods)]
 
     (if (nil? parent-task)
       [:div (app-bar) [ui/paper {:style {:width "100%"}}
@@ -242,11 +256,15 @@
        (app-bar)
        [ui/paper {:style {:width "100%"}}
 
-        [:div {:style {:display "flex"
-                       :flex-wrap "wrap"}}
-         (lp/chip-item-category parent-category)
-         (lp/chip-item-task parent-task)]
-
+        (lp/breadcrumbs [{:label (uic/svg-mui-entity
+                                  {:type :period
+                                   :color (:text-color uic/app-theme)})
+                          :link "#/list/categories"
+                          :color (:color parent-category)}
+                         {:label (:name parent-category)
+                          :link (str "#/list/tasks/" (:id parent-category))}
+                         {:label (:name parent-task)
+                          :link (str "#/list/periods/" (:id parent-task))}])
         [ui/divider]
 
         [ui/list
@@ -255,6 +273,7 @@
                          (if (cutils/period-has-stamps period)
                            (.valueOf (:stop period))
                            0)))
+              (reverse)
               (map (partial lp/list-item-period current-selection)))]]
 
        [:div.action-container ;; TODO this is used in two spots need to refactor to comp
@@ -265,10 +284,22 @@
                  :padding    "0.75em"
                  ;; :border "green solid 0.1em"
                  :box-sizing "border-box"}}
-        (actb/action-buttons-add-edit
-         (fn [_] (hist/nav! (str "#/add/period" ))) ;; TODO use query params to fill in category
-         current-selection
-         :period)]])))
+
+        (if (some? (:id-or-nil current-selection))
+          (actb/action-buttons-period-selection
+           period-in-play
+           (:id-or-nil current-selection)
+           (fn [_]
+             (let [{:keys [description start stop task-id]} selected-period]
+               (hist/nav! (str "#/add/period?"
+                               (when (cutils/period-has-stamps selected-period)
+                                 (str "start-time=" (.valueOf start)
+                                      "&stop-time=" (.valueOf stop)))
+                               "&description=" description
+                               "&task-id=" task-id)))))
+
+          (actb/action-buttons-add
+           (fn [_] (hist/nav! (str "#/add/period?task-id=" (:id parent-task))))))]])))
 
 (defn agenda-page []
   (let [selected @(rf/subscribe [:selected])
@@ -286,10 +317,8 @@
                :padding    "0.75em"
                ;; :border "green solid 0.1em"
                :box-sizing "border-box"}}
-      (actb/action-buttons-add-edit
-       (fn [_] (hist/nav! (str "#/add/category" ))) ;; TODO use query params to fill in category
-       (:current-selection selected)
-       :period)]]))
+      (actb/action-buttons-add
+       (fn [_] (hist/nav! (str "#/add/period" ))))]]))
 
 (defn queue-page []
   (let [tasks    @(rf/subscribe [:tasks])
@@ -306,11 +335,8 @@
                :padding    "0.75em"
                ;; :border "green solid 0.1em"
                :box-sizing "border-box"}}
-      (actb/action-buttons-add-edit
-       (fn [_] (hist/nav! (str "#/add/category" ))) ;; TODO use query params to fill in category
-       (:current-selection selected)
-       :period)]
-     ]))
+      (actb/action-buttons-add
+       (fn [_] (hist/nav! (str "#/add/period" ))))]]))
 
 (defn account-page []
   (let []
@@ -378,16 +404,19 @@
 
 (secretary/defroute list-categories-route "/list/categories" []
   (rf/dispatch [:set-main-drawer false])
+  (rf/dispatch [:set-selected-period nil])
   (rf/dispatch [:set-active-page {:page-id :list-categories}]))
 
 (secretary/defroute list-tasks-route "/list/tasks/:category" [category]
   (rf/dispatch [:set-main-drawer false])
+  (rf/dispatch [:set-selected-period nil])
   (rf/dispatch [:set-active-page {:page-id :list-tasks
                                   :type nil
                                   :id (uuid category)}]))
 
 (secretary/defroute list-periods-route "/list/periods/:task" [task]
   (rf/dispatch [:set-main-drawer false])
+  (rf/dispatch [:set-selected-period nil])
   (rf/dispatch [:set-active-page {:page-id :list-periods
                                   :type nil
                                   :id (uuid task)}]))
@@ -433,6 +462,7 @@
   (hist/hook-browser-navigation!)
   (re-learn/init)
   (mount-components)
+  (stylefy/init)
   (js/setInterval uic/clock-tick 5000) ;; TODO this is bad
   )
 

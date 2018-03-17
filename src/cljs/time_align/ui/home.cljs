@@ -4,14 +4,17 @@
             [re-learn.core :as re-learn]
             [time-align.ui.svg-day-view :as day-view]
             [time-align.ui.app-bar :as ab :refer [app-bar]]
+            [time-align.history :as hist]
             [time-align.ui.queue :as qp]
             [cljs-react-material-ui.reagent :as ui]
             [cljs-react-material-ui.icons :as ic]
             [time-align.ui.calendar :as cp]
             [time-align.ui.common :as uic]
             [time-align.client-utilities :as cutils]
+            [time-align.utilities :as utils]
             [time-align.ui.action-buttons :as actb]
             [time-align.ui.agenda :as ap]
+            [time-align.ui.list :as lp]
             [time-align.js-interop :as jsi]))
 
 (defn svg-mui-zoom
@@ -49,76 +52,145 @@
                                (:alternate-text-color uic/app-theme))}
                     d)]]]))
 
-(defn stats-selection [selected periods tasks]
-  (let [id (->> selected
-                (:current-selection)
-                (:id-or-nil))
-        period (some #(if (= id (:id %)) %) periods)
-        task-id (:task-id period)
-        task (some #(if (= task-id (:id %)) %) tasks)
-        ]
+(defn navigation-zoom [displayed-day]
+  [ui/paper {:style (merge {:width "100%"})}
+      [:div.navigation.zoom
+       {:style {:display         "flex"
+                :justify-content "space-between"
+                :flex-wrap       "nowrap"}}
+
+       [ui/icon-button
+        {:onClick (fn [e]
+                    (rf/dispatch [:iterate-displayed-day :prev]))}
+        [ic/image-navigate-before {:color (:alternate-text-color uic/app-theme)}]]
+
+       (svg-mui-zoom 1)
+       (svg-mui-zoom 4)
+
+       [ui/icon-button
+        {:onClick (fn [e] (rf/dispatch [:set-displayed-day (new js/Date)]))}
+        (if (cutils/same-day? displayed-day (new js/Date))
+          [ic/device-gps-fixed {:color (:alternate-text-color uic/app-theme)}]
+          [ic/device-gps-not-fixed {:color (:alternate-text-color uic/app-theme)}])]
+
+       (svg-mui-zoom 3)
+       (svg-mui-zoom 2)
+
+       [ui/icon-button
+        {:onClick (fn [e]
+                    (rf/dispatch [:iterate-displayed-day :next]))}
+        [ic/image-navigate-next {:color (:alternate-text-color uic/app-theme)}]]]])
+
+(defn period-info-tree [selected-period tasks categories]
+  (let [task  (cutils/find-task-with-period tasks (:id selected-period))
+        category (cutils/find-category-with-task categories (:id task))
+        color (:color category)
+        complete (:complete task)
+        description (:description selected-period)
+        line-style {:display         "flex"
+                    :justify-content "flex-start"
+                    :flex-wrap       "nowrap"
+                    :aign-items      "center"}]
+
     [:div
-     [ui/table {:selectable false}
-      [ui/table-body {:display-row-checkbox false}
-       [ui/table-row
-        [ui/table-row-column "task"]
-        [ui/table-row-column (:name task)]
-        ]
-       [ui/table-row
-        [ui/table-row-column "start"]
-        [ui/table-row-column (jsi/->time-string (:start period))]
-        ]
-       [ui/table-row
-        [ui/table-row-column "stop"]
-        [ui/table-row-column (jsi/->time-string (:stop period))]
-        ]
-       ]
-      ]
-     [:p {:style {:padding "0.25em"}} (:description period)]
-     ]
-    ))
+     [:div {:style (merge line-style {:margin-left "0em"})}
+      (uic/svg-mui-circle color)
+      [:div {:style {:margin-right "1em"}}]
+      (uic/concatenated-text (:name category) "...")]
 
-(defn stats-no-selection []
-  (let [planned-time @(rf/subscribe [:planned-time :selected-day])
-        accounted-time @(rf/subscribe [:accounted-time :selected-day])
-        tasks @(rf/subscribe [:tasks])
-        queue-items (cutils/filter-periods-no-stamps tasks)
-        queue-count (count queue-items)
-        incomplete-tasks (filter #(:complete %) tasks)
-        incomplete-count (count incomplete-tasks)
-        ]
+     [:div {:style (merge line-style {:margin-left "1em"})}
+      [ui/checkbox {:checked  complete
+                    :iconStyle {:fill color
+                                :margin "0"}
+                    :style {:width "auto"}}]
+      [:div {:style {:margin-right "1em"}}]
+      [:span  (:name task)]]
 
-    [ui/table {:selectable false}
-     [ui/table-body {:display-row-checkbox false}
-      [ui/table-row
-       [ui/table-row-column "planned"]
-       [ui/table-row-column (uic/duration-ms-to-string planned-time)]
-       ]
-      [ui/table-row
-       [ui/table-row-column "accounted"]
-       [ui/table-row-column (uic/duration-ms-to-string accounted-time)]
-       ]
-      [ui/table-row
-       [ui/table-row-column "queue items"]
-       [ui/table-row-column queue-count]
-       ]
-      [ui/table-row
-       [ui/table-row-column "incomplete tasks"]
-       [ui/table-row-column incomplete-count]
-       ]
-      ]
-     ]
-    )
-  )
+     [:div {:style (merge line-style {:margin-left "2em"})}
+      (if (cutils/period-has-stamps selected-period)
+          (uic/mini-arc selected-period)
+          [ui/svg-icon [ic/action-list {:color color}]])
+      [:div {:style {:margin-right "1em"}}]
+      (uic/concatenated-text description "no description")]]))
+
+(defn period-info-time [selected-period]
+  (let [has-stamps (cutils/period-has-stamps selected-period)
+        start      (if has-stamps
+                     (jsi/->locale-time-string (:start selected-period)))
+        stop       (if has-stamps
+                     (jsi/->locale-time-string (:stop selected-period)))
+        total-ms   (if has-stamps
+                     (- (jsi/value-of (:stop selected-period))
+                        (jsi/value-of (:start selected-period))))
+        total-h    (if has-stamps
+                     (jsi/round-decimals
+                      (/ total-ms utils/hour-ms)
+                      2))]
+
+    [:div {:style {:display         "flex"
+                   :flex-direction  "row"
+                   :justify-content "space-between"
+                   :align-items     "flex-end"
+                   :color           (:alternate-text-color uic/app-theme)}}
+     [:span start]
+     [:span stop]
+     [:span (if has-stamps (str total-h " hours")
+                "---")]]))
+
+(defn period-info [selected-period categories tasks]
+  [ui/paper {:style {:width "100%"
+                     :padding "0.25em"}}
+   [:div {:style {:display "flex"
+                  :flex-direction "column"
+                  :justify-content "center"
+                  :height "5em"}}
+
+    (if (some? selected-period)
+      [:div {:on-click (fn [_]
+                         (if (cutils/period-has-stamps selected-period)
+                           (do (rf/dispatch [:set-displayed-day
+                                             (:start selected-period)])
+                               (hist/nav! "/"))
+                           (hist/nav! "/queue")))}
+       (period-info-tree selected-period tasks categories)
+       (period-info-time selected-period)]
+
+      [:div {:style {:align-self "center"}}
+       [:h1 {:style {:color (:alternate-text-color uic/app-theme)}}
+        (jsi/->locale-time-string (new js/Date))]])]])
+
+(defn action-buttons [period-in-play selected-id selected-period]
+  (if (and (some? period-in-play)
+           (nil? selected-id))
+    (actb/action-buttons-pause period-in-play)
+
+    ;; playing    selection
+    ;; no playing selection
+    (if (some? selected-id)
+      (actb/action-buttons-period-selection
+       period-in-play
+       selected-id
+       (fn [_]
+         (let [{:keys [description start stop task-id]} selected-period]
+           (hist/nav! (str "#/add/period?"
+                           (when (cutils/period-has-stamps selected-period)
+                             (str "start-time=" (.valueOf start)
+                                  "&stop-time=" (.valueOf stop)))
+                           "&description=" description
+                           "&task-id=" task-id))))))))
 
 (defn home-page-comp []
   (let [tasks                @(rf/subscribe [:tasks])
         selected             @(rf/subscribe [:selected])
+        current-selection    (:current-selection selected)
+        selected-id          (:id-or-nil current-selection)
         action-button-state  @(rf/subscribe [:action-buttons])
         displayed-day        @(rf/subscribe [:displayed-day])
         periods              @(rf/subscribe [:periods])
+        categories           @(rf/subscribe [:categories])
+        selected-period      (some #(if (= selected-id (:id %)) %) periods)
         period-in-play       @(rf/subscribe [:period-in-play])
-        ;; dashboard-tab       @(rf/subscribe [:dashboard-tab])
+        in-play-period       (some #(if (= period-in-play (:id %)) %) periods)
         zoom                 @(rf/subscribe [:zoom])
         inline-period-dialog @(rf/subscribe [:inline-period-add-dialog])]
 
@@ -133,34 +205,19 @@
 
      (app-bar)
 
-     [ui/paper {:style (merge {:width "100%"}
-                              (if (nil? zoom)
-                                {:margin-bottom "3em"}
-                                {:margin-bottom "0.05em"}))}
-      [:div.navigation.zoom
-       {:style {:display         "flex"
-                :justify-content "space-between"
-                :flex-wrap       "nowrap"}}
+     (navigation-zoom displayed-day)
 
-       [ui/icon-button
-        {:onClick (fn [e]
-                    (rf/dispatch [:iterate-displayed-day :prev]))}
-        [ic/image-navigate-before {:color (:alternate-text-color uic/app-theme)}]]
+     [ui/divider {:style {:margin "0.125em"}}]
 
-       (svg-mui-zoom 1)
-       (svg-mui-zoom 4)
-       [ui/icon-button
-        {:onClick (fn [e] (rf/dispatch [:set-displayed-day (new js/Date)]))}
-        (if (cutils/same-day? displayed-day (new js/Date))
-          [ic/device-gps-fixed {:color (:alternate-text-color uic/app-theme)}]
-          [ic/device-gps-not-fixed {:color (:alternate-text-color uic/app-theme)}])]
-       (svg-mui-zoom 3)
-       (svg-mui-zoom 2)
+     (when (nil? zoom)
+       (cond (some? selected-period)
+             (period-info selected-period categories tasks)
 
-       [ui/icon-button
-        {:onClick (fn [e]
-                    (rf/dispatch [:iterate-displayed-day :next]))}
-        [ic/image-navigate-next {:color (:alternate-text-color uic/app-theme)}]]]]
+             (some? in-play-period)
+             (period-info in-play-period categories tasks)
+
+             :else
+             (period-info nil categories tasks)))
 
      [:div.day-container
       {:style (merge
@@ -170,7 +227,7 @@
                (when (some? zoom)
                  {:height          "100%"}))}
 
-      (day-view/day tasks selected displayed-day)]
+      [day-view/day tasks selected displayed-day]]
 
      [:div.action-container
       {:style {:position   "fixed"
@@ -180,7 +237,8 @@
                :padding    "0.75em"
                ;; :border "green solid 0.1em"
                :box-sizing "border-box"}}
-      (actb/action-buttons action-button-state selected period-in-play)]]))
+
+      (action-buttons period-in-play selected-id selected-period)]]))
 
 (def home-page
   (re-learn/with-lesson

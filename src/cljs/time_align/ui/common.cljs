@@ -11,6 +11,12 @@
 
 (defonce clock-state (r/atom {:time (new js/Date)}))
 
+(def span-style-ellipsis-one-line {:overflow      "hidden"
+                                   :white-space   "nowrap"
+                                   :max-width     "100%"
+                                   :text-overflow "ellipsis"
+                                   :display       "inline-block"})
+
 (defn describe-arc [cx cy r start stop]
   (let [
         p-start        (cutils/polar-to-cartesian cx cy r start)
@@ -21,7 +27,15 @@
     (string/join " " ["M" (:x p-start) (:y p-start)
                       "A" r r 0 large-arc-flag 1 (:x p-stop) (:y p-stop)])))
 
+(defn describe-arc-reverse [cx cy r start stop]
+  (let [
+        p-start        (cutils/polar-to-cartesian cx cy r start)
+        p-stop         (cutils/polar-to-cartesian cx cy r stop)
 
+        large-arc-flag (if (<= (- start stop) 180) "0" "1")]
+
+    (string/join " " ["L" (:x p-start) (:y p-start)
+                      "A" r r 0 large-arc-flag 0 (:x p-stop) (:y p-stop)])))
 
 (def basic-ic {:style {:marginTop "7.5px"}
                :color "white"})
@@ -35,39 +49,6 @@
                         (/ 60)))
     " hours"))
 
-(defn concatenated-text
-  "Takes a text message, a cut off character limit, and a fall back message. Returns text concatonated with ellipsis, full text if it is less than 10 characters or an (r/element) styled grey if text is empty."
-  [text character-limit if-empty-message]
-  (if (and (some? text)
-           (not (empty? text)))
-    (if (< character-limit (count text))
-      (str (string/join "" (take character-limit text)) " ...")
-      text)
-    ;; returns empty message as an r/as-emelent because that is the only way to style
-    ;; text in a listem item primary-text attr
-    (r/as-element
-      [:span {:style {:text-decoration "italic"
-                      :color           "grey"}}
-       if-empty-message])))
-
-(defn period-list-item-primary-text
-  "takes in a period and gives back a string to use as info in a list item element"
-  [period]
-
-  (let [description (:description period)]
-    (concatenated-text description 20 "no description...")))
-
-(defn period-list-item-secondary-text
-  [period]
-  (let [duration-ms (- (:stop period) (:start period))
-        has-stamps (cutils/period-has-stamps period)]
-    (if has-stamps
-      (str (utils/date-string (:start period))
-           " : "
-           (duration-ms-to-string duration-ms))
-      "Queue item"
-      )))
-
 (defn clock-tick []
   (swap! clock-state assoc :time (new js/Date))
 
@@ -78,20 +59,26 @@
   ;; have handler that ticks the clock + resets any "playing" period
   )
 
-;; from here https://cimdalli.github.io/mui-theme-generator/
-;; take export
-;; JSON.stringinfy(export)
-;; /s/"/\\"/g
-;; surround with final "
-;; paste here
-(def json-string-mui-theme-palette
-  (str "{\"primary1Color\":\"#607d8b\",\"primary2Color\":\"#78909c\",\"primary3Color\":\"#90a4ae\",\"accent1Color\":\"#e91e63\",\"accent2Color\":\"#d81b60\",\"accent3Color\":\"#90a4ae\",\"alternateTextColor\":\"#cfd8dc\",\"secondaryTextColor\":\"#607d8b\",\"textColor\":\"#ffffff\",\"canvasColor\":\"#263238\",\"borderColor\":\"#cfd8dc\",\"disabledColor\":\"#b0bec5\",\"pickerHeaderColor\":\"#90a4ae\",\"clockCircleColor\":\"#607d8b\",\"shadowColor\":\"#212121\"}"))
-(def json-string-mui-theme-overides
-  (str "{\"snackbar\":{\"backgroundColor\":\"#546e7a\",\"actionColor\":\"#263238\"},\"raisedButton\":{\"color\":\"#546e7a\",\"disabledColor\":\"#455a64\"},\"tableRow\":{\"selectedColor\":\"#455a64\"},\"toggle\":{\"thumbOffColor\":\"#455a64\",\"thumbOnColor\":\"#90a4ae\",\"trackOnColor\":\"rgba(120, 144, 156, 0.5)\",\"trackDisabledColor\":\"#37474f\",\"thumbDisabledColor\":\"#37474f\",\"trackOffColor\":\"#455a64\",\"thumbRequiredColor\":\"#78909c\"},\"slider\":{\"trackColor\":\"#607d8b\",\"trackColorSelected\":\"#b0bec5\",\"selectionColor\":\"#e91e63\"},\"timePicker\":{\"clockColor\":\"#37474f\",\"clockCircleColor\":\"#455a64\",\"headerColor\":\"#546e7a\"},\"textField\":{\"textColor\":\"#ffffff\",\"focusColor\":\"#ffffff\"},\"datePicker\":{\"selectColor\":\"#546e7a\",\"textColor\":\"#eceff1\"}}" ))
+;; TODO def a colors.co url that is default nil
+;; TODO defn use-colors-co-url-if-present that
+;; takes in the output of conver-js-mui-theme
+;; and replaces canvas, primaries, and accents using order of colors in url
+;; make sure to search the original values cavnas, primaries, and accents and replace them with new colors
+;; return the original map if url is nil or isn't parsable
+;; This will allow for very quick testing of color schemes
+;; compiling different versions of the app to AB test will also be easy, they can all just point to the same DB
+;; - https://coolors.co/fefeff-d6efff-fed18c-fed99b-fe654f
+;; - https://coolors.co/0f1108-190933-acfcd9-eb5e55-d81e5b
+;; - https://coolors.co/0f1108-25332d-acfcd9-665c77-e3e4db
+;; - https://coolors.co/e4fde1-8acb88-648381-575761-ffbf46
 
-(defn convert-js-mui-theme [string]
-  (->> string
-       (.parse js/JSON)
+;; from here https://cimdalli.github.io/mui-theme-generator/
+;; set in home.html template
+(def json-mui-theme-palette  (.-mui_theme_palette js/window))
+(def json-mui-theme-overides (.-mui_theme_overides js/window))
+
+(defn convert-js-mui-theme [obj]
+  (->> obj
        (js->clj)
        (seq)
        (reduce
@@ -101,7 +88,7 @@
                         (keyword))
                     v})) {})))
 
-(def converted-js-mui-theme-palette (convert-js-mui-theme json-string-mui-theme-palette))
+(def converted-js-mui-theme-palette (convert-js-mui-theme json-mui-theme-palette))
 (def app-theme (merge converted-js-mui-theme-palette
                       {;; TODO refactor primary & secondary
                        :primary   (:primary-1-color converted-js-mui-theme-palette)
@@ -109,7 +96,7 @@
 
 (def app-theme-with-component-overides
   (merge {:palette app-theme}
-         (convert-js-mui-theme json-string-mui-theme-overides)))
+         (convert-js-mui-theme json-mui-theme-overides)))
 
 (defn mini-arc [period]
   (let [{:keys [id description color planned]} period
@@ -143,30 +130,38 @@
     [ui/svg-icon
      {:viewBox "0 0 41 41"}
      [:g
-      [:circle {:cx           "20.5" :cy "20.5" :r "20"
+      [:circle {:cx      "20.5" :cy "20.5" :r "20"
                 :opacity "0.66"
-                :fill         (:border-color app-theme)}]
-      [:circle {:cx           "20.5" :cy "20.5" :r "10"
+                                :fill    (:border-color app-theme)}]
+      [:circle {:cx      "20.5" :cy "20.5" :r "10"
                 :opacity "0.66"
-                :fill         (:border-color app-theme)}]
-      [:path
-       {:d            (describe-arc 20.5 20.5
-                                    (if planned 5 15)
-                                    start-used stop-used)
-        :stroke       color
-        :stroke-width "5"
-        :fill         "transparent"}]]]))
+                :fill    (:border-color app-theme)}]
+      [:circle {:cx      "20.5" :cy "20.5"
+                :r (if planned "8" "18")
+                :opacity "1"
+                :stroke  color
+                :stroke-width "4"
+                :fill    "transparent"}]
 
-(def svg-consts {:viewBox       "0 0 100 100"
+      ;; [:path
+      ;;  {:d            (describe-arc 20.5 20.5
+      ;;                               (if planned 5 15)
+      ;;                               start-used stop-used)
+      ;;   :stroke       color
+      ;;   :stroke-width "5"
+      ;;   :fill         "transparent"}]
+      ]]))
+
+(def svg-consts {:viewBox        "0 0 100 100"
                  ;; :width "90" :height "90" :x "5" :y "5"
-                 :cx            "50" :cy "50"
-                 :r             "45"
-                 :inner-r       "34"
-                 :ticker-r      "5"
-                 :center-r      "5"  ;; TODO might not be used
-                 :circle-stroke "0.25"
-                 :period-width  "10"
-                 :border-r "34.5"
+                 :cx             "50" :cy "50"
+                 :r              "45"
+                 :inner-r        "34"
+                 :ticker-r       "5"
+                 :center-r       "5"  ;; TODO might not be used
+                 :circle-stroke  "0.25"
+                 :period-width   "10"
+                 :border-r       "34.5"
                  :inner-border-r "23.5"})
 
 (defn svg-mui-time-align [{:keys [color style]}]
@@ -187,7 +182,7 @@
 
 (defn svg-mui-circle [color]
   [ui/svg-icon
-   {:viewBox "0 0 24 24" :style {:margin-left "0.5em"}}
+   {:viewBox "0 0 24 24" :style {:margin "0"}}
    [:circle {:cx "12" :cy "12" :r "11" :fill color}]])
 
 (defn svg-mui-entity [{:keys [type color style]}]
@@ -215,3 +210,33 @@
             :stroke       color
             :stroke-width "2"}]
     ]])
+
+(defn concatenated-text
+  "Takes a text message and a fall back message.
+   Returns a span element with ellispsis cutt off that fits the available width."
+  [text empty-text]
+  (let [some-text (and (some? text)
+                       (not (empty? text)))]
+    [:span {:style
+            (merge span-style-ellipsis-one-line
+                   (when (not some-text) {:color (:secondary-text app-theme)}))}
+     (if some-text
+       text
+       empty-text)]))
+
+(defn period-list-item-primary-text
+  "takes in a period and gives back a string to use as info in a list item element"
+  [period]
+
+  (let [description (:description period)]
+    (r/as-element (concatenated-text description "..."))))
+
+(defn period-list-item-secondary-text
+  [period]
+  (let [duration-ms (- (:stop period) (:start period))
+        has-stamps (cutils/period-has-stamps period)]
+    (if has-stamps
+      (str (utils/date-string (:start period))
+           " : "
+           (duration-ms-to-string duration-ms))
+      "Queue item")))

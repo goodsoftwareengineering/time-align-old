@@ -20,6 +20,11 @@
   [x]
   (.toTimeString x))
 
+(declare .toLocaletimeString)
+(defn ->locale-time-string
+  [x]
+  (.toLocaleTimeString x))
+
 (declare .toDateString)
 (defn ->date-string
   [x]
@@ -49,3 +54,17 @@
 (defn click!
   [x]
   (.click x))
+
+(declare .addEventListener)
+(defn add-event-listener [element event fn]
+  (.addEventListener element event fn))
+
+(defn user-agent []
+  (.-userAgent js/navigator))
+
+(defn pi []
+  (.-PI js/Math))
+
+(declare .toFixed)
+(defn round-decimals [n d]
+  (.toFixed n d))

@@ -165,7 +165,6 @@
     (let [trans-pt (ocall pt "matrixTransform" (ocall ctm "inverse"))]
       {:x (oget trans-pt "x") :y (oget trans-pt "y")})))
 
-
 ;; TODO point-to-centered-circle combined with point-to-angle and client-to-view-box to make a single call
 ;; get time on click utility function (refactor all usages of these supporting functions)
 
@@ -178,7 +177,6 @@
              (- 0 (- y cy))
              (- cy y))]
     {:x xt :y yt}))
-
 
 (defn point-to-angle
   "expects map {:x number :y number}
@@ -212,7 +210,6 @@
 
     (/ (* angle-in-radians 180) pi)))
 
-
 (defn modify-periods [category-id task-id color periods]
   (->> periods
        (map (fn [period]
@@ -231,7 +228,6 @@
       (flatten)
       (remove nil?)
       (remove empty?)))
-
 
 (defn pull-periods [db]
  (->> (:categories db)
@@ -252,6 +248,17 @@
       (remove empty?)
       (remove nil?)))
 
+(defn find-task-with-period [tasks period-id]
+  (some (fn [t]
+          (some (fn [p]
+                  (if (= (:id p) period-id) t))
+                (:periods t))) tasks))
+
+(defn find-category-with-task [categories task-id]
+  (some (fn [c]
+          (some (fn [t]
+                  (if (= (:id t) task-id) c))
+                (:tasks c))) categories))
 
 (defn pad-one-b-16
   "given a base 10 number it will convert to a base 16 string and pad one zero if necessary"
@@ -261,7 +268,6 @@
         (#(if (= 1 (count n))
             (str "0" n)
             n))))
-
 
 (defn color-gradient
   "given two hex string (\"#ffaabb\") colors and a percent as decimal (0.25), will return a hex string color that is at percent along a color gradient."
@@ -300,7 +306,6 @@
                      (pad-one-b-16 b-n)
                      ])))
 
-
 (defn color-255->hex [{:keys [red blue green]}]
   (let [red-hx (pad-one-b-16 red)
         blue-hx (pad-one-b-16 blue)
@@ -308,7 +313,6 @@
     (str "#" red-hx green-hx blue-hx)
     )
   )
-
 
 (defn color-hex->255 [hex-str]
   (let [value (string/join (rest hex-str))

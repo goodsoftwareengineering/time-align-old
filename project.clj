@@ -9,7 +9,6 @@
                  [buddy "2.0.0"]
                  [camel-snake-kebab "0.4.0"]
                  [ch.qos.logback/logback-classic "1.2.3"]
-                 [cider/cider-nrepl "0.15.1"]
                  [clj-oauth "1.5.4"]
                  [clj-time "0.14.2"]
                  [cljs-ajax "0.7.3"]
@@ -59,6 +58,7 @@
                  [ring/ring-defaults "0.3.1"]
                  [secretary "1.2.3"]
                  [selmer "1.11.5"]
+                 [stylefy "1.2.0"]
                  [org.clojure/test.check "0.9.0"] ;; TODO: move to dev deps when we don't need generation of data
                ]
 
@@ -71,7 +71,8 @@
   :main ^:skip-aot time-align.core
   :migratus {:store :database :db ~(get (System/getenv) "DATABASE_URL")}
 
-  :plugins [[migratus-lein "0.5.4"]
+  :plugins [[cider/cider-nrepl "0.16.0-SNAPSHOT"]
+            [migratus-lein "0.5.4"]
             [lein-cljsbuild "1.1.5"]]
   :clean-targets ^{:protect false}
   [:target-path
