@@ -362,7 +362,24 @@
 
 (defn experimental-page []
   [:div
-   (experimental/filter-comp 2)])
+   (let [filters  (map (fn [i]
+                         (let [filter-type (nth [:range
+                                                 :parent
+                                                 :has-key
+                                                 :has-value
+                                                 :duration-less-;TODO: han
+                                                 :duration-greater-than]
+                                                (mod i 6))
+                               label       (str (name filter-type) "-" i)]
+                           {:filter-type filter-type
+                            :label       label}))
+                       (range 5))
+         add-fn   (fn [x] (println (str "please add " x)))
+         clear-fn (fn [_] (println "please clear"))
+         sort-fn  (fn [x] (println (str "please sort by " x)))
+         rm-fn    (fn [x] (println (str "please remove " x " filter")))]
+
+     (experimental/filter-comp filters add-fn clear-fn sort-fn rm-fn))])
 
 (def page
   (re-learn/with-tutorial
