@@ -33,6 +33,7 @@
             [time-align.ui.action-buttons :as actb]
             [time-align.ui.calendar :as cp]
             [time-align.js-interop :as jsi]
+            [time-align.experimentation.components :as experimental]
             [stylefy.core :as stylefy]))
 
 ;;Forward declarations to make file linting easier
@@ -359,6 +360,10 @@
                       }}
     (cp/calendar)]])
 
+(defn experimental-page []
+  [:div
+   (experimental/filter-comp 2)])
+
 (def page
   (re-learn/with-tutorial
     {:id :intro-tutorial
@@ -387,8 +392,9 @@
              :agenda            (agenda-page)
              :queue             (queue-page)
              :calendar          (calendar-page)
+             :experimental      (experimental-page)
              ;; default
-             (hp/home-page))]]]))))
+             [hp/home-page])]]]))))
 
 ;; -------------------------
 ;; Routes
@@ -442,6 +448,9 @@
   (rf/dispatch [:set-main-drawer false])
   (rf/dispatch [:set-active-page {:page-id :calendar}]))
 
+(secretary/defroute experimental-route "/experimental" []
+  (rf/dispatch [:set-main-drawer false])
+  (rf/dispatch [:set-active-page {:page-id :experimental}]))
 ;; -------------------------
 ;; History
 ;; must be called after routes have been defined

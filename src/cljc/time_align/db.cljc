@@ -115,6 +115,7 @@
                                :list-periods
                                :queue
                                :agenda
+                               :experimental
                                :calendar}
                    #(gen/return :home)))
 (s/def ::page  (s/keys :req-un [::page-id

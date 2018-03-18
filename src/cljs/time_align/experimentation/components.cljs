@@ -23,17 +23,16 @@
                        :label (str "thing " i)})
                     (range n))]
 
-    (.log js/console chips)
-
     [ui/paper
      [:div.filter {:style {:display "flex"
                            :padding "0.125em"
                            :max-width "100%"}}
 
       [:div.chips {:style {:display "flex"
-                           :flex "1 0 70%"
+                           :flex "0 0 auto"
                            :align-items "center"
                            :justify-content "space-around"}}
+
        [:div {:style {:flex "0 1 auto"
                       :display "flex"
                       :flex-wrap "wrap"
@@ -44,7 +43,7 @@
                               :on-request-delete (fn [_] (println (str "remove " label)))}
                      label])))]
 
-       [:div {:style {:flex "1 0 auto"
+       [:div {:style {:flex "0 0 auto"
                       :display "flex"
                       :flex-direction "column"
                       :justify-content "space-between"}}

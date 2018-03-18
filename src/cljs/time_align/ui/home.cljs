@@ -238,7 +238,8 @@
                ;; :border "green solid 0.1em"
                :box-sizing "border-box"}}
 
-      (action-buttons period-in-play selected-id selected-period)]]))
+      (action-buttons period-in-play selected-id selected-period)]]
+    ))
 
 (def home-page
   (re-learn/with-lesson
