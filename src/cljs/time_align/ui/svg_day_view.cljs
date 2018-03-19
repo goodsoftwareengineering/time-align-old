@@ -172,6 +172,9 @@
         {:d            arc
          :opacity      opacity
          :fill         color
+         :stroke-line-join "round"
+         :stroke       color
+         :stroke-width "0.25"
          :onClick      set-selected-handler}
 
         ;; when selected added some underneath stroke
@@ -194,6 +197,7 @@
                  {:d                arc
                   :stroke           (:text-color uic/app-theme)
                   :stroke-width     "1"
+                  :stroke-line-join "round"
                   :onClick          set-moving-handler
                   :fill             (:text-color uic/app-theme)})]
 
@@ -209,6 +213,7 @@
                    {:d                arc
                     :stroke           (:primary-1-color uic/app-theme)
                     :stroke-width     "1"
+                    :stroke-line-join "round"
                     :onClick          set-moving-handler
                     :fill             (:alternate-1-color uic/app-theme)})])])
 
