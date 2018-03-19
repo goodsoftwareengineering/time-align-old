@@ -138,26 +138,27 @@
                 "---")]]))
 
 (defn period-info [selected-period categories tasks]
-  [ui/paper {:style {:width "100%"
-                     :padding "0.25em"}}
-   [:div {:style {:display "flex"
-                  :flex-direction "column"
-                  :justify-content "center"
-                  :height "5em"}}
+  (let [now (:time @uic/clock-state)]
+    [ui/paper {:style {:width "100%"
+                       :padding "0.25em"}}
+     [:div {:style {:display "flex"
+                    :flex-direction "column"
+                    :justify-content "center"
+                    :height "5em"}}
 
-    (if (some? selected-period)
-      [:div {:on-click (fn [_]
-                         (if (cutils/period-has-stamps selected-period)
-                           (do (rf/dispatch [:set-displayed-day
-                                             (:start selected-period)])
-                               (hist/nav! "/"))
-                           (hist/nav! "/queue")))}
-       (period-info-tree selected-period tasks categories)
-       (period-info-time selected-period)]
+      (if (some? selected-period)
+        [:div {:on-click (fn [_]
+                           (if (cutils/period-has-stamps selected-period)
+                             (do (rf/dispatch [:set-displayed-day
+                                               (:start selected-period)])
+                                 (hist/nav! "/"))
+                             (hist/nav! "/queue")))}
+         (period-info-tree selected-period tasks categories)
+         (period-info-time selected-period)]
 
-      [:div {:style {:align-self "center"}}
-       [:h1 {:style {:color (:alternate-text-color uic/app-theme)}}
-        (jsi/->locale-time-string (new js/Date))]])]])
+        [:div {:style {:align-self "center"}}
+         [:h1 {:style {:color (:alternate-text-color uic/app-theme)}}
+          (jsi/->locale-time-string now)]])]]))
 
 (defn action-buttons [period-in-play selected-id selected-period]
   (if (and (some? period-in-play)

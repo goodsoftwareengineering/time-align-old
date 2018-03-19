@@ -489,6 +489,6 @@
   (re-learn/init)
   (mount-components)
   (stylefy/init)
-  (js/setInterval uic/clock-tick 5000) ;; TODO this is bad
+  (js/setInterval uic/clock-tick 1000) ;; TODO this is bad
   )
 
