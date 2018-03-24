@@ -15,6 +15,7 @@
             [time-align.ui.action-buttons :as actb]
             [time-align.ui.agenda :as ap]
             [time-align.ui.list :as lp]
+            [stylefy.core :as stylefy]
             [time-align.js-interop :as jsi]))
 
 (defn svg-mui-zoom
@@ -81,37 +82,42 @@
                     (rf/dispatch [:iterate-displayed-day :next]))}
         [ic/image-navigate-next {:color (:alternate-text-color uic/app-theme)}]]]])
 
+(def period-info-tree-expansion (r/atom :period))
+
 (defn period-info-tree [selected-period tasks categories]
-  (let [task  (cutils/find-task-with-period tasks (:id selected-period))
+  (let [expand @period-info-tree-expansion
+        task  (cutils/find-task-with-period tasks (:id selected-period))
         category (cutils/find-category-with-task categories (:id task))
         color (:color category)
         complete (:complete task)
         description (:description selected-period)
         line-style {:display         "flex"
+                    :width           "3em"
                     :justify-content "flex-start"
                     :flex-wrap       "nowrap"
                     :aign-items      "center"}]
 
-    [:div
-     [:div {:style (merge line-style {:margin-left "0em"})}
-      (uic/svg-mui-circle color)
-      [:div {:style {:margin-right "1em"}}]
-      (uic/concatenated-text (:name category) "...")]
+    [:div {:style {:display "flex"}}
 
-     [:div {:style (merge line-style {:margin-left "1em"})}
+     [:div {:style (merge line-style)}
+      (uic/svg-mui-circle {:color color :style {:width "3em"}})
+       [:div {:style {:margin-right "0.25em"}}]
+       (uic/concatenated-text (:name category) "...")]
+
+     [:div {:style (merge line-style )}
       [ui/checkbox {:checked  complete
                     :iconStyle {:fill color
                                 :margin "0"}
                     :style {:width "auto"}}]
-      [:div {:style {:margin-right "1em"}}]
-      [:span  (:name task)]]
+       [:div {:style {:margin-right "0.25em"}}]
+       (uic/concatenated-text (:name task) "...")]
 
-     [:div {:style (merge line-style {:margin-left "2em"})}
+     [:div {:style (merge line-style )}
       (if (cutils/period-has-stamps selected-period)
           (uic/mini-arc selected-period)
           [ui/svg-icon [ic/action-list {:color color}]])
-      [:div {:style {:margin-right "1em"}}]
-      (uic/concatenated-text description "no description")]]))
+       [:div {:style {:margin-right "0.25em"}}]
+       (uic/concatenated-text description "no description")]]))
 
 (defn period-info-time [selected-period]
   (let [has-stamps (cutils/period-has-stamps selected-period)
@@ -193,7 +199,15 @@
         period-in-play       @(rf/subscribe [:period-in-play])
         in-play-period       (some #(if (= period-in-play (:id %)) %) periods)
         zoom                 @(rf/subscribe [:zoom])
-        inline-period-dialog @(rf/subscribe [:inline-period-add-dialog])]
+        inline-period-dialog @(rf/subscribe [:inline-period-add-dialog])
+        day-display-container-style (merge
+                                     {:display         "flex"
+                                      :flex            "0 0 100%"
+                                      :box-sizing      "border-box"}
+                                     (when (some? zoom)
+                                       {:height          "100%"})
+                                     {::stylefy/media {{:min-width "900px"}
+                                                       {:flex "0 0 50%"}}})]
 
     [:div.app-container
      {:style {:display         "flex"
@@ -221,12 +235,7 @@
              (period-info nil categories tasks)))
 
      [:div.day-container
-      {:style (merge
-               {:display         "flex"
-                :flex            "1 0 100%"
-                :box-sizing      "border-box"}
-               (when (some? zoom)
-                 {:height          "100%"}))}
+      (stylefy/use-style day-display-container-style)
 
       [day-view/day tasks selected displayed-day]]
 
