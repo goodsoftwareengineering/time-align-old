@@ -1016,7 +1016,7 @@
 
 (reg-event-fx
   :import-app-db
-  [send-analytic]
+  [persist-ls send-analytic]
   (fn [cofx [_ file]]
     {:load-db-to-import file}))
 
