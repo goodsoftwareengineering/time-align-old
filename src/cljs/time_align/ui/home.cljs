@@ -3,7 +3,7 @@
             [reagent.core :as r]
             [re-learn.core :as re-learn]
             [time-align.ui.svg-day-view :as day-view]
-            [time-align.ui.app-bar :as ab :refer [app-bar]]
+            [time-align.ui.app-bar :as ab :refer [app-bar menu]]
             [time-align.history :as hist]
             [time-align.ui.queue :as qp]
             [cljs-react-material-ui.reagent :as ui]
@@ -207,7 +207,8 @@
                                      (when (some? zoom)
                                        {:height          "100%"})
                                      {::stylefy/media {{:min-width "900px"}
-                                                       {:flex "0 0 50%"}}})]
+                                                       {:flex "0 0 50%"
+                                                        :height "70%"}}})]
 
     [:div.app-container
      {:style {:display         "flex"
@@ -248,8 +249,7 @@
                ;; :border "green solid 0.1em"
                :box-sizing "border-box"}}
 
-      (action-buttons period-in-play selected-id selected-period)]]
-    ))
+      (action-buttons period-in-play selected-id selected-period)]]))
 
 (def home-page
   (re-learn/with-lesson
