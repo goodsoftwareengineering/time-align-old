@@ -490,5 +490,5 @@
   (mount-components)
   (stylefy/init)
   (js/setInterval uic/clock-tick 1000) ;; TODO this is bad
-  )
+  (rf/dispatch [:set-displayed-month [(int (.getFullYear (new js/Date))) (int (.getMonth (new js/Date)))]])) ;; TODO get rid of this by setting appropriately in default-db
 

@@ -252,7 +252,7 @@
   :action-buttons :collapsed,
   :continous-action {:moving-period false},
   :displayed-day (utils/make-date),
-  :displayed-month [2018 1],
+  :displayed-month [2018 2], ;; TODO figure out how to make now
   :category-form
   {:id-or-nil nil, :name "", :color-map {:red 0, :green 0, :blue 0}},
   :task-form
