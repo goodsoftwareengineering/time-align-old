@@ -58,6 +58,7 @@
       [:div.navigation.zoom
        {:style {:display         "flex"
                 :justify-content "space-between"
+                :align-items     "center"
                 :flex-wrap       "nowrap"}}
 
        [ui/icon-button
@@ -65,17 +66,12 @@
                     (rf/dispatch [:iterate-displayed-day :prev]))}
         [ic/image-navigate-before {:color (:alternate-text-color uic/app-theme)}]]
 
-       (svg-mui-zoom 1)
-       (svg-mui-zoom 4)
-
-       [ui/icon-button
-        {:onClick (fn [e] (rf/dispatch [:set-displayed-day (new js/Date)]))}
-        (if (cutils/same-day? displayed-day (new js/Date))
-          [ic/device-gps-fixed {:color (:alternate-text-color uic/app-theme)}]
-          [ic/device-gps-not-fixed {:color (:alternate-text-color uic/app-theme)}])]
-
-       (svg-mui-zoom 3)
-       (svg-mui-zoom 2)
+       [:div {:onClick (fn [e] (rf/dispatch [:set-displayed-day (new js/Date)]))}
+        [:span {:style (if (cutils/same-day? displayed-day (new js/Date))
+                         {:border (str "0.125em solid " (:text-color uic/app-theme))
+                          :border-radius "0.125em"
+                          :padding "0.25em"})}
+         (jsi/->date-string displayed-day)]]
 
        [ui/icon-button
         {:onClick (fn [e]
@@ -91,20 +87,18 @@
         color (:color category)
         complete (:complete task)
         description (:description selected-period)
-        line-style {:display         "flex"
-                    :width           "3em"
-                    :justify-content "flex-start"
-                    :flex-wrap       "nowrap"
-                    :aign-items      "center"}]
+        line-style {:display "flex"
+                    :width "100%"}]
 
-    [:div {:style {:display "flex"}}
+    [:div {:style {:display "flex"
+                   :flex-direction "column"}}
 
-     [:div {:style (merge line-style)}
-      (uic/svg-mui-circle {:color color :style {:width "3em"}})
+     [:div {:style line-style}
+      (uic/svg-mui-circle {:color color :style {:width "auto"}})
        [:div {:style {:margin-right "0.25em"}}]
        (uic/concatenated-text (:name category) "...")]
 
-     [:div {:style (merge line-style )}
+     [:div {:style line-style}
       [ui/checkbox {:checked  complete
                     :iconStyle {:fill color
                                 :margin "0"}
@@ -112,7 +106,7 @@
        [:div {:style {:margin-right "0.25em"}}]
        (uic/concatenated-text (:name task) "...")]
 
-     [:div {:style (merge line-style )}
+     [:div {:style line-style}
       (if (cutils/period-has-stamps selected-period)
           (uic/mini-arc selected-period)
           [ui/svg-icon [ic/action-list {:color color}]])
@@ -150,7 +144,7 @@
      [:div {:style {:display "flex"
                     :flex-direction "column"
                     :justify-content "center"
-                    :height "5em"}}
+                    :height "5.25em"}}
 
       (if (some? selected-period)
         [:div {:on-click (fn [_]
