@@ -137,7 +137,7 @@
                                                     (:border-color uic/app-theme))}
                                       {:border (str "0.125em solid "
                                                     (:canvas-color uic/app-theme))})
-                    :leftIcon        (r/as-element (uic/svg-mui-circle color))
+                    :leftIcon        (r/as-element (uic/svg-mui-circle {:color color}))
                     :onClick         (fn [_]
                                        (hist/nav! (str "/list/tasks/" id)))}
 

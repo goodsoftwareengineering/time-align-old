@@ -107,7 +107,7 @@
        [:circle {:cx "500" :cy "500" :r "500" :fill (cutils/color-255->hex color)}]]
       [ui/subheader "Color"]]
 
-     [ui/tabs 
+     [ui/tabs
       [ui/tab {:label "picker"}
        (standard-color-picker)]
       [ui/tab {:label "slider"}
@@ -120,16 +120,13 @@
       :value       id
       :primaryText (:name category)
       :leftIcon    (r/as-element
-                     (uic/svg-mui-circle (:color category)))}]
-    )
-  )
+                    (uic/svg-mui-circle {:color (:color category)}))}]))
 
 (defn category-selection-render [categories id]
   (->> categories
        (some #(if (= (:id %) (uuid id)) %))
        (category-menu-item)
-       (r/as-element)
-       ))
+       (r/as-element)))
 
 (defn task-menu-item [task]
   (let [id (str (:id task))]
@@ -138,9 +135,7 @@
       :value       (str id)
       :primaryText (:name task)
       :leftIcon    (r/as-element
-                     (uic/svg-mui-circle (:color task)))}]
-    )
-  )
+                    (uic/svg-mui-circle {:color (:color task)}))}]))
 
 (defn task-selection-render [tasks id]
   (->> tasks
