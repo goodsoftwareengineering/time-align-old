@@ -196,9 +196,11 @@
 (s/def ::inline-period-add-dialog boolean?)
 (s/def ::calendar-orientation (s/with-gen #{:traditional :github}
                                 #(gen/return :traditional)) )
+(s/def ::play-bucket ::id-or-nil)
 (s/def ::view (s/and (s/keys :req-un [::page
                                       ::selected
                                       ::period-in-play
+                                      ::play-bucket
                                       ::dashboard-tab
                                       ::continous-action
                                       ::main-drawer
@@ -238,6 +240,7 @@
  :view
  {:inline-period-add-dialog false
   :dashboard-tab :calendar
+  :play-bucket nil,
   :period-in-play nil,
   :zoom nil,
   :calendar-orientation :traditional,

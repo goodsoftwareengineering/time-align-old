@@ -160,24 +160,26 @@
           (jsi/->time-string-relaxed now)]])]]))
 
 (defn action-buttons [period-in-play selected-id selected-period]
-  (if (and (some? period-in-play)
-           (nil? selected-id))
+  (cond
+    (and (some? period-in-play)
+         (nil? selected-id))
     (actb/action-buttons-pause period-in-play)
 
-    ;; playing    selection
-    ;; no playing selection
-    (if (some? selected-id)
-      (actb/action-buttons-period-selection
-       period-in-play
-       selected-id
-       (fn [_]
-         (let [{:keys [description start stop task-id]} selected-period]
-           (hist/nav! (str "#/add/period?"
-                           (when (cutils/period-has-stamps selected-period)
-                             (str "start-time=" (.valueOf start)
-                                  "&stop-time=" (.valueOf stop)))
-                           "&description=" description
-                           "&task-id=" task-id))))))))
+    (some? selected-id)
+    (actb/action-buttons-period-selection
+     period-in-play
+     selected-id
+     (fn [_]
+       (let [{:keys [description start stop task-id]} selected-period]
+         (hist/nav! (str "#/add/period?"
+                         (when (cutils/period-has-stamps selected-period)
+                           (str "start-time=" (.valueOf start)
+                                "&stop-time=" (.valueOf stop)))
+                         "&description=" description
+                         "&task-id=" task-id)))))
+
+    :else
+    (actb/action-buttons-play)))
 
 (defn home-page-comp []
   (let [tasks                @(rf/subscribe [:tasks])

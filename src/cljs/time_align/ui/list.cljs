@@ -129,6 +129,15 @@
                         :left-icon (r/as-element
                                     [ui/svg-icon
                                      [ic/av-play-arrow
+                                      {:color (:text-color uic/app-theme)}]])}
+                       {:key (str id "-bucket-menu-item")
+                        :primary-text "Default Play"
+                        :on-click (fn [e]
+                                    (rf/dispatch [:set-play-bucket id])
+                                    (hist/nav! "/"))
+                        :left-icon (r/as-element
+                                    [ui/svg-icon
+                                     [ic/av-play-circle-outline
                                       {:color (:text-color uic/app-theme)}]])}]))})]))
 
 (defn list-item-category [current-selection category]

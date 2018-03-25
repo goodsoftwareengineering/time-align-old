@@ -11,13 +11,10 @@
 
 (def basic-button {:style {}})
 
-(defn play-button []
+(defn play-button [play-fn]
   [ui/floating-action-button
    (merge basic-button
-          {:onTouchTap
-           (fn [e]
-             (rf/dispatch [:play-period])
-             (hist/nav! "/"))})
+          {:onTouchTap play-fn })
    [ic/av-play-arrow uic/basic-ic]])
 
 (defn pause-button []
@@ -57,10 +54,19 @@
    [:div {:style {:padding "0.25em"}}] ;; TODO get rid of this style hack pad
    (copy-button copy-fn)
    [:div {:style {:padding "0.25em"}}] ;; TODO get rid of this style hack pad
-   (if (some? period-in-play) (pause-button) (play-button))])
+   (if (some? period-in-play)
+     (pause-button)
+     (play-button (fn [_]
+                    (rf/dispatch [:play-period])
+                    (hist/nav! "/"))))])
 
 (defn action-buttons-pause [period-in-play]
   [:div (pause-button)])
+
+(defn action-buttons-play []
+  (play-button (fn [_]
+                 (rf/dispatch [:play-task])
+                 (hist/nav! "/"))))
 
 (defn action-buttons-add [add-fn]
   [:div {:style {:display "flex"
