@@ -158,7 +158,7 @@
 
         [:div {:style {:align-self "center"}}
          [:h1 {:style {:color (:alternate-text-color uic/app-theme)}}
-          (jsi/->locale-time-string now)]])]]))
+          (jsi/->time-string-relaxed now)]])]]))
 
 (defn action-buttons [period-in-play selected-id selected-period]
   (if (and (some? period-in-play)
