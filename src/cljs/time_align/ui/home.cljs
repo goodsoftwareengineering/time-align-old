@@ -88,10 +88,12 @@
         complete (:complete task)
         description (:description selected-period)
         line-style {:display "flex"
-                    :width "100%"}]
+                    :width "100%"
+                    :justify-content "flex-start"}]
 
     [:div {:style {:display "flex"
-                   :flex-direction "column"}}
+                   :flex-direction "column"
+                   :justify-content "space-between"}}
 
      [:div {:style line-style}
       (uic/svg-mui-circle {:color color :style {:width "auto"}})
@@ -107,9 +109,10 @@
        (uic/concatenated-text (:name task) "...")]
 
      [:div {:style line-style}
-      (if (cutils/period-has-stamps selected-period)
-          (uic/mini-arc selected-period)
-          [ui/svg-icon [ic/action-list {:color color}]])
+      [:div {:style {}}
+       (if (cutils/period-has-stamps selected-period)
+         (uic/mini-arc selected-period)
+         [ui/svg-icon [ic/action-list {:color color}]])]
        [:div {:style {:margin-right "0.25em"}}]
        (uic/concatenated-text description "no description")]]))
 
