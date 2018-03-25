@@ -200,9 +200,10 @@
                                       :position        "relative"}
                                      (when (some? zoom)
                                        {:height          "100%"})
-                                     {::stylefy/media {{:min-width "900px"}
-                                                       {:flex "0 0 50%"
-                                                        :height "70%"}}})]
+                                     (when (nil? zoom)
+                                       {::stylefy/media {{:min-width "900px"}
+                                                         {:flex "0 0 50%"
+                                                          :height "70%"}}}))]
 
     [:div.app-container
      {:style {:display         "flex"
