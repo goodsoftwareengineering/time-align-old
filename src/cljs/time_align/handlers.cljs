@@ -872,7 +872,6 @@
      (assoc-in db [:view :displayed-day]
                new))))
 
-
 (defn set-play-bucket [db [_ id]]
   (assoc-in db [:view :play-bucket] id))
 (reg-event-db
