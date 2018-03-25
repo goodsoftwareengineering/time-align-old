@@ -872,6 +872,34 @@
      (assoc-in db [:view :displayed-day]
                new))))
 
+
+(defn play-task [cofx [_ task-id]]
+  (let [db (:db cofx)
+        now (new js/Date)
+        now-plus-some (new js/Date (+ (.valueOf now) 120000))
+        id (random-uuid)
+        period {:id id
+                :start now
+                :stop now-plus-some
+                :description ""
+                :planned false}
+
+        db-with-new-period (specter/setval [:categories specter/ALL
+                                            :tasks specter/ALL
+                                            #(= task-id (:id %))
+                                            :periods specter/END]
+                                           [period]
+                                           db)
+
+        new-db (assoc-in db-with-new-period [:view :period-in-play] id)]
+
+    {:db new-db}))
+
+(reg-event-fx
+ :play-task
+ [persist-ls send-analytic validate-app-db]
+ play-task)
+
 (reg-event-fx
  :play-period
  [persist-ls send-analytic validate-app-db]

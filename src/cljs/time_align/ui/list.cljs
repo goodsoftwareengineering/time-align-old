@@ -120,6 +120,15 @@
                         :left-icon (r/as-element
                                     [ui/svg-icon
                                      [ic/content-content-copy
+                                      {:color (:text-color uic/app-theme)}]])}
+                       {:key (str id "-play-menu-item")
+                        :primary-text "Play"
+                        :on-click (fn [e]
+                                    (rf/dispatch [:play-task id])
+                                    (hist/nav! "/"))
+                        :left-icon (r/as-element
+                                    [ui/svg-icon
+                                     [ic/av-play-arrow
                                       {:color (:text-color uic/app-theme)}]])}]))})]))
 
 (defn list-item-category [current-selection category]
@@ -137,7 +146,7 @@
                                                     (:border-color uic/app-theme))}
                                       {:border (str "0.125em solid "
                                                     (:canvas-color uic/app-theme))})
-                    :leftIcon        (r/as-element (uic/svg-mui-circle {:color color}))
+                    :leftIcon        (r/as-element (uic/svg-mui-circle {:color color :style {:margin "0.75em"}}))
                     :onClick         (fn [_]
                                        (hist/nav! (str "/list/tasks/" id)))}
 
@@ -201,6 +210,5 @@
                             [ic/image-navigate-next
                              {:color (:text-color uic/app-theme)}]
                             [:a {:href (:link r) :style link-style}
-                             [:span {:style span-style}
-                              (uic/concatenated-text (:label r) "...")]]])))))]))
+                             (uic/concatenated-text (:label r) "...")]])))))]))
 
