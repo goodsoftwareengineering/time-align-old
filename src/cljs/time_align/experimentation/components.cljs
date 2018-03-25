@@ -30,17 +30,19 @@
                               :on-request-delete #(rm-fn label)}
                      label])))]])
 
-(defn _filter-buttons [style]
+(defn _filter-buttons [style add-fn clear-fn]
   [:div.buttons {:style style}
    [ui/flat-button {:background-color "rgb(69, 82, 92)"
                     :icon (r/as-element [ui/svg-icon
                                          [ic/content-add]])
                     :style {:margin "0.25em"
-                            :margin-right "0em"}}]
+                            :margin-right "0em"}
+                    :on-click add-fn}]
    [ui/flat-button {:background-color "rgb(69, 82, 92)"
                     :icon (r/as-element [ui/svg-icon
                                          [ic/notification-do-not-disturb-alt]])
-                    :style {:margin "0.25em"}}]])
+                    :style {:margin "0.25em"}
+                    :on-click clear-fn}]])
 
 (defn _filter-sort [style]
   [:div.sort {:style style}
@@ -71,9 +73,12 @@
                         :flex-direction  "row"
                         :flex-wrap       "wrap"
                         :justify-content "flex-start"
-                        :align-items     "center"})
+                        :align-items     "center"}
+                       add-fn
+                       clear-fn)
 
       (_filter-sort {:display     "flex"
                      :flex        "0 1 auto"
                      :align-items "flex-start"})]]))
 
+(defn range-comp [] [:div])

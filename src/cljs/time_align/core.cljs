@@ -362,6 +362,8 @@
 
 (defn experimental-page []
   [:div
+   (app-bar)
+
    (let [filters  (map (fn [i]
                          (let [filter-type (nth [:range
                                                  :parent
@@ -373,7 +375,7 @@
                                label       (str (name filter-type) "-" i)]
                            {:filter-type filter-type
                             :label       label}))
-                       (range 5))
+                       (range 0))
          add-fn   (fn [x] (println (str "please add " x)))
          clear-fn (fn [_] (println "please clear"))
          sort-fn  (fn [x] (println (str "please sort by " x)))
