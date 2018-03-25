@@ -37,20 +37,16 @@
         invert (= zoom za)
         zoom-arg (if (and (some? zoom) invert) nil za)]
 
-    [ui/icon-button {:onClick (fn [e] (zoom-fn zoom-arg))
-                     :style (if invert
-                              {:background-color (:accent-2-color uic/app-theme)}
-                              {})}
+    [ui/icon-button {:onClick (fn [e] (zoom-fn zoom-arg))}
      [ui/svg-icon
       {:viewBox "0 0 50 50" :style {:width "100%" :height "100%"}}
       [:circle {:cx 25 :cy 25 :r 22
-                :fill (if invert (:accent-2-color uic/app-theme)
-                          (:canvas-color uic/app-theme))
+                :fill "rgba(0,0,0,0)"
                 :stroke (if invert (:text-color uic/app-theme)
-                            (:alternate-text-color uic/app-theme))
+                            (:canvas-color uic/app-theme))
                 :stroke-width "5"}]
       [:path (merge {:fill (if invert (:text-color uic/app-theme)
-                               (:alternate-text-color uic/app-theme))}
+                               (:canvas-color uic/app-theme))}
                     d)]]]))
 
 (defn navigation-zoom [displayed-day]
@@ -236,14 +232,27 @@
      [:div.day-container
       (stylefy/use-style day-display-container-style)
 
-      [:div.zoom-one {:style {:position "absolute" :top "0" :right "0"}}
-       (svg-mui-zoom 1)]
-      [:div.zoom-one {:style {:position "absolute" :top "0" :left "0"}}
-       (svg-mui-zoom 2)]
-      [:div.zoom-one {:style {:position "fixed" :bottom "0" :left "0"}}
-       (svg-mui-zoom 3)]
-      [:div.zoom-one {:style {:position "fixed" :bottom "0" :right "0"}}
-       (svg-mui-zoom 4)]
+      (when (or (nil? zoom)
+                (= zoom :q1))
+        [:div.zoom-one {:style {:position "absolute" :top "0" :right "0"}}
+         (svg-mui-zoom 1)])
+
+      (when (or (nil? zoom)
+                (= zoom :q2))
+        [:div.zoom-one {:style {:position "absolute" :top "0" :left "0"}}
+         (svg-mui-zoom 2)])
+
+      (when (or (nil? zoom)
+                (= zoom :q3))
+        [:div.zoom-one {:style {:position (if (= zoom :q3) "fixed" "absolute")
+                                :bottom "0" :left "0"}}
+         (svg-mui-zoom 3)])
+
+      (when (or (nil? zoom)
+                (= zoom :q4))
+        [:div.zoom-one {:style {:position (if (= zoom :q4) "fixed" "absolute")
+                                :bottom "0" :right "0"}}
+         (svg-mui-zoom 4)])
 
       [day-view/day tasks selected displayed-day]]
 
