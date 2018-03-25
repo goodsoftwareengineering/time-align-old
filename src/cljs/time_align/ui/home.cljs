@@ -197,7 +197,8 @@
         day-display-container-style (merge
                                      {:display         "flex"
                                       :flex            "0 0 100%"
-                                      :box-sizing      "border-box"}
+                                      :box-sizing      "border-box"
+                                      :position        "relative"}
                                      (when (some? zoom)
                                        {:height          "100%"})
                                      {::stylefy/media {{:min-width "900px"}
@@ -231,6 +232,15 @@
 
      [:div.day-container
       (stylefy/use-style day-display-container-style)
+
+      [:div.zoom-one {:style {:position "absolute" :top "0" :right "0"}}
+       (svg-mui-zoom 1)]
+      [:div.zoom-one {:style {:position "absolute" :top "0" :left "0"}}
+       (svg-mui-zoom 2)]
+      [:div.zoom-one {:style {:position "fixed" :bottom "0" :left "0"}}
+       (svg-mui-zoom 3)]
+      [:div.zoom-one {:style {:position "fixed" :bottom "0" :right "0"}}
+       (svg-mui-zoom 4)]
 
       [day-view/day tasks selected displayed-day]]
 
