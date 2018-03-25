@@ -246,13 +246,13 @@
       (when (or (nil? zoom)
                 (= zoom :q3))
         [:div.zoom-one {:style {:position (if (= zoom :q3) "fixed" "absolute")
-                                :bottom (if (= zoom :q3) "70px" "0") :left "0"}}
+                                :bottom (if (= zoom :q3) "70px" "16px") :left "0"}}
          (svg-mui-zoom 3)])
 
       (when (or (nil? zoom)
                 (= zoom :q4))
         [:div.zoom-one {:style {:position (if (= zoom :q4) "fixed" "absolute")
-                                :bottom (if (= zoom :q4) "70px" "0") :right "0"}}
+                                :bottom (if (= zoom :q4) "70px" "16px") :right "0"}}
          (svg-mui-zoom 4)])
 
       [day-view/day tasks selected displayed-day]]
