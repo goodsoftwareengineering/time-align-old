@@ -28,23 +28,22 @@
              (map (fn [{:keys [filter-type label]}]
                     [ui/chip {:key label
                               :on-request-delete #(rm-fn label)}
-                     label])))]
+                     label])))]])
 
-       [:div {:style {:flex "0 0 auto"
-                      :display "flex"
-                      :flex-direction "column"
-                      :justify-content "space-between"}}
-
-        [ui/flat-button {:background-color "rgb(69, 82, 92)"
-                         :icon (r/as-element [ui/svg-icon
-                                              [ic/content-add]])
-                         :style {:margin-bottom "0.25em"}}]
-        [ui/flat-button {:background-color "rgb(69, 82, 92)"
-                         :icon (r/as-element [ui/svg-icon
-                                              [ic/notification-do-not-disturb-alt]])}]]])
+(defn _filter-buttons [style]
+  [:div.buttons {:style style}
+   [ui/flat-button {:background-color "rgb(69, 82, 92)"
+                    :icon (r/as-element [ui/svg-icon
+                                         [ic/content-add]])
+                    :style {:margin "0.25em"
+                            :margin-right "0em"}}]
+   [ui/flat-button {:background-color "rgb(69, 82, 92)"
+                    :icon (r/as-element [ui/svg-icon
+                                         [ic/notification-do-not-disturb-alt]])
+                    :style {:margin "0.25em"}}]])
 
 (defn _filter-sort [style]
-  [:div.menu {:style style}
+  [:div.sort {:style style}
    [ui/icon-menu {:icon-button-element (r/as-element [ui/icon-button
                                                       [ic/content-sort]])}
     [ui/menu-item {:primary-text "time"}]
@@ -55,18 +54,26 @@
   (let []
 
     [ui/paper
-     [:div.filter {:style {:display "flex"
-                           :padding "0.125em"
-                           :max-width "100%"}}
+     [:div.filter {:style {:display         "flex"
+                           :justify-content "space-between"
+                           :padding         "0.125em"
+                           :max-width       "100%"}}
 
-      (_filter-chips {:display "flex"
-                      :flex "0 1 90%"
-                      :align-items "flex-start"
+      (_filter-chips {:display         "flex"
+                      :flex            "0 1 auto"
+                      :align-items     "flex-start"
                       :justify-content "space-around"}
                      filters
                      rm-fn)
 
-      (_filter-sort {:display "flex"
-                     :flex "0 1 10%"
+      (_filter-buttons {:display         "flex"
+                        :flex            "0 1 auto"
+                        :flex-direction  "row"
+                        :flex-wrap       "wrap"
+                        :justify-content "flex-start"
+                        :align-items     "center"})
+
+      (_filter-sort {:display     "flex"
+                     :flex        "0 1 auto"
                      :align-items "flex-start"})]]))
 
