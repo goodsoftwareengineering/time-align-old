@@ -25,6 +25,17 @@
   [x]
   (.toLocaleTimeString x))
 
+(declare .getHours)
+(declare .getMinutes)
+(defn ->time-string-relaxed [x]
+  (let [hours (str (.getHours x))
+        minutes (str (.getMinutes x))
+        hours-with-padded-zeros (if (= 1 (count hours))
+                                  (str "0" hours) (str hours))
+        minutes-with-padded-zeros (if (= 1 (count minutes))
+                                  (str "0" minutes) (str minutes))]
+    (str hours-with-padded-zeros ":" minutes-with-padded-zeros)))
+
 (declare .toDateString)
 (defn ->date-string
   [x]

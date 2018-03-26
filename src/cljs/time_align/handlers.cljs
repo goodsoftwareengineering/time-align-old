@@ -872,6 +872,43 @@
      (assoc-in db [:view :displayed-day]
                new))))
 
+(defn set-play-bucket [db [_ id]]
+  (assoc-in db [:view :play-bucket] id))
+(reg-event-db
+ :set-play-bucket
+ [persist-ls send-analytic validate-app-db]
+ set-play-bucket)
+
+(defn play-task [cofx [_ t-id]]
+  (let [db (:db cofx)
+        bucket (get-in db [:view :play-bucket])
+        task-id (cond (some? t-id) t-id
+                      (some? bucket) bucket
+                      :else (:id (first (cutils/pull-tasks db))))
+        now (new js/Date)
+        now-plus-some (new js/Date (+ (.valueOf now) 120000))
+        id (random-uuid)
+        period {:id id
+                :start now
+                :stop now-plus-some
+                :description ""
+                :planned false}
+
+        db-with-new-period (specter/setval [:categories specter/ALL
+                                            :tasks specter/ALL
+                                            #(= task-id (:id %))
+                                            :periods specter/END]
+                                           [period]
+                                           db)
+
+        new-db (assoc-in db-with-new-period [:view :period-in-play] id)]
+
+    {:db new-db}))
+(reg-event-fx
+ :play-task
+ [persist-ls send-analytic validate-app-db]
+ play-task)
+
 (reg-event-fx
  :play-period
  [persist-ls send-analytic validate-app-db]
@@ -1016,7 +1053,7 @@
 
 (reg-event-fx
   :import-app-db
-  [send-analytic]
+  [persist-ls send-analytic]
   (fn [cofx [_ file]]
     {:load-db-to-import file}))
 

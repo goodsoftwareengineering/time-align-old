@@ -33,6 +33,7 @@
             [time-align.ui.action-buttons :as actb]
             [time-align.ui.calendar :as cp]
             [time-align.js-interop :as jsi]
+            [time-align.experimentation.components :as experimental]
             [stylefy.core :as stylefy]))
 
 ;;Forward declarations to make file linting easier
@@ -359,6 +360,29 @@
                       }}
     (cp/calendar)]])
 
+(defn experimental-page []
+  [:div
+   (app-bar)
+
+   (let [filters  (map (fn [i]
+                         (let [filter-type (nth [:range
+                                                 :parent
+                                                 :has-key
+                                                 :has-value
+                                                 :duration-less-;TODO: han
+                                                 :duration-greater-than]
+                                                (mod i 6))
+                               label       (str (name filter-type) "-" i)]
+                           {:filter-type filter-type
+                            :label       label}))
+                       (range 0))
+         add-fn   (fn [x] (println (str "please add " x)))
+         clear-fn (fn [_] (println "please clear"))
+         sort-fn  (fn [x] (println (str "please sort by " x)))
+         rm-fn    (fn [x] (println (str "please remove " x " filter")))]
+
+     (experimental/filter-comp filters add-fn clear-fn sort-fn rm-fn))])
+
 (def page
   (re-learn/with-tutorial
     {:id :intro-tutorial
@@ -387,8 +411,9 @@
              :agenda            (agenda-page)
              :queue             (queue-page)
              :calendar          (calendar-page)
+             :experimental      (experimental-page)
              ;; default
-             (hp/home-page))]]]))))
+             [hp/home-page])]]]))))
 
 ;; -------------------------
 ;; Routes
@@ -442,6 +467,9 @@
   (rf/dispatch [:set-main-drawer false])
   (rf/dispatch [:set-active-page {:page-id :calendar}]))
 
+(secretary/defroute experimental-route "/experimental" []
+  (rf/dispatch [:set-main-drawer false])
+  (rf/dispatch [:set-active-page {:page-id :experimental}]))
 ;; -------------------------
 ;; History
 ;; must be called after routes have been defined
@@ -463,6 +491,6 @@
   (re-learn/init)
   (mount-components)
   (stylefy/init)
-  (js/setInterval uic/clock-tick 5000) ;; TODO this is bad
-  )
+  (js/setInterval uic/clock-tick 1000) ;; TODO this is bad
+  (rf/dispatch [:set-displayed-month [(int (.getFullYear (new js/Date))) (int (.getMonth (new js/Date)))]])) ;; TODO get rid of this by setting appropriately in default-db
 

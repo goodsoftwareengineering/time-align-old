@@ -175,14 +175,11 @@
     [:path {:d            "M 12 12 L 9 18"
             :stroke-width "2"
             :stroke       color
-            :fill         "transparent"}]
-    ]
-   ]
-  )
+            :fill         "transparent"}]]])
 
-(defn svg-mui-circle [color]
+(defn svg-mui-circle [{:keys [color style]}]
   [ui/svg-icon
-   {:viewBox "0 0 24 24" :style {:margin "0"}}
+   {:viewBox "0 0 24 24" :style (merge {:margin "0"} style)}
    [:circle {:cx "12" :cy "12" :r "11" :fill color}]])
 
 (defn svg-mui-entity [{:keys [type color style]}]

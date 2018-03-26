@@ -115,6 +115,7 @@
                                :list-periods
                                :queue
                                :agenda
+                               :experimental
                                :calendar}
                    #(gen/return :home)))
 (s/def ::page  (s/keys :req-un [::page-id
@@ -195,9 +196,11 @@
 (s/def ::inline-period-add-dialog boolean?)
 (s/def ::calendar-orientation (s/with-gen #{:traditional :github}
                                 #(gen/return :traditional)) )
+(s/def ::play-bucket ::id-or-nil)
 (s/def ::view (s/and (s/keys :req-un [::page
                                       ::selected
                                       ::period-in-play
+                                      ::play-bucket
                                       ::dashboard-tab
                                       ::continous-action
                                       ::main-drawer
@@ -237,6 +240,7 @@
  :view
  {:inline-period-add-dialog false
   :dashboard-tab :calendar
+  :play-bucket nil,
   :period-in-play nil,
   :zoom nil,
   :calendar-orientation :traditional,
@@ -251,7 +255,7 @@
   :action-buttons :collapsed,
   :continous-action {:moving-period false},
   :displayed-day (utils/make-date),
-  :displayed-month [2018 1],
+  :displayed-month [2018 2], ;; TODO figure out how to make now
   :category-form
   {:id-or-nil nil, :name "", :color-map {:red 0, :green 0, :blue 0}},
   :task-form

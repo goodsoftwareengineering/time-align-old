@@ -92,11 +92,17 @@
                                         (:border-color uic/app-theme))}
                           {:border (str "0.125em solid "
                                         (:canvas-color uic/app-theme))})
-       :onClick         (fn [_] (hist/nav! (str "/list/periods/" id)))}
+       :onClick         (fn [e]
+                          ;; TODO get rid of this or upgrade MUI
+                          ;; condition is a dirty nasty hack on the fact that
+                          ;; rightIconButton on listItem http://www.material-ui.com/#/components/list
+                          ;; doesn't actually stop the click from bubbling up to the item (on desktop only -- mobile is fine)
+                          (if (not (clojure.string/includes? (str (type (.-target e))) "SVG"))
+                            (hist/nav! (str "/list/periods/" id))))}
 
       {:rightIconButton (r/as-element
-                     (list-item-right-menu
-                      [{:key (str id "-edit-menu-item")
+                         (list-item-right-menu
+                          [{:key (str id "-edit-menu-item")
                         :primary-text "Edit"
                         :on-click (fn [e]
                                     ;; mui docs say we don't need this
@@ -107,7 +113,7 @@
                                     [ui/svg-icon
                                      [ic/image-edit
                                       {:color (:text-color uic/app-theme)}]])}
-                       {:key (str id "-copy-menu-item")
+                           {:key (str id "-copy-menu-item")
                         :primary-text "Copy"
                         :on-click (fn [e]
                                     ;; mui docs say we don't need this
@@ -120,6 +126,23 @@
                         :left-icon (r/as-element
                                     [ui/svg-icon
                                      [ic/content-content-copy
+                                      {:color (:text-color uic/app-theme)}]])}
+                           {:key (str id "-play-menu-item")
+                        :primary-text "Play"
+                        :on-click (fn [e]
+                                    (rf/dispatch [:play-task id])
+                                    (hist/nav! "/"))
+                        :left-icon (r/as-element
+                                    [ui/svg-icon
+                                     [ic/av-play-arrow
+                                      {:color (:text-color uic/app-theme)}]])}
+                           {:key (str id "-bucket-menu-item")
+                        :primary-text "Default Play"
+                        :on-click (fn [e]
+                                    (rf/dispatch [:set-play-bucket id]))
+                        :left-icon (r/as-element
+                                    [ui/svg-icon
+                                     [ic/av-play-circle-outline
                                       {:color (:text-color uic/app-theme)}]])}]))})]))
 
 (defn list-item-category [current-selection category]
@@ -137,7 +160,7 @@
                                                     (:border-color uic/app-theme))}
                                       {:border (str "0.125em solid "
                                                     (:canvas-color uic/app-theme))})
-                    :leftIcon        (r/as-element (uic/svg-mui-circle color))
+                    :leftIcon        (r/as-element (uic/svg-mui-circle {:color color :style {:margin "0.75em"}}))
                     :onClick         (fn [_]
                                        (hist/nav! (str "/list/tasks/" id)))}
 
@@ -201,6 +224,5 @@
                             [ic/image-navigate-next
                              {:color (:text-color uic/app-theme)}]
                             [:a {:href (:link r) :style link-style}
-                             [:span {:style span-style}
-                              (uic/concatenated-text (:label r) "...")]]])))))]))
+                             (uic/concatenated-text (:label r) "...")]])))))]))
 

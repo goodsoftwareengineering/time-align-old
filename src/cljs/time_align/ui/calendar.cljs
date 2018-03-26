@@ -3,6 +3,7 @@
             [cljs-react-material-ui.reagent :as ui]
             [time-align.ui.common :as uic]
             [time-align.history :as hist]
+            [stylefy.core :as stylefy]
             [cljs-react-material-ui.icons :as ic]
             [time-align.client-utilities :as cutils]
             [time-align.utilities :as utils]))
@@ -148,13 +149,12 @@
         periods @(rf/subscribe [:periods])]
 
     [:div
-     {:style
-      {:display "flex"
-       :justify-content "flex-start"
-       :align-items "stretch"
-       :align-content "center"
-       :flex-direction "column"
-       :flex-wrap "nowrap"}}
+     (stylefy/use-style {:display "flex"
+                         :justify-content "center"
+                         :align-items "center"
+                         :align-content "center"
+                         :flex-direction "column"
+                         :flex-wrap "nowrap"})
 
      (calendar-nav year month dd-year dd-month calendar-orientation)
 
@@ -164,18 +164,23 @@
                      :justify-content "center"}}
       (str year " " (get months (keyword (str month))))]
 
-     [:div {:style (if traditional?
-                     {:display "flex"
-                      :flex-direction "column"
-                      :flex-wrap "nowrap"
-                      :justify-content "center"
-                      :align-items "stretch"
-                      :align-content "stretch"}
-                     {:display "flex"
-                      :flex-direction "row"
-                      :justify-content "center"
-                      :align-items "stretch"
-                      :align-content "stretch"})}
+     [:div (stylefy/use-style (merge {:display "flex"
+                                      :justify-content "center"
+                                      ::stylefy/media {{:min-width "900px"}
+                                                       {:width "30em"}}}
+                                     (if traditional?
+                                       {:display "flex"
+                                        :flex-direction "column"
+                                        :flex-wrap "nowrap"
+                                        :justify-content "center"
+                                        :align-items "stretch"
+                                        :align-content "stretch"}
+
+                                       {:display "flex"
+                                        :flex-direction "row"
+                                        :justify-content "center"
+                                        :align-items "stretch"
+                                        :align-content "stretch"})))
       (calendar-week-headings
        (if traditional?
          {:display "flex"
